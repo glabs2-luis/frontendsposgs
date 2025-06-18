@@ -43,9 +43,15 @@
           POS GS - Sucursal Huehue
         </q-toolbar-title>
         <div class="q-mr-md text-weight-medium">
-          Nombre del usuario
+        {{ nombreVendedor }}
         </div>
+
+        <q-btn flat icon="logout" label="" class="q-ml-sm" color="negative"
+        @click="cerrarSesion" />
+
       </q-toolbar>
+
+     
     </q-header>
 
     <!-- Contenido de las páginas -->
@@ -59,11 +65,30 @@
 
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import Swal from 'sweetalert2'
+import { useUserStore } from '@/stores/user'
+
+const { nombreVendedor, codigoVendedor } = useUserStore()
+
 
 const router = useRouter()
 const route = useRoute()
 
 const menuAbierto = ref(false)
+
+
+const cerrarSesion = async () => {
+
+  await Swal.fire({
+    icon: 'info',
+    title: 'Sesión cerrada',
+    text: 'Has cerrado sesión correctamente',
+    timer: 1500,
+    showConfirmButton: false
+  })
+
+  router.push('/login')
+}
 
 
 </script>

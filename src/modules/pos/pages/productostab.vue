@@ -4,6 +4,7 @@
 
     <!-- Sección de búsqueda -->
     <div class="text-h6 text-indigo-10">Ventas</div>
+    
     <q-card-section class="q-gutter-md row items-center">
       <q-input
         dense
@@ -30,10 +31,10 @@
 
       <div class="text-h6 text-right q-mr-sm">Total: Q{{ totalGeneral.toFixed(2) }}</div>
 
-      <q-btn class="boton-amarillo" icon="inventory_2" label="Terminar Venta"  />
+      
 
     </q-card-section>
-
+    <q-btn class="boton-amarillo " icon="inventory_2" label="Terminar Venta" />
     <!-- Tabla de productos -->
     <q-table
       flat

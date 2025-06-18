@@ -2,7 +2,7 @@ import {  useQuery } from '@tanstack/vue-query'
 import { loginVendedorAction } from '../action/login-vendedor.action'
 import { Login } from '../interfaces/login.interface'
 
-export const useLogin = ( login:Login ) =>{
+export const useLogin = ( login:Login ) => {
 
     const {  data: loginUsuario } = useQuery({
         queryKey: ['login'],
@@ -15,3 +15,4 @@ export const useLogin = ( login:Login ) =>{
         loginUsuario
     }
 }
+
