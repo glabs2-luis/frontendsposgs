@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-
+import { VueQueryPlugin } from '@tanstack/vue-query'
 // quasar
 import 'quasar/src/css/index.sass'
 import '@quasar/extras/material-icons/material-icons.css'
@@ -15,5 +15,6 @@ app.use(Quasar, {
   plugins: {} // Notify, Dialog, etc.
 })
 
+app.use(VueQueryPlugin)
 app.use(router)
 app.mount('#app')

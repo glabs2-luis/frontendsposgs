@@ -10,7 +10,7 @@
           </q-card-section>
 
           <q-card-section>
-            <q-select
+            <!-- <q-select
               v-model="empresa"
               :options="empresas"
               label="Seleccionar empresa"
@@ -18,7 +18,7 @@
               outlined
               emit-value
               map-options
-            />
+            /> -->
 
             <q-input
               v-model="usuario"
@@ -29,7 +29,7 @@
             />
 
             <q-input
-              v-model="contrasena"
+              v-model="password"
               label="Contraseña"
               type="password"
               dense
@@ -41,7 +41,7 @@
               label="Iniciar sesión"
               color="primary"
               class="full-width q-mt-lg"
-              @click="handleLogin"
+              @click="realizarLogin"
             />
           </q-card-section>
         </q-card>
@@ -52,10 +52,22 @@
 </template>
 
 
-<script lang="ts">
+<script lang="ts" setup>
+
 
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useLogin } from '../composables/useLogin'
+import { Login } from '../interfaces/login.interface'
+import { useQuery } from '@tanstack/vue-query'
+import { loginVendedorAction } from '../action/login-vendedor.action'
+
+
+const fromLogin = ref({
+  usaurio: '',
+  pasword:''
+})
+
 
 const router = useRouter()
 
@@ -64,6 +76,16 @@ const empresa = ref('')
 const usuario = ref('')
 const password = ref('')
 
+const realizarLogin = () =>{
+loginVendedorAction({USUARIO:usuario.value,PASSWORD:password.value})
+}
+
+
+
+
+
+
+    
 
 
 

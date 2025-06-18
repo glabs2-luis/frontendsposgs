@@ -3,6 +3,7 @@
 
 
     <!-- Sección de búsqueda -->
+    <div class="text-h6 text-indigo-10">Ventas</div>
     <q-card-section class="q-gutter-md row items-center">
       <q-input
         dense

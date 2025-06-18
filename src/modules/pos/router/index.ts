@@ -1,7 +1,11 @@
 export const posRoutes = {
   path: '/ventas',
-  name: 'ventas',
-  component: () => import('../components/Mainpos.vue')
+  component: () => import('@/modules/pos/components/Mainlayout.vue'),
+  children: [
+    {
+      path: '',
+      name: 'MainPOS',
+      component: () => import('@/modules/pos/components/Mainpos.vue')
+    }
+  ]
 }
-
-
