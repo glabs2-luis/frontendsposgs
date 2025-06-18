@@ -319,11 +319,15 @@ import { useTotalStore } from "@/stores/total";
 import { useClienteStore } from "@/stores/cliente";
 import { cleanAllStores } from "@/common/helper/cleanStore";
 import { useValidation } from "@/modules/validation/composables/useValidation";
-
 import useFormat from "@/common/composables/useFormat";
 
-const { formatCurrency, formatNumber, formatDecimal } = useFormat();
+import { useBodegas } from "@/modules/bodegas/composables/useBodegas";
+import { useStoreSucursal } from "@/stores/sucursal";
 
+const { ObtenerBodegasId2 } = useBodegas()
+const  storeSucursal  = useStoreSucursal()
+
+const { formatCurrency, formatNumber, formatDecimal } = useFormat();
 const validador = ref(false);
 const $q = useQuasar();
 const tipoDocumento = ref<"nit" | "dpi">("nit");
@@ -344,6 +348,7 @@ const modalPendientes = ref(false);
 const mostrarModalFacturacion = ref(false);
 const expansionCliente = ref(false);
 const formRef = ref();
+const bodega = ref()
 
 const { obtenerClientePorDocumento, refetchMostrarCF, mutateCrearCliente } =
   useClientes();
@@ -358,6 +363,18 @@ const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc);
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
 const focus2 = ref<HTMLInputElement | null>(null);
+
+const mostrarBodega  = async () => {
+  bodega.value = await ObtenerBodegasId2()
+  console.log(bodega.value)
+}
+
+onMounted(() => {
+
+mostrarBodega()
+
+})
+
 
 // abrir expansion item y focus a nit
 watch(

@@ -116,7 +116,7 @@
 
 
       <q-page class="q-mt-lg">
-        <q-btn label="Imprimir" color="green" @click="probarFactura" />
+        <q-btn label="Actualizar bodega" color="black" @click="actualizarBodega" />
       </q-page>
 
   </q-page>
@@ -172,46 +172,9 @@ const mostrarConexion = () => {
 }
 
 // probar impresion
-const probarFactura = () => {
-  const dataFactura: DataFactura = {
-    encabezado: {
-      serie: "A",
-      numero: "000123",
-      uuid: "123e4567-e89b-12d3-a456-426614174000",
-      numeroInterno: "FAC-00123",
-      tipoDocumento: 'FACTURA ELECTRONICA'
-    },
-    cliente: {
-      nombre: "Juan Pérez",
-      nit: "1234567-8",
-      direccion: "5a Avenida 10-25 Zona 1, Ciudad de Guatemala"
-    },
-    items: [
-      {
-        cantidad: 2,
-        descripcion: "Camisa Polo Azul",
-        precio: "Q100.00",
-        subtotal: "Q200.00"
-      },
-      {
-        cantidad: 1,
-        descripcion: "Pantalón Jeans",
-        precio: "Q150.00",
-        subtotal: "Q150.00"
-      }
-    ],
-    resumen: {
-      subtotal: "Q350.00",
-      descuento: "Q0.00",
-      totalPagar: "Q350.00",
-      totalItems: 3
-    },
-    nombreVendedor: "Carlos Ramírez",
-    qrCodeData: "https://midominio.com/factura/000123"
-  };
+const actualizarBodega = () => {
 
-  generarFacturaPDF(dataFactura);
-};
+}
 
 
 

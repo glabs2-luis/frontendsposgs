@@ -88,7 +88,9 @@ import { showErrorNotification, showSuccessNotification } from '@/common/helper/
 import { useSucursales } from '@/modules/Sucursales/composables/useSucursales'
 import { useBodegas} from '@/modules/bodegas/composables/useBodegas';
 import type { Bodega } from '../../bodegas/interfaces/bodegaInterface';
+import { useStoreSucursal } from '@/stores/sucursal'
 
+const StoreSucursal = useStoreSucursal()
 const { loginMutation } = useUserStore()
 const { obtenerSucursal } = useSucursales()
 const { obtenerBodegasId } = useBodegas()
@@ -106,13 +108,14 @@ const mostrarBodega  = async () => {
 
 
 
+
 const realizarLogin = () => {
   loginMutation({
     USUARIO: usuario.value,
     PASSWORD: password.value
   }, {
     // Login exitoso
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
 
       // Rrecordar usuario
       if (recordarUsuario.value) {
@@ -122,6 +125,14 @@ const realizarLogin = () => {
     }
 
       router.push('/ventas')
+
+      const response = await ObtenerBodegasId2() as Bodega
+      StoreSucursal.setbodega(
+      response.CODIGO_BODEGA,
+      response.DESCRIPCION_BODEGA,
+      response.ID_SUCURSAL
+    )
+
     },
     onError: (error: Error) => {
       // Login fallido

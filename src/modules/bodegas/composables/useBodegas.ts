@@ -39,10 +39,11 @@ export const useBodegas = () => {
 
   const ObtenerBodegasId2 = async () => {
     try {
+      // Seteado mal uno
     const response = await obtenerBodegasIdAction(1)
-    return response;
+    return response
     } catch (error){
-      const message = getAxiosErrorMessage(error, "Hubo un error xd")
+      const message = getAxiosErrorMessage(error, 'Hubo un error obteniendo bodega')
       console.log(message)
       throw new Error(error)
     }

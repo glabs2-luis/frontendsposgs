@@ -51,7 +51,7 @@
         <!-- botón hamburguesa menú -->
         <q-btn flat dense round icon="menu" @click="menuAbierto = !menuAbierto" class="q-mr-sm" />
         <q-toolbar-title>
-          POS GS - {{obtenerSucursal?.NOMBRE_DE_SUCURSAL}}
+          POS GS - {{ StoreSucursal.descripcionBodega }}
         </q-toolbar-title>
 
         <div class="q-mr-md text-weight-medium">
@@ -96,8 +96,12 @@ import { useUserStore } from '@/stores/user'
 import { useSucursales} from '@/modules/Sucursales/composables/useSucursales'
 import { useConfiguracionStore } from '@/stores/serie'
 import { cleanAllStores } from '@/common/helper/cleanStore'
+import { useBodegas } from '@/modules/bodegas/composables/useBodegas'
+import { useStoreSucursal } from '@/stores/sucursal'
+import { Sucursal } from '../../Sucursales/interfaces/sucursalesInterface';
 
-const { obtenerSucursal } = useSucursales()
+const StoreSucursal = useStoreSucursal()
+const { ObtenerBodegasId2 } = useBodegas()
 const { nombreVendedor, codigoVendedor } = useUserStore()
 const router = useRouter()
 const route = useRoute()
