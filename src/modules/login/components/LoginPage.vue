@@ -24,8 +24,7 @@
             
             <q-input v-model="password" label="Contraseña"
               type="password" dense outlined
-              class="q-mt-md" />
-
+              class="q-mt-md" @keydown.enter="realizarLogin" />
 
             <q-btn label="Iniciar sesión" class="boton-amarillo espacio-arriba"
               @click="realizarLogin"  />
@@ -55,17 +54,14 @@ import { showErrorNotification, showSuccessNotification } from '@/common/helper/
 const { loginMutation } = useUserStore()
 
 const router = useRouter()
-
-//Formulario
 const usuario = ref('')
 const password = ref('')
-
 
 const realizarLogin =  () => {
 
     loginMutation({
-USUARIO: usuario.value,
-PASSWORD: password.value
+    USUARIO: usuario.value,
+    PASSWORD: password.value
     }, 
 
      {
@@ -74,22 +70,15 @@ PASSWORD: password.value
         showSuccessNotification('Bienvenido', 'Has iniciado sesión correctamente')
 
       router.push('/ventas')
-
-  
-  
   }, 
-      onError:(error) => {
+
+      onError:(error: Error) => {
         //Login fallido
-        showErrorNotification('Error de inicio de sesión', 'Usuario o contraseña incorrectos')
-
-        console.log('Error de Login', error)
+        showErrorNotification('Error de inicio de sesión', error.message )
       }
-  
-     }
 
-    )
-
-    }
+     })
+ }
   
 </script>
 

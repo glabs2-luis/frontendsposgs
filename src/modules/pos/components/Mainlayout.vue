@@ -7,7 +7,7 @@
 
         <q-item clickable v-ripple @click="router.push('/ventas')">
           <q-item-section avatar><q-icon name="point_of_sale" /></q-item-section>
-          <q-item-section>Ventas</q-item-section>
+          <q-item-section>Ventas </q-item-section>
         </q-item>
 
         <q-item clickable v-ripple @click="router.push('/clientes')" >
@@ -79,15 +79,27 @@ const menuAbierto = ref(false)
 
 const cerrarSesion = async () => {
 
-  await Swal.fire({
-    icon: 'info',
-    title: 'Sesión cerrada',
-    text: 'Has cerrado sesión correctamente',
-    timer: 1500,
-    showConfirmButton: false
-  })
+  Swal.fire({
+  title: "Cerrar Sesión",
+  text: "Estas seguro que deseas salir?",
+  icon: "warning",
+  showCancelButton: true,
+  cancelButtonText: "Cancelar",
+  confirmButtonColor: "#3085d6",
+  cancelButtonColor: "#d33",
+  confirmButtonText: "Si, Cerrar Sesion"
+}).then((result) => {
+  if (result.isConfirmed) {
+      router.push('/login')
+      Swal.fire({
+      title: "Sesion Cerrada",
+      text: "",
+      icon: "success"
+    });
+  }
+})
 
-  router.push('/login')
+
 }
 
 

@@ -4,7 +4,6 @@ import { getAxiosErrorMessage } from "@/common/helper/geterrordb";
 
 export const loginVendedorAction = async( login: Partial<Login>):Promise<Login> =>{
 
-    
     delete login.CODIGO_VENDEDOR
     delete login.ESTADO_VENDEDOR
     delete login.TIPO_VENDEDOR
@@ -15,7 +14,9 @@ export const loginVendedorAction = async( login: Partial<Login>):Promise<Login> 
         console.log('usuario', data.NOMBRE_VENDEDOR) 
         return data
     } catch (error) {
-        console.log(error)
+        console.log('error', error)
+        const message = getAxiosErrorMessage(error, "Hubo un error al iniciar sesión");
+        throw new Error(message);
 
     }
     

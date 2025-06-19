@@ -9,8 +9,6 @@ export const useLogin = ( login:Login ) => {
         queryFn: () => loginVendedorAction(login),
     })
 
-
-
     return {
         loginUsuario
     }

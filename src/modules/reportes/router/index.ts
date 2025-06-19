@@ -5,7 +5,7 @@ export const reportesRoutes = {
     {
       path: '',
       name: 'reportes',
-      component: () => import('../components/reportes.vue')
+      component: () => import('../components/ReportesPage.vue')
     }
   ]
 }

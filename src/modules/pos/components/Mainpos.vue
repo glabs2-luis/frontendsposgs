@@ -4,10 +4,10 @@
     <!-- Cliente Formulario -->
     <ClienteForm />
     
-    <q-img src="/img/2.png" alt="Logo del sistema"
+    <!-- <q-img src="/img/2.png" alt="Logo del sistema"
         style="max-width: 200px; border-radius: 8px;"
         spinner-color="yellow-9"
-          class="absolute-top-right q-ma-md"/>
+          class="absolute-top-right q-ma-md"/> -->
 
     
 

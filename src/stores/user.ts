@@ -12,7 +12,6 @@ export const useUserStore = defineStore('user', () => {
     codigoVendedor.value = null
   }
 
-  // 💡 Definimos la mutación (solo una vez)
   const {mutate:loginMutation} = useMutation({
     mutationFn: 
       loginVendedorAction,
@@ -23,16 +22,14 @@ export const useUserStore = defineStore('user', () => {
     },
     onError() {
       cerrarSesion()
-      console.log('Credenciales inválidas')
+      
     },
   })
-
-
 
   return {
     nombreVendedor,
     codigoVendedor,
     cerrarSesion,
-    loginMutation, // Por si quieres observar estado (isLoading, isError, etc.)
+    loginMutation, 
   }
 })

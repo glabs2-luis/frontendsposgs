@@ -15,7 +15,6 @@ export const getAxiosErrorMessage = (
       return data.details.join('\n');
     }
 
-    // Si `message` es string o array
     if (typeof data?.message === 'string') {
       return data.message;
     }

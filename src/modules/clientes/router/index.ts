@@ -5,7 +5,7 @@ export const clientesRoutes = {
     {
       path: '', // Ruta base /clientes
       name: 'clientes',
-      component: () => import('../components/clientes.vue')
+      component: () => import('../components/ClientesPage.vue')
     }
   ]
 }

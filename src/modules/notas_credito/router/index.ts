@@ -5,7 +5,7 @@ export const notasRoutes = {
     {
       path: '',
       name: 'notas',
-      component: () => import('../components/notas.vue') // <- esta ruta ya es correcta para la estructura
+      component: () => import('../components/NotasPage.vue') // <- esta ruta ya es correcta para la estructura
     }
   ]
 }
