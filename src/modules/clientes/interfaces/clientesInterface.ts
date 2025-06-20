@@ -15,5 +15,6 @@ export interface Cliente {
   VENDEDOR_SUSCRIBE:  string;
   FECHA_SUSCRIPCION:  Date;    
   FECHA_CREACION:     Date;    
+  ACTION?:              string;
 }
 

@@ -12,6 +12,7 @@
     "@quasar/extras": "^1.17.0",
     "@tanstack/react-query": "^5.80.7",
     "@tanstack/vue-query": "^5.80.7",
+    "@tanstack/vue-query-devtools": "^5.80.10",
     "axios": "^1.10.0",
     "pinia": "^3.0.3",
     "quasar": "^2.18.1",

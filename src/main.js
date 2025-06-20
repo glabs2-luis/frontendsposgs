@@ -17,6 +17,9 @@ app.use(Quasar, {
   plugins: {} // Notify, Dialog, etc.
 })
 
+app.use(VueQueryPlugin, {
+enableDevtoolsV6Plugin: true,
+})
 app.use(pinia)
 app.use(VueQueryPlugin)
 app.use(router)

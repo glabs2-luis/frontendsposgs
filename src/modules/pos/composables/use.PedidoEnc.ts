@@ -20,8 +20,6 @@ export const usePedidoEnc = (CODIGO_PEDIDO: string) => {
     return {
         MutatePedidoEncCrear,
 
-        // Query para obtener un pedido por su código
-
 }
 
 }
