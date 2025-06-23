@@ -28,12 +28,12 @@
               <!-- Fila 1: Documento, Nombre, Dirección -->
               <div class="col-4">
                 <q-input v-model="cliente.documento" label="DPI/NIT" dense
-                  outlined :rules="[val => !!val || 'Requerido']"
-                  style="font-size: 13px;" @keydown.tab.prevent="buscarCliente" @keydown="usarF2">
+                  outlined :rules="[val => ! !val || 'Requerido']"
+                  style="font-size: 13px;" @keydown.enter.prevent="buscarClienteDPINIT" @keydown="usarF2">
                 
                   <template v-slot:append>
                     <q-btn flat dense icon="search"
-                      color="primary" @click="buscarCliente"
+                      color="primary" @click="buscarClienteDPINIT"
                       :disable="!cliente.documento" size="xs" />
                   </template>
                 </q-input>
@@ -64,7 +64,7 @@
 
               <div class="col-3 flex items-end">
                 <q-btn flat dense icon="person" color="warning"
-                  label="CF (F2)" @click="usarConsumidorFinal" size="md"
+                  label="CF (F2)" @click="colocarCF" size="md"
                   class="full-width" style="height: 32px;"  />
               </div>
 
@@ -77,14 +77,26 @@
 
     </div>
   </div>
+
+
+
 </template>
 
 <script setup lang="ts">
 
-import { QExpansionItem } from 'quasar'
 import { ref } from 'vue'
+import { QExpansionItem } from 'quasar'
+import useClientes from '../../clientes/composables/use.clientes';
+import { showSuccessNotification } from '@/common/helper/notification';
+import ModalEditarCliente from '@/modals/modalEditarCliente.vue';
+
+const abrirModalCliente = ref('false')
+
 
 const expansion = ref<any>(null)
+
+const { obtenerClientePorDocumento,refetchMostrarCF } = useClientes()
+
 
 const cliente = ref({
   documento: '',
@@ -95,42 +107,76 @@ const cliente = ref({
 })
 
 
+const clienteNuevo = ref({
+  NOMBRE: '',
+  NIT: '',
+  DPI: '',
+  DIRECCION: '',
+  TELEFONO: '',
+  CORREO_ELECTRONICO: ''
+})
 
 
- const buscarCliente = () => {
-   if (cliente.value.documento === '1234567890101') {
-     Object.assign(cliente.value, {
-       nombre: 'Juan Pérez',
-       direccion: 'Zona 1, Huehuetenango',
-       telefono: '5555-1234',
-       email: 'juan@mail.com'  
-     })
+const colocarCF = async () => {
+  const cf = await refetchMostrarCF()
 
-   } else {
-     Object.assign(cliente.value, {
-       nombre: '',
-       direccion: '',
-       telefono: '',
-       email: ''
-     })
-   }
- }
+  if (cf.data) {
+    Object.assign(cliente.value, {
+      documento: cf.data.NIT || '',
+      nombre: cf.data.NOMBRE || '',
+      direccion: cf.data.DIRECCION || '',
+      telefono: cf.data.TELEFONO || '',
+      email: cf.data.CORREO_ELECTRONICO || ''
+    })
 
-const usarConsumidorFinal = () => {
-  Object.assign(cliente.value, {
-    documento: 'CF',
-    nombre: 'Consumidor Final',
-    direccion: 'Ciudad',
-    telefono: '',
-    email: ''
-  })
+    showSuccessNotification('CF cargado', 'Consumidor Final cargado con éxito')
+    expansion.value?.collapse()
+  }
 }
+
+
+const buscarClienteDPINIT = async () => {
+    const doc = cliente.value.documento.trim()
+    if(!doc) return 
+
+    const tipo: 'dpi' | 'nit' = doc.length > 9 ? 'dpi' : 'nit'
+
+    // Buscar cliente
+    const clienteEncontrado = await obtenerClientePorDocumento(doc, tipo)
+
+
+    if (clienteEncontrado) {
+      Object.assign(cliente.value, {
+        documento: clienteEncontrado.NIT || '',
+        nombre: clienteEncontrado.NOMBRE || '',
+        direccion: clienteEncontrado.DIRECCION || '',
+        telefono: clienteEncontrado.TELEFONO || '',
+        email: clienteEncontrado.CORREO_ELECTRONICO || ''
+      })
+
+    showSuccessNotification('Cliente Encontrado', 'Encontrado con éxito')
+    expansion.value?.collapse()
+
+    } else {
+
+
+  }
+
+
+    
+}
+
+
+
+
+
+// refetch Mostrar CF
 
 
 const usarF2 = (e: KeyboardEvent) => {
   if (e.key === 'F2') {
     e.preventDefault()
-    usarConsumidorFinal()
+    colocarCF()
   }
 
 }

@@ -1,9 +1,15 @@
 <template>
   <div class="q-pa-md">
     <q-card>
-      <q-card-section class="text-h6 text-primary">
+      <q-card-section div class="row items-center justify-between">
 
-        📋 Listado de Clientes
+        <div class="text-h6 text-primary">📋 Listado de Clientes</div>
+
+
+        <q-btn
+          icon="add" round dense flat justify-end label="Crear Cliente"
+          class="q-mr-sm" @click="abrirModalCrearCliente"/>
+
       </q-card-section>
 
       <q-separator />
@@ -24,9 +30,9 @@
           </q-btn> 
 
           <!-- Button Editar-->
-           <q-btn color="yellow" class="button" @click="mutateActualizarClienteId(props.row.ID_ACLIENTE)">
-            <q-icon name="edit"  />
-          </q-btn> 
+            <q-btn color="yellow" class="button" @click="abrirModalEdicion(props.row)"> 
+              <q-icon name="edit" />
+            </q-btn> 
 
 
             <q-td :props="props">
@@ -36,9 +42,17 @@
 
       </q-card-section>
 
+        <ModalEditarCliente
+         v-if="clienteSeleccionado" 
+         v-model="modalEditar"
+         :cliente="clienteSeleccionado"
+         :modo="esNuevo ? 'crear' : 'editar'"
+        @guardar="guardarCliente"/>
 
     </q-card>
   </div>
+
+
 </template>
 
 
@@ -46,20 +60,18 @@
 
 import { ref, computed } from 'vue'
 import type { QTableColumn } from 'quasar'
-import { showErrorNotification } from '@/common/helper/notification'
 import { Cliente } from '../interfaces/clientesInterface';
 import { useClientes } from '../composables/use.clientes'
 import { eliminarClienteIdAction } from '../action/clientes-action';
+import ModalEditarCliente from '@/modals/modalEditarCliente.vue';
 
-
-const { todosClientes, eliminarClienteId, mutateActualizarClienteId } = useClientes()
+const { todosClientes, eliminarClienteId, mutateActualizarClienteId, mutateCrearCliente } = useClientes()
 
 const filtro = ref('')
 const modalEditar = ref(false)
-
-
-
 const clientes = computed(() => todosClientes.value ?? [])
+const clienteSeleccionado = ref<Cliente | null>(null)
+const esNuevo = ref(false)
 
 const columns : QTableColumn<Cliente>[] = [
   { name: 'ID_ACLIENTE', label: 'ID', field: 'ID_ACLIENTE', align: 'left' },
@@ -73,7 +85,37 @@ const columns : QTableColumn<Cliente>[] = [
   
 ] 
 
+// modal de edición
+function abrirModalEdicion(cliente: Cliente) {
+  clienteSeleccionado.value = cliente
+  esNuevo.value = false
+  modalEditar.value = true
+}
 
+
+
+//modal de creación
+function abrirModalCrearCliente() {
+  clienteSeleccionado.value = {
+    NOMBRE: '',
+    NIT: '',
+    DPI: '',
+    DIRECCION: '',
+    TELEFONO: '',
+    CORREO_ELECTRONICO: ''
+  } as Cliente
+  esNuevo.value = true
+  modalEditar.value = true
+}
+
+function guardarCliente(cliente: Cliente) {
+  if (esNuevo.value) {
+    mutateCrearCliente(cliente)
+  } else {
+    mutateActualizarClienteId(cliente.ID_ACLIENTE)
+  }
+  modalEditar.value = false
+}
 
 
 
@@ -88,7 +130,7 @@ const columns : QTableColumn<Cliente>[] = [
 
 
 .filtro-cliente-elegante {
-  background-color: #fffbe6; /* amarillo claro */
+  background-color: #fffbe6; 
   border: 1px solid #e7e710; /* amarillo dorado */
   border-radius: 6px;
   font-size: 14px;
@@ -98,7 +140,7 @@ const columns : QTableColumn<Cliente>[] = [
 }
 
 .filtro-cliente-elegante:hover {
-  border-color: #ddc27e; /* tono más oscuro al pasar mouse */
+  border-color: #ddc27e; 
 }
 
 .filtro-cliente-elegante:focus-within {

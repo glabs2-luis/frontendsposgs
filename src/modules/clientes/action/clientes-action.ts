@@ -49,10 +49,10 @@ Promise<Cliente> => {
     }
 }
 
-export const actualizarClienteIdAction = async (id: number, cliente: Partial<Cliente>):
+export const actualizarClienteIdAction = async (id: number):
 Promise<Cliente> => {
     try {
-        const { data } = await posApi.patch<Cliente>(`clientes/${id}`)
+        const { data } = await posApi.patch<Cliente>(`/clientes/${id}`)
         return data
     } catch (error){
         const message = getAxiosErrorMessage(error, "Hubo un error actualizando cliente por ID")
@@ -70,3 +70,17 @@ Promise<Cliente> => {
         throw new Error(message);
     }
 }
+
+
+export const obtenerClienteDPINITAction = async (nitcui:string, tipo: 'dpi'|'nit'):
+Promise<Cliente> => {
+    try {
+        const { data } = await posApi.get<Cliente>(`/clientes/${nitcui}/${tipo}`)
+        return data
+    } catch (error) {
+        console.log('Error', error)
+        const message = getAxiosErrorMessage(error, "Hubo un error obteniendo cliente por DPI o NIT");
+        throw new Error(message);
+    }
+}
+
