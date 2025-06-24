@@ -5,7 +5,6 @@
 
         <div class="text-h6 text-primary">📋 Listado de Clientes</div>
 
-
         <q-btn
           icon="add" round dense flat justify-end label="Crear Cliente"
           class="q-mr-sm" @click="abrirModalCrearCliente"/>
@@ -19,7 +18,7 @@
 
         <!-- Input de búsqueda -->
         <q-input  v-model="filtro" debounce="300" flat
-          placeholder="Buscar clientes" standard dense outlined class="q-mb-md"clearable
+          placeholder="Buscar clientes" standard dense outlined class="q-mb-md" clearable
         ></q-input>
 
         <q-table :rows="clientes" :columns="columns" 
@@ -33,7 +32,6 @@
             <q-btn color="yellow" class="button" @click="abrirModalEdicion(props.row)"> 
               <q-icon name="edit" />
             </q-btn> 
-
 
             <q-td :props="props">
             </q-td>
@@ -52,9 +50,7 @@
     </q-card>
   </div>
 
-
 </template>
-
 
 <script setup lang="ts">
 
@@ -62,10 +58,11 @@ import { ref, computed } from 'vue'
 import type { QTableColumn } from 'quasar'
 import { Cliente } from '../interfaces/clientesInterface';
 import { useClientes } from '../composables/use.clientes'
-import { eliminarClienteIdAction } from '../action/clientes-action';
+import { eliminarClienteIdAction, crearClientesAction } from '../action/clientes-action';
 import ModalEditarCliente from '@/modals/modalEditarCliente.vue';
+import { showErrorNotification, showSuccessNotification } from '@/common/helper/notification';
 
-const { todosClientes, eliminarClienteId, mutateActualizarClienteId, mutateCrearCliente } = useClientes()
+const { todosClientes, eliminarClienteId, mutateActualizarClienteId } = useClientes()
 
 const filtro = ref('')
 const modalEditar = ref(false)
@@ -82,17 +79,14 @@ const columns : QTableColumn<Cliente>[] = [
   { name: 'TELEFONO', label: 'Teléfono', field: 'TELEFONO', align: 'left' },
   { name: 'CORREO_ELECTRONICO', label: 'Correo', field: 'CORREO_ELECTRONICO', align: 'left' },
   { name: 'ACTION', label: 'Acciones', field: 'ACTION', align: 'left' }
-  
 ] 
 
 // modal de edición
 function abrirModalEdicion(cliente: Cliente) {
-  clienteSeleccionado.value = cliente
+  clienteSeleccionado.value = { ...cliente } // Crear copia para evitar mutaciones
   esNuevo.value = false
   modalEditar.value = true
 }
-
-
 
 //modal de creación
 function abrirModalCrearCliente() {
@@ -108,17 +102,24 @@ function abrirModalCrearCliente() {
   modalEditar.value = true
 }
 
-function guardarCliente(cliente: Cliente) {
-  if (esNuevo.value) {
-    mutateCrearCliente(cliente)
-  } else {
-    mutateActualizarClienteId(cliente.ID_ACLIENTE)
+async function guardarCliente(cliente: Cliente) {
+  try {
+    if (esNuevo.value) {
+      const creado = await crearClientesAction(cliente)
+      if (creado) {
+        showSuccessNotification('Nuevo Cliente', 'Cliente creado satisfactoriamente')
+
+      }
+    } else {
+      // Actualizar cliente existente
+      await mutateActualizarClienteId(cliente.ID_ACLIENTE!)
+      showSuccessNotification('Cliente Actualizado', 'Cliente actualizado satisfactoriamente')
+    }
+    modalEditar.value = false
+  } catch (error) {
+    showErrorNotification('Error', esNuevo.value ? 'No se pudo crear el cliente' : 'No se pudo actualizar el cliente')
   }
-  modalEditar.value = false
 }
-
-
-
 
 </script>
 
@@ -128,10 +129,9 @@ function guardarCliente(cliente: Cliente) {
   margin: 5px;
 }
 
-
 .filtro-cliente-elegante {
   background-color: #fffbe6; 
-  border: 1px solid #e7e710; /* amarillo dorado */
+  border: 1px solid #e7e710; 
   border-radius: 6px;
   font-size: 14px;
   padding: 2px 10px;
@@ -145,8 +145,6 @@ function guardarCliente(cliente: Cliente) {
 
 .filtro-cliente-elegante:focus-within {
   border-color: #f3b24a;
-
 }
-
 
 </style>

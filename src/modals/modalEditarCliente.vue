@@ -11,12 +11,12 @@
       <q-card-section>
         
         <q-form @submit.prevent="Guardar">
-          <q-input v-model="clienteForm.NOMBRE" label="Nombre" dense outlined :rules="[val => !!val || 'Requerido']" />
-          <q-input v-model="clienteForm.DPI" label="DPI" dense outlined :rules="[val => !!val || 'Requerido']" />
-          <q-input v-model="clienteForm.NIT" label="NIT" dense outlined :rules="[val => !!val || 'Requerido']" />
-          <q-input v-model="cliente.DIRECCION" label="Dirección" dense outlined  :rules="[val => !!val || 'Requerido']" />
+          <q-input v-model="cliente.NOMBRE" label="Nombre" dense outlined :rules="[val => !!val || 'Requerido']" />
+          <q-input v-model="cliente.DPI" label="DPI" class="q-mb-md" dense outlined  />
+          <q-input v-model="cliente.NIT" label="NIT" dense outlined :rules="[val => !!val || 'Requerido']" class="q-mb-xs" />
+          <q-input v-model="cliente.DIRECCION" label="Dirección" dense outlined :rules="[val => !!val || 'Requerido']" class="q-mb-xd" />
           <q-input v-model="cliente.TELEFONO" label="Teléfono" dense outlined class="q-mb-md" mask="####-####" />
-          <q-input v-model="cliente.CORREO_ELECTRONICO" label="Correo Electrónico" dense outlined class="q-mb-sm" type="email" />
+          <q-input v-model="cliente.CORREO_ELECTRONICO" label="Correo Electrónico" dense outlined class="q-mb-xs" type="email" />
 
           <q-btn class="boton-amarillo q-mt-md" :label="props.modo === 'crear' ? 'Crear' : 'Guardar'" type="submit" />
         </q-form>
@@ -31,7 +31,8 @@
 <script setup lang="ts">
 
 import { Cliente } from '@/modules/clientes/interfaces/clientesInterface'
-import { ref, watch, computed } from 'vue'
+import { ref, watch } from 'vue'
+import { showSuccessNotification } from '@/common/helper/notification';
 
 const props = defineProps<{
   modelValue: boolean
@@ -53,17 +54,15 @@ watch(() => mostrar.value, val => {
   emit('update:modelValue', val)
 })
 
-// local
 const cliente = ref<Cliente>({ ...props.cliente })
 watch(() => props.cliente, nuevo => {
   cliente.value = { ...nuevo }
-})
-
-const clienteForm = computed(() => cliente.value)
+}, { deep: true })
 
 // Guardar cambios
 function Guardar() {
   emit('guardar', cliente.value)
+  //showSuccessNotification('cliente','Cliente creado satisfactoriamente')
   emit('update:modelValue', false)
 }
 
@@ -78,7 +77,7 @@ function Guardar() {
   display: block;
   text-align: center;
   margin: 16px auto 0;
-
+  width: 100%;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease-in-out;
