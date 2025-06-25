@@ -6,17 +6,12 @@ import { clientesRoutes } from '@/modules/clientes/router'
 import { facturasRoutes } from '@/modules/facturas/router'
 import { notasRoutes } from '@/modules/notas_credito/router'
 import { reportesRoutes } from '@/modules/reportes/router'
+import { useUserStore } from '@/stores/user'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    // Redirección raíz
-    {
-      path: '/',
-      redirect: '/login'
-    },
-
-    // Rutas por módulo
+    { path: '/', redirect: '/login' },
     loginRoutes,
     posRoutes, 
     clientesRoutes,
@@ -25,5 +20,27 @@ const router = createRouter({
     reportesRoutes
   ]
 })
+
+// Proteccion de rutas
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+
+  // Si no hay token, 
+  if (to.meta.requiresAuth && !token) {
+    if (to.path !== '/login') {
+      return next('/login')
+    } else {
+      return next() // no redirige al login
+    }
+  }
+
+  // Si ya tiene token redirigir a ventas
+  if (to.path === '/login' && token) {
+    return next('/ventas')
+  }
+
+  next()
+})
+
 
 export default router

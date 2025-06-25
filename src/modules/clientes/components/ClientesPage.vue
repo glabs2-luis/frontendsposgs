@@ -83,7 +83,7 @@ const columns : QTableColumn<Cliente>[] = [
 
 // modal de edición
 function abrirModalEdicion(cliente: Cliente) {
-  clienteSeleccionado.value = { ...cliente } // Crear copia para evitar mutaciones
+  clienteSeleccionado.value = { ...cliente } 
   esNuevo.value = false
   modalEditar.value = true
 }

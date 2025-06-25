@@ -5,7 +5,8 @@ export const reportesRoutes = {
     {
       path: '',
       name: 'reportes',
-      component: () => import('../components/ReportesPage.vue')
+      component: () => import('../components/ReportesPage.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 }

@@ -67,7 +67,6 @@ const realizarLogin =  () => {
      {
       onSuccess:(data) => {
       //Login exitoso
-        showSuccessNotification('Bienvenido', 'Has iniciado sesión correctamente')
 
       router.push('/ventas')
   }, 
@@ -94,9 +93,9 @@ const realizarLogin =  () => {
   color: #070303;
   width: 80%;
   font-weight: 500;
-  text-align: center;   /* Centra el texto */
-  display: block;       /* Necesario para centrar el botón */
-  margin: 0 auto;       /* Centra el botón horizontalmente */
+  text-align: center;  
+  display: block;      
+  margin: 0 auto;    
   border-radius: 8px;
   box-shadow:  2px 6px rgba(5, 4, 4, 0.1);
   transition: all 0.2s ease-in-out;
@@ -110,7 +109,7 @@ const realizarLogin =  () => {
 }
 
 .espacio-arriba {
-  margin-top: 24px !important; /* fuerza el espacio */
+  margin-top: 24px !important; 
 }
 
 

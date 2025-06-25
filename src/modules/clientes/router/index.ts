@@ -5,7 +5,9 @@ export const clientesRoutes = {
     {
       path: '', // Ruta base /clientes
       name: 'clientes',
-      component: () => import('../components/ClientesPage.vue')
+      component: () => import('../components/ClientesPage.vue'),
+      meta: { requiresAuth: true }
+
     }
   ]
 }

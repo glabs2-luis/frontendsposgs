@@ -1,35 +1,54 @@
-import { loginVendedorAction } from '@/modules/login/action/login-vendedor.action'
-import { useMutation } from '@tanstack/vue-query'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { useMutation} from '@tanstack/vue-query';
+import { loginVendedorAction } from '@/modules/login/action/login-vendedor.action'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
+
 
 export const useUserStore = defineStore('user', () => {
   const nombreVendedor = ref('')
   const codigoVendedor = ref<number | null>(null)
+  const token = ref('')
+
+  const router = useRouter()
 
   const cerrarSesion = () => {
     nombreVendedor.value = ''
     codigoVendedor.value = null
+    token.value = ''
+    localStorage.clear()
+    delete axios.defaults.headers.common['Authorization']
+    router.push('/login')
   }
 
-  const {mutate:loginMutation} = useMutation({
-    mutationFn: 
-      loginVendedorAction,
-
+  // Obtenemos todo el objeto de la mutación
+  const mutation = useMutation({
+    mutationFn: loginVendedorAction,
     onSuccess(data) {
-      nombreVendedor.value = data.NOMBRE_VENDEDOR
-      codigoVendedor.value = data.CODIGO_VENDEDOR
+      nombreVendedor.value = data.NOMBRE_VENDEDOR || ''
+      codigoVendedor.value = data.CODIGO_VENDEDOR || null
+      token.value = data.token || ''
+
+      localStorage.setItem('usuario', nombreVendedor.value)
+      localStorage.setItem('codigo', String(codigoVendedor.value || ''))
+      localStorage.setItem('token', token.value)
+
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+      router.push('/ventas')
     },
-    onError() {
+    onError(error) {
       cerrarSesion()
-      
-    },
+      alert('❌ Usuario o contraseña incorrectos.\n\nDetalles: ' + error.message)
+    }
   })
 
   return {
     nombreVendedor,
     codigoVendedor,
-    cerrarSesion,
-    loginMutation, 
+    token,
+    loginMutation: mutation.mutate,
+     isLoading: computed(() => mutation.status.value === 'pending'),
+     cerrarSesion
   }
 })

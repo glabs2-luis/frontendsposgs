@@ -5,7 +5,8 @@ export const facturasRoutes = {
     {
       path: '', // Ruta base /clientes
       name: 'facturas',
-      component: () => import('../components/FacturasPage.vue')
+      component: () => import('../components/FacturasPage.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 }

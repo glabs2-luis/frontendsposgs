@@ -5,7 +5,8 @@ export const posRoutes = {
     {
       path: '',
       name: 'MainPOS',
-      component: () => import('@/modules/pos/components/Mainpos.vue')
+      component: () => import('@/modules/pos/components/Mainpos.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 }

@@ -79,6 +79,8 @@ const menuAbierto = ref(false)
 
 const cerrarSesion = async () => {
 
+  localStorage.removeItem('token')
+
   Swal.fire({
   title: "Cerrar Sesión",
   text: "Estas seguro que deseas salir?",

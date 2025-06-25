@@ -19,6 +19,6 @@
 </template>
 
 <script setup lang="ts">
-import ClienteForm from '../pages/clienteform.vue'
-import ProductosTab from '../pages/productostab.vue'
+import ClienteForm from '../pages/clienteForm.vue'
+import ProductosTab from '../pages/productosTab.vue'
 </script>

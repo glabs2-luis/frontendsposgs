@@ -1,11 +1,12 @@
 export const notasRoutes = {
   path: '/notas',
-  component: () => import('../../pos/components/Mainlayout.vue'), // usa tu layout principal
+  component: () => import('../../pos/components/Mainlayout.vue'), 
   children: [
     {
       path: '',
       name: 'notas',
-      component: () => import('../components/NotasPage.vue') // <- esta ruta ya es correcta para la estructura
+      component: () => import('../components/NotasPage.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 }
