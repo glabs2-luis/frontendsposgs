@@ -78,7 +78,6 @@ Promise<Cliente> => {
         const { data } = await posApi.get<Cliente>(`/clientes/${nitcui}/${tipo}`)
         return data
     } catch (error) {
-        console.log('Error', error)
         const message = getAxiosErrorMessage(error, "Hubo un error obteniendo cliente por DPI o NIT");
         throw new Error(message);
     }

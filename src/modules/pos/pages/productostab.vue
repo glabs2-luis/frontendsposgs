@@ -22,6 +22,7 @@
       
         </q-card-section>
         <q-btn class="boton-amarillo " icon="inventory_2" label="Crear Pedido" @onclick=" crearPedido"/>
+
     <!-- Tabla de productos -->
     <q-table flat bordered dense :rows="productos" :columns="columnas"
       row-key="codigo" hide-pagination class="q-mb-md">
@@ -43,11 +44,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+
+import { ref, computed, watch} from 'vue'
 import type { QTableColumn } from 'quasar'
-import { useUserStore } from '@/stores/user'
 import { showErrorNotification, showConfirmationDialog, showSuccessNotification} from '@/common/helper/notification'
-import { useRouter } from 'vue-router'
+import { usePedidoDet } from '@/modules/pedidos_det/composables/usePedidosDet'
 
 
 const productos = ref([

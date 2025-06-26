@@ -6,6 +6,7 @@ import axios from 'axios'
 import 'quasar/src/css/index.sass'
 import '@quasar/extras/material-icons/material-icons.css'
 import { Quasar } from 'quasar'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 // router
 import router from './router'
@@ -17,6 +18,7 @@ if (token) {
 
 const app = createApp(App)
 const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
 
 app.use(Quasar, {
   plugins: {} 

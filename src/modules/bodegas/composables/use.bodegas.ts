@@ -12,31 +12,23 @@ export const useBodegas = () => {
   const queryClient = useQueryClient();
 
   // Obtener todas las bodegas
-  const { data: bodegas, refetch: refetchBodegas, isLoading: cargandoBodegas } = useQuery({
+  const { data: bodegas, refetch: refetchBodegas } = useQuery({
     queryKey: ['bodegas'],
-    queryFn: obtenerBodegasAction,
+    queryFn: () => obtenerBodegasAction,
   })
 
-  // Crear nueva bodega
-  // const { mutate: crearBodegaNueva, isPending: creandoBodega } = useMutation({
-  // mutationFn: (nuevaBodega: Partial<Bodega>) => crearBodegaAction(nuevaBodega),
-  // onSuccess: () => {
-  //   queryClient.invalidateQueries({ queryKey: ['bodegas'] });
-  // },
-  // });
-
-
   // Actualizar bodega existente
-  const { mutate: actualizarBodega, isPending: actualizandoBodega } = useMutation({
-    mutationFn: ({id}: { id: number; bodega: Partial<Bodega> }) =>
-      actualizarBodegaAction(id),
-    onSuccess: () => {
+  const { mutate: mutateActualizarBodega } = useMutation({
+    mutationFn: actualizarBodegaAction,
+
+    onSuccess: (id) => {
       queryClient.invalidateQueries({ queryKey: ['bodegas'] });
+      queryClient.invalidateQueries({ queryKey: ['bodegas', id] })
     },
   })
 
   // Eliminar bodega
-  const { mutate: eliminarBodega, isPending: eliminandoBodega } = useMutation({
+  const { mutate: mutateEliminarBodega } = useMutation({
     mutationFn: (id: number) => eliminarBodegaAction(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bodegas'] });
@@ -46,10 +38,7 @@ export const useBodegas = () => {
   return {
     bodegas,
     refetchBodegas,
-    cargandoBodegas,
-    actualizarBodega,
-    actualizandoBodega,
-    eliminarBodega,
-    eliminandoBodega,
+    mutateActualizarBodega,
+    mutateEliminarBodega
   }
 }

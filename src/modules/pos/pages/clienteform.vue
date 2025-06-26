@@ -2,7 +2,6 @@
   <div class="row">
     <div class="col-12 col-md-8 col-lg-7">
       
-
       <div class="row items-start">
 
         <!-- ExpansionItem -->
@@ -84,62 +83,40 @@
         </div>
 
         <!-- Botones al lado derecho -->
-<div class="col-auto q-ml-sm q-mt-sm">
-  <q-card flat bordered class="q-pa-sm bg-white rounded-borders shadow-3">
-    <div class="row items-center q-gutter-sm no-wrap">
-      
-      <!-- Número de Pedido -->
-      <div class="row items-center q-gutter-xs">
-        <q-icon name="receipt_long" color="primary" size="sm" />
-        <div class="text-subtitle2 text-primary">
-          Pedido #{{  }}
-        </div>
-      </div>
+        <div class="col-auto q-ml-sm q-mt-sm">
+          <q-card flat bordered class="q-pa-sm bg-white rounded-borders shadow-3">
+            <div class="row items-center q-gutter-sm no-wrap">
+              
+              <!-- Número de Pedido -->
+              <div v-if="mostrarNumPedido" class="row items-center q-gutter-xs">
+                <q-icon name="receipt_long" color="primary" size="sm" />
+                <div class="text-subtitle2 text-primary">
+                  Pedido #{{ numPedido  }}
+                </div>
+              </div>
 
-      <q-separator vertical class="q-mx-sm" />
+              <q-separator vertical class="q-mx-sm" />
 
-      <!-- Total de Venta -->
-      <div class="row items-center q-gutter-xs">
-        <q-icon name="paid" color="green-9" size="sm" />
-        <div>
-          <div class="text-h6 text-weight-bold text-green-9">
-            Q{{ }}
-          </div>
-          <div class="text-caption text-grey-7">Total</div>
-        </div>
-      </div>
+              <!-- Total de Venta -->
+              <div class="row items-center q-gutter-xs total-card q-pa-xs">
+                <q-icon name="paid" size="sm" class="text-amber-9" />
+                <div>
+                  <div v-if="mostrarTotal"  class="text-body1 text-amber-10 text-weight-bold">
+                    Total{{ total }}
+                  </div>
+                </div>
+              </div>
 
-    </div>
-  </q-card>
-</div>
+                </div>
+              </q-card>
+            </div>
 
-
-      
-      <!-- Pedido -->
-          
-
-      <!-- pedidos_enc -->
-      <q-card
-        v-if="mostrarCardPedidoCreado"
-        flat
-        bordered
-        class="q-mt-md bg-green-1 text-green-10"
-      >
-        <q-card-section>
-          <div>Pedido registrado con éxito</div>
-        </q-card-section>
-      </q-card>
-
-      <!-- Modal Cliente (si decides activarlo) -->
-      <!--
-      <ModalEditarCliente
-        :model-value="abrirModalCliente"
-        @update:modelValue="abrirModalCliente = $event"
-        :cliente="cliente.value"
-        modo="crear"
-        @guardar="guardarClienteDesdeModal"
-      />
-      -->
+          <ModalEditarCliente
+            :model-value="abrirModalCliente"
+               @update:modelValue="abrirModalCliente = $event"
+                :cliente="clienteTemp"
+              modo="crear"
+            @guardar="guardarClienteDesdeModal"/>
 
           </div>
       </div>
@@ -150,22 +127,28 @@
 
 <script setup lang="ts">
 
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { QExpansionItem } from 'quasar'
 import useClientes from '../../clientes/composables/use.clientes';
 import { showErrorNotification, showSuccessNotification } from '@/common/helper/notification';
 import ModalEditarCliente from '@/modals/modalEditarCliente.vue';
-import { crearClientesAction } from '@/modules/clientes/action/clientes-action';
 import type { Cliente } from '@/modules/clientes/interfaces/clientesInterface'
 import usePedidosEnc from '@/modules/pedidos_enc/composables/use-pedidosEnc';
+import { useUserStore } from '../../../stores/user';
+
+const userStore = useUserStore();
 
 const abrirModalCliente = ref(false)
 const mostrarCardPedidoCreado = ref(false)
 const expansion = ref<any>(null)
-const { obtenerClientePorDocumento,refetchMostrarCF } = useClientes()
+const { obtenerClientePorDocumento,refetchMostrarCF, mutateCrearCliente } = useClientes()
 const { mutateCrearPedidoEnc, obtenerPedidoPorId } = usePedidosEnc()
 const total = ref(0)
 const numPedido = ref(0)
+
+//mostrar total mayor a 0
+const mostrarTotal = computed(() => total.value > 0)
+const mostrarNumPedido = computed(() => numPedido.value > 0)
 
 const cliente = ref({
   DOCUMENTO: '',
@@ -175,7 +158,14 @@ const cliente = ref({
   EMAIL: ''
 })
 
-
+//Llenar modal desde esta pagina
+const clienteTemp = ref ({
+  NIT: '',
+  NOMBRE: '',
+  DIRECCION: '',
+  TELEFONO: '',
+  CORREO_ELECTRONICO: ''
+})
 
 const crearPedido = () => {
   const nombre = cliente.value.NOMBRE?.trim();
@@ -192,25 +182,26 @@ const crearPedido = () => {
     DIRECCION_FACTURAR: direccion,
     NIT_A_FACTURAR: nit,
     SUBTOTAL_PEDIDO: 85,              // temporal
-    IVA_PEDIDO: 12,                   // temporal
     TOTAL_GENERAL_PEDIDO: 97,        // temporal
     ID_SUCURSAL: 1,                // temporal
-    USUARIO_INGRESO_PEDI: 'jpablo', // temporal
-    CODIGO_VENDEDOR: 1,             // temporal
-    CODIGO_DE_CLIENTE: 1020         // temporal
+    USUARIO_INGRESO_PEDI: (userStore.nombreVendedor).substring(0,10) , 
+    CODIGO_VENDEDOR: userStore.codigoVendedor ,          
+    CODIGO_DE_CLIENTE: 1020      // temporal
   }
 
-  console.log('🚀 Pedido a guardar:', JSON.stringify(pedidoEnc, null, 2));
+  console.log('Pedido a guardar:', JSON.stringify(pedidoEnc, null, 2));
 
 
     mutateCrearPedidoEnc(pedidoEnc, {
-    onSuccess: () => {
+    onSuccess: (data) => {
 
+      total.value=data.TOTAL_GENERAL_PEDIDO
+      numPedido.value=data.NUMERO_DE_PEDIDO
 
       mostrarCardPedidoCreado.value = true;
       showSuccessNotification('Pedido creado', 'Pedido registrado correctamente');
 
-      console.log('🚀 Pedido a guardar:', JSON.stringify(pedidoEnc, null, 2));
+      console.log('Pedido a guardar:', JSON.stringify(pedidoEnc, null, 2));
     },
     onError: (error: any) => {
       showErrorNotification('Error al crear', error.message || 'No se pudo registrar el pedido');
@@ -232,13 +223,9 @@ const colocarCF = async () => {
       EMAIL: cf.data.CORREO_ELECTRONICO || ''
     })
 
-    showSuccessNotification('CF cargado', 'Consumidor Final cargado con éxito')
     expansion.value?.toggle()
 
     crearPedido()
-
-
-
 
   }
 }
@@ -260,19 +247,18 @@ const buscarClienteDPINIT = async () => {
         NOMBRE: clienteEncontrado.NOMBRE || '',
         DIRECCION: clienteEncontrado.DIRECCION || '',
         TELEFONO: clienteEncontrado.TELEFONO || '',
-        EMAIL: clienteEncontrado.CORREO_ELECTRONICO || ''
+        EMAIL: clienteEncontrado.CORREO_ELECTRONICO || '',
+        
       })
 
-    showSuccessNotification('Cliente Encontrado', 'Encontrado con éxito')
     expansion.value?.toggle()
 
       //crear pedido
       crearPedido()
 
-
-
     } else {
-      abrirModalCliente.value = true;
+    clienteTemp.value.NIT = doc // prellenar el NIT buscado
+   abrirModalCliente.value = true
   }
 
 }
@@ -286,30 +272,53 @@ const usarF2 = (e: KeyboardEvent) => {
 
 }
 
-const guardarClienteDesdeModal = async (clienteRecibido: any) => {
-  try {
-    const creado = await crearClientesAction(clienteRecibido)
+const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
+  const payload: Partial<Cliente> = { ...nuevoCliente }
 
-    if (creado) {
-      // Actualizar el formulario principal
+  // Eliminar campos vacíos opcionales
+  if (!payload.CORREO_ELECTRONICO || payload.CORREO_ELECTRONICO.trim() === '') {
+    delete payload.CORREO_ELECTRONICO
+  }
+
+  // TELEFONO: debe ser string,
+  if (!payload.TELEFONO || typeof payload.TELEFONO !== 'string') {
+    payload.TELEFONO = ''
+  }
+
+  mutateCrearCliente(payload, {
+    onSuccess: (creado: any) => {
       cliente.value = {
         DOCUMENTO: creado.DPI || creado.NIT || '',
         NOMBRE: creado.NOMBRE,
         DIRECCION: creado.DIRECCION,
-        TELEFONO: creado.TELEFONO,
-        EMAIL: creado.CORREO_ELECTRONICO
+        TELEFONO: creado.TELEFONO || '',
+        EMAIL: creado.CORREO_ELECTRONICO || ''
       }
 
+      abrirModalCliente.value = false
       expansion.value?.toggle()
 
-      // Notificación visual
-      showSuccessNotification('Nuevo Cliente','Cliente Creado satisfactoriamente')
+      showSuccessNotification('Nuevo Cliente', 'Cliente creado satisfactoriamente')
+    },
+    onError: (error: any) => {
+      console.error('Error creando cliente:', error)
+      showErrorNotification('Error', error.message || 'No se pudo registrar el cliente')
     }
-  } catch (error) {
-    showErrorNotification('Error', 'No se puede crear el cliente')
-  }
+  })
 }
 
 
-
 </script>
+
+<style scoped>
+
+.total-card {
+  background-color: #fff9db;
+  border: 1px solid #ffecb3;
+  border-radius: 8px;
+  min-width: 120px;
+  max-height: 40px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+</style>

@@ -39,9 +39,14 @@ export const useUserStore = defineStore('user', () => {
     },
     onError(error) {
       cerrarSesion()
-      alert('❌ Usuario o contraseña incorrectos.\n\nDetalles: ' + error.message)
+      alert(' Usuario o contraseña incorrectos.\n\nDetalles: ' + error.message)
     }
   })
+    // aplicar token a axios
+    if (token.value) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+  }
+
 
   return {
     nombreVendedor,
@@ -51,4 +56,11 @@ export const useUserStore = defineStore('user', () => {
      isLoading: computed(() => mutation.status.value === 'pending'),
      cerrarSesion
   }
-})
+}, {
+  // persistencia automatica
+  persist: true 
+}
+
+
+
+)
