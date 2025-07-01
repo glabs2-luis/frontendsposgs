@@ -1,11 +1,11 @@
 <template>
   <div class="pedido-detalle-container">
 
-<!-- Card combinada para encabezado y entrada -->
-<q-card flat bordered class="q-pa-md q-mb-md bg-yellow-light rounded-borders shadow-2">
+<q-card flat bordered class="q-pa-md q-mb-md bg-yellow-1 text-black rounded-borders shadow-2">
 
-  <!-- Primera fila: título + total -->
+  <!-- título + total -->
   <div class="row items-center justify-between q-mb-md">
+
     <!-- Título -->
     <div class="col-auto row items-center q-gutter-sm">
       <q-icon name="receipt_long" size="24px" color="black" />
@@ -19,11 +19,17 @@
       </div>
     </div>
 
+    <!-- Terminar Venta-->
+
+    <q-btn label="Terminar Venta" icon="point_of_sale" @click="" class="boton-amarillo q-ml-auto" />
+
+
+
+
     <!-- Total -->
     <div class="col-auto">
-      <q-badge color="positive" text-color="white" class="q-pa-sm" style="min-width: 110px; border-radius: 8px;">
-        <div class="text-subtitle2">Q{{ totalPedido.toFixed(2) }}</div>
-        <div class="text-caption">{{ detallesPedido.length }} productos</div>
+      <q-badge color="positive" text-color="white" class="q-pa-sm q-ml-md" style="min-width: 110px; border-radius: 8px;">
+        <div class="text-subtitle2">Q  {{ totalPedido.toFixed(2) }}</div>
       </q-badge>
     </div>
   </div>
@@ -38,10 +44,10 @@
       dense
       @keyup.enter="buscarProductoPorCodigo"
       @input="onCodigoChange"
-      class="col-12 col-md-5"
-    >
+      class="col-12 col-md-5">
+    
       <template #prepend>
-        <q-icon name="qr_code_scanner" color="primary" />
+        <q-icon name="view_headline" color="primary" />
       </template>
       <template #append>
         <q-btn round dense flat icon="search" @click="buscarProductoPorCodigo" color="primary" />
@@ -93,19 +99,18 @@
           row-key="ID_PEDIDO_DET"
           flat
           :loading="loadingDetalle"
-          :pagination="{ rowsPerPage: 0 }"
-          class="productos-table"
-        >
+          :pagination="{ rowsPerPage: 50 }"
+          class="productos-table" >
+        
           <template v-slot:body="props">
             <q-tr :props="props" class="producto-row">
               <q-td key="codigo" :props="props">
-                <div class="text-weight-medium">{{ props.row.PRODUCT0 }}</div>
+                <div class="text-weight-medium"> {{ props.row.PRODUCT0 }}</div>
               </q-td>
               
               <q-td key="producto" :props="props">
                 <div class="producto-info">
-                  <div class="text-weight-medium text-dark">{{ props.row.PRODUCT0 }}</div>
-                  <div class="text-caption text-grey-6" v-if="props.row.DESCRIPCION_PROD_AUX">
+                  <div class="text-caption text-grey-9 text-weight bold" v-if="props.row.DESCRIPCION_PROD_AUX">
                     {{ props.row.DESCRIPCION_PROD_AUX }}
                   </div>
                 </div>
@@ -126,7 +131,7 @@
               
               <q-td key="precio" :props="props">
                 <div class="precio-info">
-                  <div class="text-weight-medium">Q{{ props.row.PRECIO_UNITARIO_VENTA.toFixed(2) }}</div>
+                  <div class="text-weight-medium">Q  {{ props.row.PRECIO_UNITARIO_VENTA.toFixed(4) }}</div>
                   <div class="text-caption text-grey-6" v-if="props.row.PRECIO_AFECTADO !== props.row.PRECIO_UNITARIO_VENTA">
                     Afectado: Q{{ props.row.PRECIO_AFECTADO.toFixed(2) }}
                   </div>
@@ -135,7 +140,7 @@
               
               <q-td key="subtotal" :props="props">
                 <div class="text-weight-bold text-primary">
-                  Q{{ props.row.SUBTOTAL_VENTAS.toFixed(2) }}
+                  Q  {{ props.row.SUBTOTAL_VENTAS.toFixed(2) }}
                 </div>
               </q-td>
               
@@ -147,7 +152,7 @@
                     icon="delete"
                     round
                     flat
-                    @click="eliminarProducto(props.row)"
+                    @click.stop="eliminarProducto(props.row)"
                     class="delete-btn"
                   >
                     <q-tooltip>Eliminar producto</q-tooltip>
@@ -191,10 +196,10 @@
         @input="filtrarProductos"
         class="q-mb-md"
       >
-        <template v-slot:prepend>
+        <template #prepend>
           <q-icon name="search" />
         </template>
-        <template v-slot:append>
+        <template #append>
           <q-btn
             v-if="filtroProductos"
             @click="limpiarFiltro"
@@ -214,37 +219,53 @@
         :loading="loadingProductos"
         :pagination="paginacionCatalogo"
         class="catalogo-table"
+        :body-cell="() => {}"
       >
-        <template v-slot:body="props">
+        <template #body="props">
           <q-tr :props="props" class="catalogo-row" @click="seleccionarProducto(props.row)">
-            <q-td key="codigo" :props="props">
+            
+            <!-- Código del producto -->
+            <q-td key="codigo">
               <div class="text-weight-medium">{{ props.row.PRODUCT0 }}</div>
             </q-td>
 
-            <q-td key="producto" :props="props">
+            <!-- Descripción del producto y mensaje -->
+            <q-td key="producto">
               <div class="producto-catalogo">
-                <div class="text-weight-medium">{{ props.row.PRODUCTO }}</div>
-                <div class="text-caption text-grey-6">{{ props.row.DESCRIPCION_PROD }}</div>
+                <div class="text-weight-bold">{{ props.row.DESCRIPCION_PROD }}</div>
               </div>
             </q-td>
 
-            <q-td key="familia" :props="props">
+            <!-- Marca -->
+            <q-td key="marca">
               <q-chip size="sm" color="grey-3" text-color="dark">
-                {{ props.row.FAMILIA }}
+                {{ props.row.DESCRIPCION_MARCA }}
               </q-chip>
             </q-td>
 
-            <q-td key="estado" :props="props">
-              <q-chip
-                :color="props.row.ESTADO_PRODUCTO === 'ACTIVO' ? 'positive' : 'negative'"
-                text-color="white"
-                size="sm"
-              >
-                {{ props.row.ESTADO_PRODUCTO }}
-              </q-chip>
+            <!-- Precio final -->
+            <q-td key="precio">
+              <div class="text-weight-bold text-primary ">
+                Q {{ props.row.PRECIO_FINAL.toFixed(2) }}
+              </div>
             </q-td>
 
-            <q-td key="accion" :props="props">
+
+            <!-- Precio Oferta -->
+            <q-td key="precioOferta">
+              <div v-if="props.row.MENSAJE === 'Precio en promocion'">
+                <span class="text-red text-strike q-mr-sm">
+                  Q {{ props.row.PRECIO_FINAL.toFixed(2) }}
+                </span>
+                <span class="text-green text-bold">
+                 Q {{ props.row.PRECIO_PROMOCION != null ? props.row.PRECIO_PROMOCION.toFixed(4) : '0.00' }}
+                </span>
+              </div>
+              </q-td>
+        
+
+            <!-- Acción: botón agregar -->
+            <q-td key="accion">
               <q-btn
                 color="primary"
                 icon="add_shopping_cart"
@@ -255,14 +276,23 @@
                 <q-tooltip>Agregar al pedido</q-tooltip>
               </q-btn>
             </q-td>
+
           </q-tr>
         </template>
+
+
+
       </q-table>
+
+
+
+
+
     </q-card-section>
 
   </q-card>
 </q-dialog>
-    <!-- termina el modal -->
+
 
   </div>
 </template>
@@ -273,6 +303,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useProductos } from '@/modules/Productos/composables/useProductos'
 import { usePedidoDet } from '@/modules/pedidos_det/composables/usePedidosDet'
+import { showConfirmationDialog, showSuccessNotification } from '@/common/helper/notification'
 
 const props = defineProps({
   pedidoId: {
@@ -303,7 +334,7 @@ const productosFil = computed(() => {
   const f = filtroProductos.value.toLowerCase()
   return todosProductos.value.filter(prod =>
     prod.PRODUCT0.toLowerCase().includes(f) ||
-    prod.CODIGO_MARCA.toLowerCase().includes(f) ||
+    prod.DESCRIPCION_MARCA.toLowerCase().includes(f) ||
     (prod.DESCRIPCION_PROD || '').toLowerCase().includes(f)
   )
 })
@@ -361,7 +392,7 @@ const columns = [
     name: 'subtotal',
     label: 'Subtotal',
     align: 'right',
-    field: 'SUBTOTAL_VENTAS',
+    field: 'PRECIO_FINAL',
     sortable: true
   },
   {
@@ -388,18 +419,24 @@ const columnasCatalogo = [
     sortable: true
   },
   {
-    name: 'familia',
-    label: 'Familia',
-    align: 'center',
-    field: 'FAMILIA',
+    name: 'marca',
+    label: 'Marca',
+    align: 'left',
+    field: 'DESCRIPCION_MARCA',
     sortable: true
   },
   {
-    name: 'estado',
-    label: 'Estado',
+    name: 'precio',
+    label: 'Precio',
     align: 'center',
-    field: 'ESTADO_PRODUCTO',
+    field: 'PRECIO_FINAL',
     sortable: true
+  },
+  {
+    name: 'precioPromo',
+    label: 'Precio Oferta',
+    align: 'center',
+    field: 'PRECIO_PROMOCION'
   },
   {
     name: 'accion',
@@ -413,20 +450,29 @@ const paginacionCatalogo = ref({
   sortBy: 'PRODUCTO',
   descending: false,
   page: 1,
-  rowsPerPage: 10
+  rowsPerPage: 100
 })
 
+
+
 // Computeds
-const totalPedido = computed(() => {
-  return detallesPedido.value.reduce((total, item) => total + item.SUBTOTAL_VENTAS, 0)
+ const totalPedido = computed(() => {
+  return detallesPedido.value.reduce((total, item) => total + item.PRECIO_FINAL, 0)
 })
+
+defineExpose({
+  totalPedido
+})
+
+
+
 
 const productosFiltrados = computed(() => {
   if (!filtroProductos.value) return todosProductos.value
   const f = filtroProductos.value.toLowerCase()
   return todosProductos.value.filter(p =>
-    p.PRODUCTO.toLowerCase().includes(f) ||
-    p.CODIGO_MARCA.toLowerCase().includes(f) ||
+    p.PRODUCT0.toLowerCase().includes(f) ||
+    p.DESCRIPCION_MARCA.toLowerCase().includes(f) ||
     (p.DESCRIPCION_PROD || '').toLowerCase().includes(f)
   )
 })
@@ -436,7 +482,7 @@ const limpiarFiltro = () => {
 }
 
 const filtrarProductos = () => {
-  // Se usa el computed, no hace falta lógica extra aquí
+
 }
 
 
@@ -480,42 +526,39 @@ const agregarProducto = () => {
 
 const agregarProductoAlPedido = async (producto) => {
   try {
+    // Validación mínima de producto y cantidad
+    if (!producto || !producto.PRODUCT0 || cantidad.value <= 0) {
+      console.error('Producto inválido o cantidad no válida')
+      return
+    }
+
     const detalle = {
       ID_PEDIDO_ENC: props.pedidoId,
       ID_PEDIDO_DET: `${props.pedidoId}-${Date.now()}`,
       ID_SUCURSAL: '1',
       NUMERO_DE_PEDIDO: parseInt(props.pedidoId),
-      PRODUCTO: producto.PRODUCTO,
-      CODIGO_UNIDAD_VENTA: producto.CODIGO_MARCA,
+      PRODUCT0: producto.PRODUCT0,
+      CODIGO_UNIDAD_VENTA: producto.DESCRIPCION_MARCA,
       CANTIDAD_PEDIDA: cantidad.value,
-      PRECIO_UNITARIO_VENTA: producto.COSTO_UNITARIO,
-      PRECIO_AFECTADO: producto.COSTO_UNITARIO,
+      PRECIO_UNITARIO_VENTA: producto.PRECIO_FINAL,
+      PRECIO_AFECTADO: producto.PRECIO_FINAL,
       MONTO_DESCUENTO_PDET: 0,
       MONTO_IVA: 0,
       SUBTOTAL_VENTAS: cantidad.value * producto.COSTO_UNITARIO,
       CORRELATIVO_INGRESO: detallesPedido.value.length + 1,
       DESCRIPCION_PROD_AUX: producto.DESCRIPCION_PROD
     }
-    
-    // await mutateCrearPedidoDet(detalle)
+
+    // Agregar detalle al arreglo reactivo de productos
     detallesPedido.value.push(detalle)
-    
-    // Limpiar campos
+
+    // Limpiar campos del formulario
     codigoProducto.value = ''
     cantidad.value = 1
-    
-    $q.notify({
-      type: 'positive',
-      message: 'Producto agregado correctamente'
-    })
   } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Error al agregar el producto'
-    })
+    console.error('Error al agregar producto al pedido:', error)
   }
 }
-
 const seleccionarProducto = (producto) => {
   agregarProductoAlPedido(producto)
   modalProductos.value = false
@@ -539,30 +582,18 @@ const actualizarCantidad = async (detalle) => {
   }
 }
 
+
+//eliminar producto
 const eliminarProducto = async (detalle) => {
-  try {
-    $q.dialog({
-      title: 'Confirmar eliminación',
-      message: `¿Está seguro de eliminar "${detalle.PRODUCTO}" del pedido?`,
-      cancel: true,
-      persistent: true
-    }).onOk(async () => {
-      // await mutateEliminarPedidoDetID(detalle.ID_PEDIDO_DET)
-      const index = detallesPedido.value.findIndex(d => d.ID_PEDIDO_DET === detalle.ID_PEDIDO_DET)
-      if (index > -1) {
-        detallesPedido.value.splice(index, 1)
-      }
-      
-      $q.notify({
-        type: 'positive',
-        message: 'Producto eliminado correctamente'
-      })
-    })
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Error al eliminar el producto'
-    })
+  const confirmado = await showConfirmationDialog('Eliminar producto', '¿Desea eliminar este producto?');
+  if (!confirmado) return;
+
+  const index = detallesPedido.value.findIndex(d => d.ID_PEDIDO_DET === detalle.ID_PEDIDO_DET);
+  if (index !== -1) {
+    detallesPedido.value.splice(index, 1);
+    showSuccessNotification('Producto eliminado', 'El producto se ha eliminado correctamente');
+  } else {
+    showErrorNotification('Error', 'Producto no encontrado en la lista');
   }
 }
 
@@ -571,6 +602,7 @@ const eliminarProducto = async (detalle) => {
 // Watchers
 watch(() => props.pedidoId, () => {
   cargarDetallesPedido()
+
 })
 
 </script>
@@ -628,6 +660,7 @@ watch(() => props.pedidoId, () => {
 
 .producto-row {
   transition: all 0.2s ease;
+  color: black;
 }
 
 .producto-row:hover {
@@ -637,6 +670,7 @@ watch(() => props.pedidoId, () => {
 
 .producto-info {
   max-width: 300px;
+  font-weight: bold;
 }
 
 .precio-info {
@@ -676,6 +710,7 @@ watch(() => props.pedidoId, () => {
 
 .producto-catalogo {
   max-width: 250px;
+  font-weight: bold;
 }
 
 .bg-gradient {
@@ -685,9 +720,33 @@ watch(() => props.pedidoId, () => {
   
 }
 
-.bg-yellow-light {
-  background: linear-gradient(to right, #fffde7, #fff9c4); /* suave y profesional */
+.boton-amarillo {
+  background: linear-gradient(90deg, #FFEB3B, #FBC02D);
+  color: #070606;
+  font-weight: 500;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
 }
+
+.boton-amarillo:hover {
+  background: linear-gradient(90deg, #FBC02D, #F9A825);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transform: scale(1.02);
+}
+
+
+#oferta
+.text-strike {
+  text-decoration: line-through;
+}
+.text-green {
+  color: #2e7d32;
+}
+.text-red {
+  color: #c62828;
+}
+
 
 
 /* Responsive adjustments */

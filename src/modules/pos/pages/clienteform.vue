@@ -84,7 +84,7 @@
 
         <!-- Botones al lado derecho -->
         <div class="col-auto q-ml-sm q-mt-sm">
-          <q-card flat bordered class="q-pa-sm bg-white rounded-borders shadow-3">
+          <q-card flat bordered class="q-pa-sm bg-white shadow-3">
             <div class="row items-center q-gutter-sm no-wrap">
               
               <!-- Número de Pedido -->
@@ -98,6 +98,7 @@
               <q-separator vertical class="q-mx-sm" />
 
               <!-- Total de Venta -->
+              <div v-if="mostrarTotal" class="row items-center q-gutter-xs">
               <div class="row items-center q-gutter-xs total-card q-pa-xs">
                 <q-icon name="paid" size="sm" class="text-amber-9" />
                 <div>
@@ -105,6 +106,7 @@
                     Total{{ total }}
                   </div>
                 </div>
+              </div>
               </div>
 
                 </div>
@@ -136,6 +138,11 @@ import type { Cliente } from '@/modules/clientes/interfaces/clientesInterface'
 import usePedidosEnc from '@/modules/pedidos_enc/composables/use-pedidosEnc';
 import { useUserStore } from '../../../stores/user';
 
+
+const detallesPedido = ref (0)
+
+
+
 const userStore = useUserStore();
 
 const abrirModalCliente = ref(false)
@@ -148,6 +155,8 @@ const numPedido = ref(0)
 
 //mostrar total mayor a 0
 const mostrarTotal = computed(() => total.value > 0)
+
+
 const mostrarNumPedido = computed(() => numPedido.value > 0)
 
 const cliente = ref({
@@ -316,7 +325,7 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
   background-color: #fff9db;
   border: 1px solid #ffecb3;
   border-radius: 8px;
-  min-width: 120px;
+  min-width: 130px;
   max-height: 40px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
