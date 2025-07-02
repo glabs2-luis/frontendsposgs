@@ -8,17 +8,18 @@ import {
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { showConfirmationDialog } from '@/common/helper/notification';
+import { Sucursal } from '../../Sucursales/interfaces/sucursalesInterface';
 
 export const usePedidosEnc = () => {
 
   const queryClient = useQueryClient();
 
   // Pedidos pendientes
-  const obtenerPedidosPendientes = (ID_SUCURSAL: number, CODIGO_VENDEDOR: number) => {
+  const obtenerPedidosPendientes = (id_sucursal: number, codigo_vendedor: number) => {
     return useQuery({
-      queryKey: ['pedidos-pendientes', ID_SUCURSAL, CODIGO_VENDEDOR],
-      queryFn: () => obtenerPedidosPendientesAction(ID_SUCURSAL, CODIGO_VENDEDOR),
-      enabled: !!ID_SUCURSAL && !!CODIGO_VENDEDOR 
+      queryKey: ['pedidos-pendientes', id_sucursal, codigo_vendedor],
+      queryFn: () => obtenerPedidosPendientesAction(id_sucursal, codigo_vendedor),
+      enabled: !!id_sucursal && !!codigo_vendedor 
     });
   };
 

@@ -1,4 +1,4 @@
-export interface Producto {
+export interface Productos {
   PRODUCT0: string;
   DESCRIPCION_PROD: string;
   DESCRIPCION_MARCA: string;

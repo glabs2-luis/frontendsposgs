@@ -1,5 +1,5 @@
-import { Producto } from "../interfaces/productosInterface";
-import { useQuery, useQueryClient } from "@tanstack/vue-query";
+import { Productos } from "../interfaces/productosInterface"
+import { useQuery, useQueryClient } from "@tanstack/vue-query"
 import { obtenerProductosAction, obtenerProductosIdAction } from '../action/productosAction';
 import { showConfirmationDialog, showErrorNotification } from "@/common/helper/notification";
 

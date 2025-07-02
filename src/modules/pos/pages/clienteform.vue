@@ -2,6 +2,7 @@
   <div class="row">
     <div class="col-12 col-md-8 col-lg-7">
       
+      <!-- informacion mas pedido y cantidad-->
       <div class="row items-start">
 
         <!-- ExpansionItem -->
@@ -26,7 +27,8 @@
                 <q-form>
                   <div class="row q-col-gutter-xs">
                     <div class="col-4">
-                      <q-input v-model="cliente.DOCUMENTO" label="DPI/NIT" dense outlined :rules="[val => !!val || 'Requerido']"
+                      <!-- DPI-->
+                      <q-input ref="focus" v-model="cliente.DOCUMENTO" label="DPI/NIT" dense outlined :rules="[val => !!val || 'Requerido']"
                         style="font-size: 13px;" @keydown.enter.prevent="buscarClienteDPINIT" @keydown="usarF2">
                       
                         <template v-slot:append>
@@ -39,24 +41,12 @@
                     </div>
 
                     <div class="col-5">
-                      <q-input
-                        v-model="cliente.NOMBRE"
-                        label="Nombre"
-                        dense
-                        outlined
-                        :rules="[val => !!val || 'Requerido']"
-                        style="font-size: 13px;"
+                      <q-input v-model="cliente.NOMBRE" label="Nombre" dense outlined :rules="[val => !!val || 'Requerido']" style="font-size: 13px;"
                       />
                     </div>
 
                     <div class="col-3">
-                      <q-input
-                        v-model="cliente.DIRECCION"
-                        label="Dirección"
-                        dense
-                        outlined
-                        :rules="[val => !!val || 'Requerido']"
-                        style="font-size: 13px;"
+                      <q-input v-model="cliente.DIRECCION" label="Dirección" dense outlined :rules="[val => !!val || 'Requerido']" style="font-size: 13px;"
                       />
                     </div>
 
@@ -82,15 +72,61 @@
           </q-expansion-item>
         </div>
 
+        <!-- Ver Pedidos Pendientes -->
+        <div class="col-auto q-ml-sm">
+            <q-card flat bordered class="q-pa-sm bg-white shadow-3">
+              <q-btn label="Pedidos Pendientes" icon="assignment" size="sm" color="deep-orange-5" class="text-caption" unelevated rounded @click="abrirModalPedidosPendientes"
+              />
+            </q-card>
+
+            <!-- Modal de Pedidos Pendientes -->
+            <q-dialog v-model="modalPendientes">
+              <q-card class="q-pa-md" style="min-width: 750px">
+                <q-card-section class="row items-center q-pb-none">
+                  <q-icon name="assignment" color="deep-orange-6" />
+                  <span class="q-ml-md text-subtitle1">Pedidos Pendientes</span>
+                </q-card-section>
+
+                <q-card-section>
+   
+                  <p class="text-caption">Lista de pedidos no facturados</p>
+
+                  <q-markup-table flat bordered class="q-mt-sm tabla-elegante">
+                    <thead>
+                      <tr>
+                        <th class="text-left"># Pedido</th>
+                        <th class="text-left">Cliente</th>
+                        <th class="text-left">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="pedido in pedidosPendientes" :key="pedido.NUMERO_DE_PEDIDO">
+                        <td>{{ pedido.NOMBRE_A_FACTURAR }}</td>
+                        <td>{{ pedido.NIT_A_FACTURAR }}</td>
+                        <td>{{ pedido.DIRECCION_FACTURAR}}</td>
+                      </tr>
+                    </tbody>
+                  </q-markup-table>
+
+                </q-card-section>
+
+                <q-card-actions align="right">
+                  <q-btn flat label="Cerrar" color="primary" v-close-popup />
+                </q-card-actions>
+              </q-card>
+            </q-dialog>
+          </div>
+
         <!-- Botones al lado derecho -->
-        <div class="col-auto q-ml-sm q-mt-sm">
+        <div class="col-auto q-ml-sm ">
+
           <q-card flat bordered class="q-pa-sm bg-white shadow-3">
             <div class="row items-center q-gutter-sm no-wrap">
               
               <!-- Número de Pedido -->
               <div v-if="mostrarNumPedido" class="row items-center q-gutter-xs">
                 <q-icon name="receipt_long" color="primary" size="sm" />
-                <div class="text-subtitle2 text-primary">
+                <div class="text-subtitle2 text-primary "style="font-size: 160%">
                   Pedido #{{ numPedido  }}
                 </div>
               </div>
@@ -111,6 +147,7 @@
 
                 </div>
               </q-card>
+
             </div>
 
           <ModalEditarCliente
@@ -124,40 +161,58 @@
       </div>
 
    </div>
+
+   <ProductosTab ref="productosTabRef" />
 </template>
 
 
 <script setup lang="ts">
 
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { QExpansionItem } from 'quasar'
 import useClientes from '../../clientes/composables/use.clientes';
 import { showErrorNotification, showSuccessNotification } from '@/common/helper/notification';
 import ModalEditarCliente from '@/modals/modalEditarCliente.vue';
 import type { Cliente } from '@/modules/clientes/interfaces/clientesInterface'
-import usePedidosEnc from '@/modules/pedidos_enc/composables/use-pedidosEnc';
+import usePedidosEnc from '@/modules/pedidos_enc/composables/usePedidosEnc';
 import { useUserStore } from '../../../stores/user';
-
-
-const detallesPedido = ref (0)
-
-
+import { nextTick } from 'vue';
+import ProductosTab from '@/modules/pos/pages/productosTab.vue'
 
 const userStore = useUserStore();
-
 const abrirModalCliente = ref(false)
 const mostrarCardPedidoCreado = ref(false)
 const expansion = ref<any>(null)
 const { obtenerClientePorDocumento,refetchMostrarCF, mutateCrearCliente } = useClientes()
-const { mutateCrearPedidoEnc, obtenerPedidoPorId } = usePedidosEnc()
+const { mutateCrearPedidoEnc, obtenerPedidosPendientes } = usePedidosEnc()
 const total = ref(0)
 const numPedido = ref(0)
 
 //mostrar total mayor a 0
 const mostrarTotal = computed(() => total.value > 0)
+const productosTabRef = ref(null)
+const focus = ref(null)
+const modalPendientes = ref (false)
 
+const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
+  1,
+  userStore.codigoVendedor
+)
+
+
+
+
+
+// focus para pedido a DPI
+onMounted(() => {
+  focus.value?.focus()
+})
 
 const mostrarNumPedido = computed(() => numPedido.value > 0)
+
+const abrirModalPedidosPendientes = () => {
+  modalPendientes.value = true
+}
 
 const cliente = ref({
   DOCUMENTO: '',
@@ -202,21 +257,30 @@ const crearPedido = () => {
 
 
     mutateCrearPedidoEnc(pedidoEnc, {
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
 
       total.value=data.TOTAL_GENERAL_PEDIDO
       numPedido.value=data.NUMERO_DE_PEDIDO
 
       mostrarCardPedidoCreado.value = true;
       showSuccessNotification('Pedido creado', 'Pedido registrado correctamente');
+      
+        await nextTick() 
+                //focus a codigo 
+      console.log('contenido de productosTabRef:', productosTabRef.value)
+      
 
       console.log('Pedido a guardar:', JSON.stringify(pedidoEnc, null, 2));
+
     },
     onError: (error: any) => {
       showErrorNotification('Error al crear', error.message || 'No se pudo registrar el pedido');
     }
-  });
+  })
+  
+    productosTabRef.value?.enfocarCodigo()
 }
+
 
 
 // Funcion para Colocar CF
@@ -329,5 +393,55 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
   max-height: 40px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
+
+#Diseño de la tabla
+
+.tabla-elegante {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  background-color: #ffffff;
+}
+
+/* Encabezado de la tabla */
+.tabla-elegante thead {
+  background-color: #fff9db; 
+  color: #0f0d05; 
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Celdas del encabezado */
+.tabla-elegante thead th {
+  padding: 12px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+/* Celdas del cuerpo */
+.tabla-elegante tbody td {
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+
+/* Fila hover */
+.tabla-elegante tbody tr:hover {
+  background-color: #f5faff;
+  transition: background-color 0.3s ease;
+}
+
+/* Filas alternas */
+.tabla-elegante tbody tr:nth-child(odd) {
+  background-color: #fafafa;
+}
+
+/* Última fila sin borde inferior */
+.tabla-elegante tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
 
 </style>

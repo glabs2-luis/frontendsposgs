@@ -93,11 +93,6 @@ const cerrarSesion = async () => {
 }).then((result) => {
   if (result.isConfirmed) {
       router.push('/login')
-      Swal.fire({
-      title: "Sesion Cerrada",
-      text: "",
-      icon: "success"
-    });
   }
 })
 

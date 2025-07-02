@@ -11,7 +11,7 @@
             <div class="text-subtitle2">POS GS</div>
 
              <q-img src="/img/1.png" alt="Logo del sistema"
-              style="max-width: 200px; border-radius: 8px;"
+              style="max-width: 160px; border-radius: 8px;"
               class="q-ma-md"/>
             </q-card-section>
 

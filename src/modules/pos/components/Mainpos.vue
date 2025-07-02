@@ -13,7 +13,7 @@
 
 
     <!-- Tabla de productos -->
-    <ProductosTab />
+
 
 </q-page>
 </template>

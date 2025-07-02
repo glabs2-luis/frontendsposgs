@@ -1,7 +1,6 @@
 <template>
   <div class="pedido-detalle-container">
-
-<q-card flat bordered class="q-pa-md q-mb-md bg-yellow-1 text-black rounded-borders shadow-2">
+   <q-card flat bordered class="q-pa-md q-mb-md bg-yellow-1 text-black rounded-borders shadow-2">
 
   <!-- título + total -->
   <div class="row items-center justify-between q-mb-md">
@@ -20,11 +19,7 @@
     </div>
 
     <!-- Terminar Venta-->
-
     <q-btn label="Terminar Venta" icon="point_of_sale" @click="" class="boton-amarillo q-ml-auto" />
-
-
-
 
     <!-- Total -->
     <div class="col-auto">
@@ -36,15 +31,9 @@
 
   <!-- Segunda fila: inputs + botones -->
   <div class="row q-col-gutter-sm items-end">
+
     <!-- Código del producto -->
-    <q-input
-      v-model="codigoProducto"
-      label="Código del Producto"
-      outlined
-      dense
-      @keyup.enter="buscarProductoPorCodigo"
-      @input="onCodigoChange"
-      class="col-12 col-md-5">
+    <q-input ref="inputCodigo" v-model="codigoProducto" label="Código del Producto" outlined dense @keyup.enter="buscarProductoPorCodigo" @input="onCodigoChange" class="col-12 col-md-5">
     
       <template #prepend>
         <q-icon name="view_headline" color="primary" />
@@ -55,40 +44,19 @@
     </q-input>
 
     <!-- Cantidad -->
-    <q-input
-      v-model.number="cantidad"
-      label="Cantidad"
-      type="number"
-      outlined
-      dense
-      min="1"
-      class="col-6 col-md-2"
+    <q-input v-model.number="cantidad" label="Cantidad" type="number" outlined dense min="1" class="col-6 col-md-2"
     />
 
     <!-- Botones -->
     <div class="col-6 col-md-5 row q-gutter-sm">
-      <q-btn
-        @click="agregarProducto"
-        color="primary"
-        icon="add"
-        label="Agregar"
-        class="col"
-        :loading="loadingAgregar"
-        :disable="!codigoProducto"/>
+      <q-btn @click="agregarProducto" color="primary" icon="add" label="Agregar" class="col" :loading="loadingAgregar" :disable="!codigoProducto"/>
       
-      <q-btn
-        @click="abrirCatalogo"
-        color="secondary"
-        icon="inventory_2"
-        label="Catálogo"
-        class="col"
-        outline/>
-      
+      <q-btn @click="abrirCatalogo" color="secondary" icon="inventory_2" label="Catálogo" class="col" outline/>
     </div>
+
   </div>
 
 </q-card>
-
 
     <!-- Tabla de productos -->
     <q-card flat bordered class="productos-table-card">
@@ -110,22 +78,14 @@
               
               <q-td key="producto" :props="props">
                 <div class="producto-info">
-                  <div class="text-caption text-grey-9 text-weight bold" v-if="props.row.DESCRIPCION_PROD_AUX">
+                  <div class="text-caption text-grey-9 text-weight bold" v-if="props.row. DESCRIPCION_PROD_AUX">
                     {{ props.row.DESCRIPCION_PROD_AUX }}
                   </div>
                 </div>
               </q-td>
               
               <q-td key="cantidad" :props="props">
-                <q-input
-                  v-model.number="props.row.CANTIDAD_PEDIDA"
-                  type="number"
-                  dense
-                  outlined
-                  min="1"
-                  @change="actualizarCantidad(props.row)"
-                  class="cantidad-edit"
-                  style="width: 80px"
+                <q-input v-model.number="props.row.CANTIDAD_PEDIDA" type="number" dense outlined min="1" @change="actualizarCantidad(props.row)" class="cantidad-edit" style="width: 80px"
                 />
               </q-td>
               
@@ -146,14 +106,8 @@
               
               <q-td key="acciones" :props="props">
                 <div class="row q-gutter-xs">
-                  <q-btn
-                    size="sm"
-                    color="negative"
-                    icon="delete"
-                    round
-                    flat
-                    @click.stop="eliminarProducto(props.row)"
-                    class="delete-btn"
+                  <q-btn size="sm" color="negative" icon="delete" round flat
+                    @click.stop="eliminarProducto(props.row)" class="delete-btn"
                   >
                     <q-tooltip>Eliminar producto</q-tooltip>
                   </q-btn>
@@ -188,32 +142,20 @@
 
     <!-- Buscador -->
     <q-card-section>
-      <q-input
-        v-model="filtroProductos"
-        label="Buscar productos..."
-        outlined
-        dense
-        @input="filtrarProductos"
-        class="q-mb-md"
+      <q-input v-model="filtroProductos" label="Buscar productos..." outlined dense class="q-mb-md"
       >
         <template #prepend>
           <q-icon name="search" />
         </template>
         <template #append>
-          <q-btn
-            v-if="filtroProductos"
-            @click="limpiarFiltro"
-            icon="clear"
-            flat
-            round
-            dense
+          <q-btn v-if="filtroProductos" @click="limpiarFiltro" icon="clear" flat  round dense
           />
         </template>
       </q-input>
 
       <!-- Tabla de productos -->
       <q-table
-        :rows="productosFiltrados"
+        :rows="productosFil"
         :columns="columnasCatalogo"
         row-key="PRODUCTO"
         :loading="loadingProductos"
@@ -238,7 +180,7 @@
 
             <!-- Marca -->
             <q-td key="marca">
-              <q-chip size="sm" color="grey-3" text-color="dark">
+              <q-chip size="sm" color="yellow" text-color="dark">
                 {{ props.row.DESCRIPCION_MARCA }}
               </q-chip>
             </q-td>
@@ -249,7 +191,6 @@
                 Q {{ props.row.PRECIO_FINAL.toFixed(2) }}
               </div>
             </q-td>
-
 
             <!-- Precio Oferta -->
             <q-td key="precioOferta">
@@ -263,15 +204,8 @@
               </div>
               </q-td>
         
-
             <!-- Acción: botón agregar -->
-            <q-td key="accion">
-              <q-btn
-                color="primary"
-                icon="add_shopping_cart"
-                size="sm"
-                round
-                @click.stop="seleccionarProducto(props.row)"
+            <q-td key="accion"> <q-btn color="black" icon="add_shopping_cart" size="sm" round @click.stop="seleccionarProducto(props.row)"
               >
                 <q-tooltip>Agregar al pedido</q-tooltip>
               </q-btn>
@@ -280,19 +214,12 @@
           </q-tr>
         </template>
 
-
-
       </q-table>
-
-
-
-
 
     </q-card-section>
 
-  </q-card>
-</q-dialog>
-
+    </q-card>
+  </q-dialog>
 
   </div>
 </template>
@@ -304,6 +231,7 @@ import { useQuasar } from 'quasar'
 import { useProductos } from '@/modules/Productos/composables/useProductos'
 import { usePedidoDet } from '@/modules/pedidos_det/composables/usePedidosDet'
 import { showConfirmationDialog, showSuccessNotification } from '@/common/helper/notification'
+import { useCodigo } from '@/modules/codigo_barras/composables/useCodigo'
 
 const props = defineProps({
   pedidoId: {
@@ -314,6 +242,7 @@ const props = defineProps({
 
 const { mutateCrearPedidoDet, obtenerPedidosDetID, mutateActualizarPedidoDetId, mutateEliminarPedidoDetID} = usePedidoDet()
 const { todosProductos, refetchTodosProductos, obtenerProductosId } = useProductos()
+const { obtenerPorCodigo } = useCodigo()
 
 const $q = useQuasar()
 
@@ -327,16 +256,28 @@ const loadingProductos = ref(false)
 const loadingDetalle = ref(false)
 const loadingAgregar = ref(false)
 
+// focus
+const inputCodigo = ref(null)
+
+const enfocarCodigo = () => {
+  inputCodigo.value?.focus()
+}
+
 //filtro 
 const productosFil = computed(() => {
   if (!filtroProductos.value) return todosProductos.value
 
-  const f = filtroProductos.value.toLowerCase()
-  return todosProductos.value.filter(prod =>
-    prod.PRODUCT0.toLowerCase().includes(f) ||
-    prod.DESCRIPCION_MARCA.toLowerCase().includes(f) ||
-    (prod.DESCRIPCION_PROD || '').toLowerCase().includes(f)
-  )
+  const palabras = filtroProductos.value.toLowerCase().split(' ').filter(p => p.trim() !== '')
+
+  return todosProductos.value.filter(prod => {
+    const texto = (
+      (prod.PRODUCT0 || '') + ' ' +
+      (prod.DESCRIPCION_MARCA || '') + ' ' +
+      (prod.DESCRIPCION_PROD || '')
+    ).toLowerCase()
+
+    return palabras.every(palabra => texto.includes(palabra))
+  })
 })
 
 // productos modal
@@ -355,6 +296,8 @@ watch(modalProductos, async (val) => {
 
 const abrirCatalogo = () => {
   modalProductos.value = true
+
+
 }
 
 
@@ -428,20 +371,20 @@ const columnasCatalogo = [
   {
     name: 'precio',
     label: 'Precio',
-    align: 'center',
+    align: 'left',
     field: 'PRECIO_FINAL',
     sortable: true
   },
   {
     name: 'precioPromo',
     label: 'Precio Oferta',
-    align: 'center',
+    align: 'left',
     field: 'PRECIO_PROMOCION'
   },
   {
     name: 'accion',
     label: 'Acción',
-    align: 'center'
+    align: 'left'
   }
 ]
 
@@ -453,20 +396,12 @@ const paginacionCatalogo = ref({
   rowsPerPage: 100
 })
 
-
-
 // Computeds
- const totalPedido = computed(() => {
+  const totalPedido = computed(() => {
   return detallesPedido.value.reduce((total, item) => total + item.PRECIO_FINAL, 0)
 })
 
-defineExpose({
-  totalPedido
-})
-
-
-
-
+// Filtar productos
 const productosFiltrados = computed(() => {
   if (!filtroProductos.value) return todosProductos.value
   const f = filtroProductos.value.toLowerCase()
@@ -482,40 +417,10 @@ const limpiarFiltro = () => {
 }
 
 const filtrarProductos = () => {
-
 }
 
-
-
-
 const buscarProductoPorCodigo = async () => {
-  if (!codigoProducto.value.trim()) return
-  
-  try {
-    loadingAgregar.value = true
-    // const producto = await obtenerProductosId(codigoProducto.value)
-    
-    // Simulación
-    const producto = productosDisponibles.value.find(p => 
-      p.CODIGO_MARCA === codigoProducto.value
-    )
-    
-    if (producto) {
-      await agregarProductoAlPedido(producto)
-    } else {
-      $q.notify({
-        type: 'warning',
-        message: 'Producto no encontrado'
-      })
-    }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Error al buscar el producto'
-    })
-  } finally {
-    loadingAgregar.value = false
-  }
+
 }
 
 const agregarProducto = () => {
@@ -564,12 +469,13 @@ const seleccionarProducto = (producto) => {
   modalProductos.value = false
 }
 
+
+// no creo que sirva
 const actualizarCantidad = async (detalle) => {
   try {
     detalle.SUBTOTAL_VENTAS = detalle.CANTIDAD_PEDIDA * detalle.PRECIO_UNITARIO_VENTA
     
     // await mutateActualizarPedidoDetId(detalle)
-    
     $q.notify({
       type: 'positive',
       message: 'Cantidad actualizada'
@@ -582,32 +488,36 @@ const actualizarCantidad = async (detalle) => {
   }
 }
 
-
 //eliminar producto
 const eliminarProducto = async (detalle) => {
-  const confirmado = await showConfirmationDialog('Eliminar producto', '¿Desea eliminar este producto?');
-  if (!confirmado) return;
+  const confirmado = await showConfirmationDialog('Eliminar producto', '¿Desea eliminar este producto?')
+  if (!confirmado) return
 
-  const index = detallesPedido.value.findIndex(d => d.ID_PEDIDO_DET === detalle.ID_PEDIDO_DET);
+  const index = detallesPedido.value.findIndex(d => d.ID_PEDIDO_DET === detalle.ID_PEDIDO_DET)
   if (index !== -1) {
     detallesPedido.value.splice(index, 1);
-    showSuccessNotification('Producto eliminado', 'El producto se ha eliminado correctamente');
+    showSuccessNotification('Producto eliminado', 'El producto se ha eliminado correctamente')
   } else {
-    showErrorNotification('Error', 'Producto no encontrado en la lista');
+    showErrorNotification('Error', 'Producto no encontrado en la lista')
   }
 }
 
-
-
-// Watchers
+// Watch para pedido
 watch(() => props.pedidoId, () => {
   cargarDetallesPedido()
-
 })
+
+defineExpose({
+  enfocarCodigo,
+  totalPedido
+})
+
 
 </script>
 
+
 <style scoped>
+
 .pedido-detalle-container {
   padding: 16px;
   max-width: 1400px;
@@ -735,7 +645,6 @@ watch(() => props.pedidoId, () => {
   transform: scale(1.02);
 }
 
-
 #oferta
 .text-strike {
   text-decoration: line-through;
@@ -746,8 +655,6 @@ watch(() => props.pedidoId, () => {
 .text-red {
   color: #c62828;
 }
-
-
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
