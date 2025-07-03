@@ -58,7 +58,7 @@
 
 </q-card>
 
-    <!-- Tabla de productos -->
+    <!-- Tabla de productos agregados -->
     <q-card flat bordered class="productos-table-card">
       <q-card-section class="q-pa-none">
         <q-table
@@ -91,7 +91,7 @@
               
               <q-td key="precio" :props="props">
                 <div class="precio-info">
-                  <div class="text-weight-medium">Q  {{ props.row.PRECIO_UNITARIO_VENTA.toFixed(4) }}</div>
+                  <div class="text-weight-medium">Q  {{ props.row.PRECIO_UNIDAD_VENTA}}</div>
                   <div class="text-caption text-grey-6" v-if="props.row.PRECIO_AFECTADO !== props.row.PRECIO_UNITARIO_VENTA">
                     Afectado: Q{{ props.row.PRECIO_AFECTADO.toFixed(2) }}
                   </div>
@@ -100,7 +100,7 @@
               
               <q-td key="subtotal" :props="props">
                 <div class="text-weight-bold text-primary">
-                  Q  {{ props.row.SUBTOTAL_VENTAS.toFixed(2) }}
+                  Q  {{ props.row.SUBTOTAL_VENTAS }}
                 </div>
               </q-td>
               
@@ -232,22 +232,26 @@ import { useProductos } from '@/modules/Productos/composables/useProductos'
 import { usePedidoDet } from '@/modules/pedidos_det/composables/usePedidosDet'
 import { showConfirmationDialog, showSuccessNotification } from '@/common/helper/notification'
 import { useCodigo } from '@/modules/codigo_barras/composables/useCodigo'
+import { usePedidoStore } from '@/stores/pedido'
+import { useSucursales } from '@/modules/Sucursales/composables/useSucursales'
+import usePedidosEnc from '../../pedidos_enc/composables/usePedidosEnc';
 
 const props = defineProps({
   pedidoId: {
-    type: String,
+    type: [String, Number],
     required: true
   }
 })
 
 const { mutateCrearPedidoDet, obtenerPedidosDetID, mutateActualizarPedidoDetId, mutateEliminarPedidoDetID} = usePedidoDet()
+const { obtenerPedidoPorId } = usePedidosEnc()
 const { todosProductos, refetchTodosProductos, obtenerProductosId } = useProductos()
 const { obtenerPorCodigo } = useCodigo()
-
+const { obtenerSucursal } = useSucursales()
 const $q = useQuasar()
-
-// Estados reactivos
 const detallesPedido = ref([])
+
+const productosAgregados = ref([])
 const codigoProducto = ref('')
 const cantidad = ref(1)
 const modalProductos = ref(false)
@@ -255,6 +259,8 @@ const filtroProductos = ref('')
 const loadingProductos = ref(false)
 const loadingDetalle = ref(false)
 const loadingAgregar = ref(false)
+const pedidoStore = usePedidoStore()
+
 
 // focus
 const inputCodigo = ref(null)
@@ -262,6 +268,9 @@ const inputCodigo = ref(null)
 const enfocarCodigo = () => {
   inputCodigo.value?.focus()
 }
+
+console.log(pedidoStore.ID_PEDIDO_ENC)
+console.log(pedidoStore.NUMERO_DE_PEDIDO)
 
 //filtro 
 const productosFil = computed(() => {
@@ -297,9 +306,7 @@ watch(modalProductos, async (val) => {
 const abrirCatalogo = () => {
   modalProductos.value = true
 
-
 }
-
 
 // Columnas de la tabla principal
 const columns = [
@@ -314,7 +321,7 @@ const columns = [
     name: 'producto',
     label: 'Producto',
     align: 'left',
-    field: 'PRODUCTO',
+    field: 'DESRCIPCION_PROD_AUX',
     sortable: true
   },
   {
@@ -328,14 +335,14 @@ const columns = [
     name: 'precio',
     label: 'Precio Unit.',
     align: 'right',
-    field: 'PRECIO_UNITARIO_VENTA',
+    field: 'PRECIO_UNIDAD_VENTA',
     sortable: true
   },
   {
     name: 'subtotal',
     label: 'Subtotal',
     align: 'right',
-    field: 'PRECIO_FINAL',
+    field: 'SUBTOTAL_VENTAS',
     sortable: true
   },
   {
@@ -344,6 +351,27 @@ const columns = [
     align: 'center'
   }
 ]
+
+// nuevo
+const cargarProductosAgregados = async () => {
+  try {
+    if (!pedidoStore.idPedidoEnc) return
+
+    loadingDetalle.value = true
+    const data = await obtenerPedidosDetID(pedidoStore.idPedidoEnc)
+    productosAgregados.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    productosAgregados.value = []
+    console.error('Error al cargar productos agregados', error)
+  } finally {
+    loadingDetalle.value = false
+  }
+}
+
+onMounted(() => {
+  cargarProductosAgregados()
+})
+
 
 // Columnas del catálogo
 const columnasCatalogo = [
@@ -398,7 +426,7 @@ const paginacionCatalogo = ref({
 
 // Computeds
   const totalPedido = computed(() => {
-  return detallesPedido.value.reduce((total, item) => total + item.PRECIO_FINAL, 0)
+  return detallesPedido.value.reduce((total, item) => total + item.SUBTOTAL_VENTAS, 0)
 })
 
 // Filtar productos
@@ -419,9 +447,6 @@ const limpiarFiltro = () => {
 const filtrarProductos = () => {
 }
 
-const buscarProductoPorCodigo = async () => {
-
-}
 
 const agregarProducto = () => {
   if (codigoProducto.value.trim()) {
@@ -429,41 +454,89 @@ const agregarProducto = () => {
   }
 }
 
+const buscarProductoPorCodigo = async () => {
+  try {
+    if (!codigoProducto.value.trim()) return
+
+    const producto = await obtenerPorCodigo(codigoProducto.value.trim())
+    if (!producto) {
+      $q.notify({ type: 'warning', message: 'Producto no encontrado' })
+      return
+    }
+
+    agregarProductoAlPedido(producto)
+  } catch (error) {
+    console.error('Error al buscar producto por código', error)
+    $q.notify({ type: 'negative', message: 'Error al buscar el producto' })
+  }
+}
+
+
 const agregarProductoAlPedido = async (producto) => {
   try {
-    // Validación mínima de producto y cantidad
     if (!producto || !producto.PRODUCT0 || cantidad.value <= 0) {
       console.error('Producto inválido o cantidad no válida')
       return
     }
 
+    loadingAgregar.value = true
+
     const detalle = {
-      ID_PEDIDO_ENC: props.pedidoId,
-      ID_PEDIDO_DET: `${props.pedidoId}-${Date.now()}`,
-      ID_SUCURSAL: '1',
-      NUMERO_DE_PEDIDO: parseInt(props.pedidoId),
+      ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
       PRODUCT0: producto.PRODUCT0,
-      CODIGO_UNIDAD_VENTA: producto.DESCRIPCION_MARCA,
       CANTIDAD_PEDIDA: cantidad.value,
-      PRECIO_UNITARIO_VENTA: producto.PRECIO_FINAL,
-      PRECIO_AFECTADO: producto.PRECIO_FINAL,
-      MONTO_DESCUENTO_PDET: 0,
-      MONTO_IVA: 0,
-      SUBTOTAL_VENTAS: cantidad.value * producto.COSTO_UNITARIO,
-      CORRELATIVO_INGRESO: detallesPedido.value.length + 1,
-      DESCRIPCION_PROD_AUX: producto.DESCRIPCION_PROD
+      PRECIO_UNIDAD_VENTA: producto.PRECIO_PROMOCION ?? producto.PRECIO_FINAL,
+      SUBTOTAL_VENTAS: cantidad.value * (producto.PRECIO_PROMOCION ?? producto.PRECIO_FINAL),
+      DESCRIPCION_PROD_AUX: producto.DESCRIPCION_PROD,
+      ID_SUCURSAL: '1',
+      NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido
     }
 
-    // Agregar detalle al arreglo reactivo de productos
-    detallesPedido.value.push(detalle)
+      console.log('Detalle a enviar:', detalle)
 
-    // Limpiar campos del formulario
-    codigoProducto.value = ''
-    cantidad.value = 1
+      mutateCrearPedidoDet(detalle, {
+      onSuccess: (data) => {
+
+        cargarDetallesPedido()
+        detallesPedido.value.push(data)
+        showSuccessNotification('Producto agregado', 'Se agregó correctamente al pedido')
+        codigoProducto.value = ''
+        cantidad.value = 1
+        enfocarCodigo()
+      },
+      onError: (error) => {
+        console.error('Error al guardar producto en BD:', error)
+        $q.notify({ type: 'negative', message: 'No se pudo guardar el producto en la base de datos' })
+      },
+      onSettled: () => {
+        loadingAgregar.value = false
+      }
+    })
   } catch (error) {
-    console.error('Error al agregar producto al pedido:', error)
+    console.error('Error al agregar producto:', error)
+    loadingAgregar.value = false
   }
 }
+
+
+const cargarDetallesPedido = async () => {
+  try {
+    loadingDetalle.value = true
+    const detalle = await obtenerPedidosDetID(pedidoId.value)
+    detallesPedido.value = Array.isArray(detalle) ? detalle : [detalle]
+  } catch (e) {
+    detallesPedido.value = []
+  } finally {
+    loadingDetalle.value = false
+  }
+}
+
+
+watch(() => props.pedidoId, () => {
+  cargarDetallesPedido()
+})
+
+
 const seleccionarProducto = (producto) => {
   agregarProductoAlPedido(producto)
   modalProductos.value = false

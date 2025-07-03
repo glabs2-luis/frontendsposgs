@@ -12,7 +12,7 @@ export const usePedidoDet = () => {
     const { mutate: mutateCrearPedidoDet } = useMutation({
         mutationFn: (PedidosDet: Partial<PedidosDet>) => crearPedidoDetAction(PedidosDet),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['pedidost-det'] })
+            queryClient.invalidateQueries({queryKey: ['pedidos-det'] })
         }
     })
 

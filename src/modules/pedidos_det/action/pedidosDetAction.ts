@@ -2,6 +2,7 @@ import posApi from "@/api/apiPos";
 import { getAxiosErrorMessage } from "@/common/helper/geterrordb";
 import { PedidosDet } from "../interfaces/pedidosDetInterface";
 
+// crear Pedido Det
 export const crearPedidoDetAction = async (detalle: PedidosDet): Promise<PedidosDet> => {
   try {
     const { data } = await posApi.post<PedidosDet>('/pedidos-det', detalle)
@@ -12,9 +13,10 @@ export const crearPedidoDetAction = async (detalle: PedidosDet): Promise<Pedidos
   }
 }
 
-export const obtenerPedidoDetIdAction = async (id: number): Promise<PedidosDet[]> => {
+// obtener pedido det por Id
+export const obtenerPedidoDetIdAction = async (id: number): Promise<PedidosDet> => {
     try {
-        const { data } = await posApi.get<PedidosDet[]>(`pedidos-det/${id}`)
+        const { data } = await posApi.get<PedidosDet>(`pedidos-det/${id}`)
         return data
     } catch(error){
         console.log('error', error)
@@ -23,6 +25,7 @@ export const obtenerPedidoDetIdAction = async (id: number): Promise<PedidosDet[]
     }
 }
 
+// eliminar pedido det por Id
 export const eliminarPedidoDetId = async (id: number) : Promise<PedidosDet[]> => {
     try {
         const { data } = await posApi.delete(`/pedidos-det/${id}`)
@@ -34,9 +37,10 @@ export const eliminarPedidoDetId = async (id: number) : Promise<PedidosDet[]> =>
     }
 }
 
-export const actualizarDescripcionPedidoDetAction = async (id: number, descripcion: string) : Promise<PedidosDet[]> => {
+// Actualizar la descripcion en pedido det
+export const actualizarDescripcionPedidoDetAction = async (id: number, descripcion: string) : Promise<PedidosDet> => {
     try {
-        const { data } = await posApi.patch<PedidosDet[]>(`/pedidos-det/${id}`,{ DESCRIPTION: descripcion })
+        const { data } = await posApi.patch<PedidosDet>(`/pedidos-det/${id}`,{ DESCRIPCION_PROD_AUX: descripcion })
         return data
     } catch (error){
         console.log(error, 'error')

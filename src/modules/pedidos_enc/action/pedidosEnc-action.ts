@@ -31,6 +31,7 @@ export const obtenerPedidoEncPorIdAction = async (id: number): Promise<PedidosEn
   try {
     const { data } = await posApi.get<PedidosEnc>(`/pedidos-enc/${id}`);
     return data;
+
   } catch (error) {
     const message = getAxiosErrorMessage(error, "Hubo un error al obtener el pedido");
     throw new Error(message);
@@ -47,3 +48,8 @@ export const eliminarPedidoEncAction = async (ID_PEDIDO_ENC: number): Promise<Pe
     throw new Error(message);
   }
 }
+
+
+  
+
+

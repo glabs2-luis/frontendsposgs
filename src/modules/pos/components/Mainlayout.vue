@@ -40,7 +40,7 @@
         <!-- botón hamburguesa menú -->
         <q-btn flat dense round icon="menu" @click="menuAbierto = !menuAbierto" class="q-mr-sm" />
         <q-toolbar-title>
-          POS GS - Sucursal Huehue
+          POS GS - {{obtenerSucursal?.NOMBRE_DE_SUCURSAL}}
         </q-toolbar-title>
         <div class="q-mr-md text-weight-medium">
         {{ nombreVendedor }}
@@ -51,10 +51,9 @@
 
       </q-toolbar>
 
-     
     </q-header>
 
-    <!-- Contenido de las páginas -->
+    <!-- Paginas -->
     <q-page-container>
       <router-view />
     </q-page-container>
@@ -63,17 +62,18 @@
 
 <script setup lang="ts">
 
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Swal from 'sweetalert2'
 import { useUserStore } from '@/stores/user'
+import { useSucursales} from '@/modules/Sucursales/composables/useSucursales';
+const { obtenerSucursal } = useSucursales()
 
 const { nombreVendedor, codigoVendedor } = useUserStore()
 
 
 const router = useRouter()
 const route = useRoute()
-
 const menuAbierto = ref(false)
 
 
@@ -95,7 +95,6 @@ const cerrarSesion = async () => {
       router.push('/login')
   }
 })
-
 
 }
 

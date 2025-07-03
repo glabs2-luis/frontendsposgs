@@ -40,8 +40,8 @@ export const usePedidosEnc = () => {
     });
 
     return { data, refetchObtenerPedidoID }
-  };
-
+  }
+  
   // Eliminar pedido por ID
   const { mutate: mutateEliminarPedido } = useMutation({
     mutationFn: eliminarPedidoEncAction,

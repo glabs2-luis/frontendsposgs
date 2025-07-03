@@ -85,6 +85,7 @@
                 <q-card-section class="row items-center q-pb-none">
                   <q-icon name="assignment" color="deep-orange-6" />
                   <span class="q-ml-md text-subtitle1">Pedidos Pendientes</span>
+
                 </q-card-section>
 
                 <q-card-section>
@@ -96,11 +97,13 @@
                       <tr>
                         <th class="text-left"># Pedido</th>
                         <th class="text-left">Cliente</th>
-                        <th class="text-left">Total</th>
+                        <th class="text-left">Nit</th>
+                        <th class="text-left">Direccion</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr v-for="pedido in pedidosPendientes" :key="pedido.NUMERO_DE_PEDIDO">
+                        <td>{{ pedido.ID_PEDIDO_ENC}}</td>
                         <td>{{ pedido.NOMBRE_A_FACTURAR }}</td>
                         <td>{{ pedido.NIT_A_FACTURAR }}</td>
                         <td>{{ pedido.DIRECCION_FACTURAR}}</td>
@@ -133,13 +136,22 @@
 
               <q-separator vertical class="q-mx-sm" />
 
+              <!-- Total -->
+              <div v-if="mostrarTotalReal" class="row items-center q-gutter-xs">
+                <q-icon name="paid" color="primary" size="sm" />
+                <div class="text-subtitle2 text-primary "style="font-size: 160%">
+                  Total: Q. {{ totalReal  }}
+                </div>
+              </div>
+
+
               <!-- Total de Venta -->
-              <div v-if="mostrarTotal" class="row items-center q-gutter-xs">
+              <div v-if="mostrarSubtotal" class="row items-center q-gutter-xs">
               <div class="row items-center q-gutter-xs total-card q-pa-xs">
                 <q-icon name="paid" size="sm" class="text-amber-9" />
                 <div>
                   <div v-if="mostrarTotal"  class="text-body1 text-amber-10 text-weight-bold">
-                    Total{{ total }}
+                    Total: Q. {{ total }}
                   </div>
                 </div>
               </div>
@@ -178,15 +190,23 @@ import usePedidosEnc from '@/modules/pedidos_enc/composables/usePedidosEnc';
 import { useUserStore } from '../../../stores/user';
 import { nextTick } from 'vue';
 import ProductosTab from '@/modules/pos/pages/productosTab.vue'
+import { usePedidoStore } from '@/stores/pedido';
+import { PedidosEnc } from '../../pedidos_enc/interfaces/pedidoEncInterface';
 
+
+const pedidoStore = usePedidoStore()
 const userStore = useUserStore();
 const abrirModalCliente = ref(false)
 const mostrarCardPedidoCreado = ref(false)
+const mostrarCardTotal = ref(false)
+
 const expansion = ref<any>(null)
 const { obtenerClientePorDocumento,refetchMostrarCF, mutateCrearCliente } = useClientes()
-const { mutateCrearPedidoEnc, obtenerPedidosPendientes } = usePedidosEnc()
+const { mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId } = usePedidosEnc()
 const total = ref(0)
 const numPedido = ref(0)
+const totalReal = ref(0)
+const numero = ref('')
 
 //mostrar total mayor a 0
 const mostrarTotal = computed(() => total.value > 0)
@@ -194,13 +214,12 @@ const productosTabRef = ref(null)
 const focus = ref(null)
 const modalPendientes = ref (false)
 
+
+// pendiente la sucursal *******
 const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
   1,
   userStore.codigoVendedor
 )
-
-
-
 
 
 // focus para pedido a DPI
@@ -209,6 +228,9 @@ onMounted(() => {
 })
 
 const mostrarNumPedido = computed(() => numPedido.value > 0)
+const mostrarTotalReal = computed(() => totalReal.value > 0)
+
+const mostrarSubtotal = computed(() => total.value > 0)
 
 const abrirModalPedidosPendientes = () => {
   modalPendientes.value = true
@@ -245,32 +267,38 @@ const crearPedido = () => {
     NOMBRE_A_FACTURAR: nombre,
     DIRECCION_FACTURAR: direccion,
     NIT_A_FACTURAR: nit,
-    SUBTOTAL_PEDIDO: 85,              // temporal
-    TOTAL_GENERAL_PEDIDO: 97,        // temporal
-    ID_SUCURSAL: 1,                // temporal
+    SUBTOTAL_PEDIDO: 0,            
+    TOTAL_GENERAL_PEDIDO: 0,       
+    ID_SUCURSAL: 1,                // Sera unica
     USUARIO_INGRESO_PEDI: (userStore.nombreVendedor).substring(0,10) , 
     CODIGO_VENDEDOR: userStore.codigoVendedor ,          
-    CODIGO_DE_CLIENTE: 1020      // temporal
+    CODIGO_DE_CLIENTE: 1020      // 
   }
 
   console.log('Pedido a guardar:', JSON.stringify(pedidoEnc, null, 2));
 
-
     mutateCrearPedidoEnc(pedidoEnc, {
     onSuccess: async (data) => {
 
-      total.value=data.TOTAL_GENERAL_PEDIDO
+
       numPedido.value=data.NUMERO_DE_PEDIDO
+      console.log('numPedido asignado:', numPedido.value)
+
+
+      totalReal.value = data.TOTAL_GENERAL_PEDIDO
+      console.log('totalReal asignado:', totalReal.value)
+
+
+      //store pedido
+       pedidoStore.setPedidoEncabezado(data.ID_PEDIDO_ENC, data.NUMERO_DE_PEDIDO)
 
       mostrarCardPedidoCreado.value = true;
+      mostrarCardTotal.value = true;
+
       showSuccessNotification('Pedido creado', 'Pedido registrado correctamente');
       
-        await nextTick() 
-                //focus a codigo 
-      console.log('contenido de productosTabRef:', productosTabRef.value)
+      await nextTick() 
       
-
-      console.log('Pedido a guardar:', JSON.stringify(pedidoEnc, null, 2));
 
     },
     onError: (error: any) => {
@@ -278,9 +306,10 @@ const crearPedido = () => {
     }
   })
   
+    //focus
     productosTabRef.value?.enfocarCodigo()
+   
 }
-
 
 
 // Funcion para Colocar CF
@@ -297,12 +326,9 @@ const colocarCF = async () => {
     })
 
     expansion.value?.toggle()
-
     crearPedido()
-
   }
 }
-
 
 const buscarClienteDPINIT = async () => {
     const doc = cliente.value.DOCUMENTO.trim()
@@ -313,7 +339,6 @@ const buscarClienteDPINIT = async () => {
     // Buscar cliente
     const clienteEncontrado = await obtenerClientePorDocumento(doc, tipo)
 
-
     if (clienteEncontrado) {
       Object.assign(cliente.value, {
         DOCUMENTO: clienteEncontrado.NIT || '',
@@ -321,12 +346,9 @@ const buscarClienteDPINIT = async () => {
         DIRECCION: clienteEncontrado.DIRECCION || '',
         TELEFONO: clienteEncontrado.TELEFONO || '',
         EMAIL: clienteEncontrado.CORREO_ELECTRONICO || '',
-        
       })
 
-    expansion.value?.toggle()
-
-      //crear pedido
+      expansion.value?.toggle()
       crearPedido()
 
     } else {
@@ -335,7 +357,6 @@ const buscarClienteDPINIT = async () => {
   }
 
 }
-
 
 const usarF2 = (e: KeyboardEvent) => {
   if (e.key === 'F2') {
@@ -348,7 +369,7 @@ const usarF2 = (e: KeyboardEvent) => {
 const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
   const payload: Partial<Cliente> = { ...nuevoCliente }
 
-  // Eliminar campos vacíos opcionales
+  // Campos adicionales
   if (!payload.CORREO_ELECTRONICO || payload.CORREO_ELECTRONICO.trim() === '') {
     delete payload.CORREO_ELECTRONICO
   }

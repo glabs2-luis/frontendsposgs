@@ -2,6 +2,7 @@ import posApi from "@/api/apiPos";
 import { getAxiosErrorMessage } from "@/common/helper/geterrordb";
 import { Sucursal } from "../interfaces/sucursalesInterface";
 
+// obtener todas las sucursales
 export const obtenerSucursalAction = async(): Promise<Sucursal[]> => {
     try {
         const { data } = await posApi.get<Sucursal[]>(`/sucursales/`);
@@ -13,9 +14,10 @@ export const obtenerSucursalAction = async(): Promise<Sucursal[]> => {
     }
 }
 
-export const obtenerSucursalIdAction = async (id: number): Promise<Sucursal[]> => {
+// obtener sucursal por Id
+export const obtenerSucursalIdAction = async (id: string): Promise<Sucursal> => {
     try {
-        const { data } = await posApi.get<Sucursal[]>(`/sucursales/${id}`)
+        const { data } = await posApi.get<Sucursal>(`/sucursales/${id}`)
         return data;
     } catch(error){
         const message = getAxiosErrorMessage(error, "Hubo un error obteniendo sucursal por ID")
@@ -23,7 +25,7 @@ export const obtenerSucursalIdAction = async (id: number): Promise<Sucursal[]> =
     }
 }
 
-
+// eliminar sucursal
 export const eliminarScucursalAction = async(): Promise<Sucursal[]> => {
     try {
         const { data } = await posApi.delete(`/sucursales/`)
