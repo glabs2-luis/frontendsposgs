@@ -280,7 +280,7 @@ const crearPedido = () => {
     mutateCrearPedidoEnc(pedidoEnc, {
     onSuccess: async (data) => {
 
-
+      console.log('prueba 1: ', data)
       numPedido.value=data.NUMERO_DE_PEDIDO
       console.log('numPedido asignado:', numPedido.value)
 

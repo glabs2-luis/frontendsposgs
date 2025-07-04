@@ -14,9 +14,9 @@ export const crearPedidoDetAction = async (detalle: PedidosDet): Promise<Pedidos
 }
 
 // obtener pedido det por Id
-export const obtenerPedidoDetIdAction = async (id: number): Promise<PedidosDet> => {
+export const obtenerPedidoDetIdAction = async (id: number): Promise<PedidosDet[]> => {
     try {
-        const { data } = await posApi.get<PedidosDet>(`pedidos-det/${id}`)
+        const { data } = await posApi.get<PedidosDet[]>(`pedidos-det/${id}`)
         return data
     } catch(error){
         console.log('error', error)
@@ -49,4 +49,18 @@ export const actualizarDescripcionPedidoDetAction = async (id: number, descripci
     }
 }
 
+// obtener lista de pedido det
+export const obtenerListaPedidosDet = async (idPedidoEnc:number) : Promise<PedidosDet[]> => {
+  try {
+    const { data } = await posApi.get<PedidosDet[]>(`/pedidos-det/pedidoEncDetalle/${idPedidoEnc}`)
+    console.log('Respuesta de pedidos-det:', data)
+    return data
+  } catch(error){
+     console.log(error, 'error')
+    const message = getAxiosErrorMessage(error, "hubo un error obteniendo la lista de pedidos det")
+    throw new Error(message)
+  }
+
+
+}
 

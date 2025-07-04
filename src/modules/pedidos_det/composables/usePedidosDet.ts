@@ -2,7 +2,7 @@ import { PedidosDet } from '../interfaces/pedidosDetInterface';
 import { useQuery } from "@tanstack/vue-query";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { showConfirmationDialog } from "@/common/helper/notification";
-import { crearPedidoDetAction, actualizarDescripcionPedidoDetAction, eliminarPedidoDetId, obtenerPedidoDetIdAction } from "../action/pedidosDetAction";
+import { crearPedidoDetAction, actualizarDescripcionPedidoDetAction, eliminarPedidoDetId, obtenerPedidoDetIdAction, obtenerListaPedidosDet } from "../action/pedidosDetAction";
 
 export const usePedidoDet = () => {
 
@@ -45,12 +45,22 @@ export const usePedidoDet = () => {
         }
     })
 
+    // obtener lista pedidos det
+        const ListaDet = (idPedidoEnc: number) => {
+        return useQuery({
+        queryKey: ['pedido-det', idPedidoEnc],
+        queryFn: () => obtenerListaPedidosDet(idPedidoEnc),
+        enabled: !!idPedidoEnc, 
+        refetchOnWindowFocus: false,
+    })
+    }
 
     return {
         mutateCrearPedidoDet,
         obtenerPedidosDetID,
         mutateActualizarPedidoDetId,
-        mutateEliminarPedidoDetID
+        mutateEliminarPedidoDetID,
+        ListaDet
     }
 
 }

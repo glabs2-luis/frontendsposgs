@@ -3,12 +3,11 @@ import {
   crearPedidoEncAction,
   obtenerPedidosPendientesAction,
   obtenerPedidoEncPorIdAction,
-  eliminarPedidoEncAction
+  eliminarPedidoEncAction, obtenerPedidoEncPorIdAction2
 } from '../action/pedidosEnc-action';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { showConfirmationDialog } from '@/common/helper/notification';
-import { Sucursal } from '../../Sucursales/interfaces/sucursalesInterface';
 
 export const usePedidosEnc = () => {
 
@@ -42,6 +41,20 @@ export const usePedidosEnc = () => {
     return { data, refetchObtenerPedidoID }
   }
   
+  const obtenerPedido2 = (id:number) => {
+  const {data: obtenerPedido2, refetch: refetchObtenerPedido2 } = useQuery ({
+    queryKey: ['pedido-enc', id],
+    queryFn: () => obtenerPedidoEncPorIdAction2(id)
+  })
+
+  return {
+    obtenerPedido2,
+    refetchObtenerPedido2
+  }
+
+  }
+
+
   // Eliminar pedido por ID
   const { mutate: mutateEliminarPedido } = useMutation({
     mutationFn: eliminarPedidoEncAction,
@@ -65,7 +78,8 @@ export const usePedidosEnc = () => {
     obtenerPedidosPendientes,
     mutateCrearPedidoEnc,
     obtenerPedidoPorId,
-    eliminarPedido
+    eliminarPedido,
+    obtenerPedido2
   };
 };
 
