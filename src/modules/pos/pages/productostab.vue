@@ -10,7 +10,7 @@
       <q-icon name="receipt_long" size="24px" color="black" />
       <div>
         <div class="text-subtitle2 text-weight-bold text-dark">
-          Detalle del Pedido #{{ pedidoId }}
+          Detalle del Pedido 
         </div>
         <div class="text-caption text-grey-8">
           Registra productos escaneando o ingresando manualmente
@@ -19,27 +19,22 @@
     </div>
 
     <!-- Terminar Venta-->
-    <q-btn label="Terminar Venta" icon="point_of_sale" @click="" class="boton-amarillo q-ml-auto" />
+    <q-btn label="Terminar Venta (F4)" icon="point_of_sale" @click="terminarVenta" class="boton-amarillo q-ml-auto" />
 
-    <!-- Total -->
-    <div class="col-auto">
-      <q-badge color="positive" text-color="white" class="q-pa-sm q-ml-md" style="min-width: 110px; border-radius: 8px;">
-        <div class="text-subtitle2">Q  {{ totalPedido.toFixed(2) }}</div>
-      </q-badge>
-    </div>
+
   </div>
 
   <!-- Segunda fila: inputs + botones -->
   <div class="row q-col-gutter-sm items-end">
 
     <!-- Código del producto -->
-    <q-input ref="inputCodigo" v-model="codigoProducto" label="Código del Producto" outlined dense @keyup.enter="buscarProductoPorCodigo" @input="onCodigoChange" class="col-12 col-md-5">
+    <q-input ref="inputCodigo" v-model="codigoProducto" label="Código del Producto" outlined dense @keyup.enter="buscarProductoEscaneado" class="col-12 col-md-5">
     
       <template #prepend>
         <q-icon name="view_headline" color="primary" />
       </template>
       <template #append>
-        <q-btn round dense flat icon="search" @click="buscarProductoPorCodigo" color="primary" />
+        <q-btn round dense flat icon="search"  color="primary" />
       </template>
     </q-input>
 
@@ -58,7 +53,7 @@
 
 </q-card>
 
-    <!-- Tabla de productos agregados -->
+    <!-- Tabla de productos agregados 
     <q-card flat bordered class="productos-table-card">
       <q-card-section class="q-pa-none">
         <q-table
@@ -112,6 +107,7 @@
                     <q-tooltip>Eliminar producto</q-tooltip>
                   </q-btn>
                 </div>
+
               </q-td>
             </q-tr>
           </template>
@@ -125,9 +121,13 @@
               </div>
             </div>
           </template>
+          
         </q-table>
       </q-card-section>
     </q-card>
+  -->
+
+
 
 <!-- Modal de catálogo de productos -->
 <q-dialog v-model="modalProductos" maximized>
@@ -226,15 +226,17 @@
 
 <script setup>
 
-import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import { ref, computed, onMounted, watch, watchEffect } from 'vue'
 import { useProductos } from '@/modules/Productos/composables/useProductos'
 import { usePedidoDet } from '@/modules/pedidos_det/composables/usePedidosDet'
-import { showConfirmationDialog, showSuccessNotification } from '@/common/helper/notification'
-import { useCodigo } from '@/modules/codigo_barras/composables/useCodigo'
+import { showConfirmationDialog, showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
 import { usePedidoStore } from '@/stores/pedido'
-import { useSucursales } from '@/modules/Sucursales/composables/useSucursales'
-import usePedidosEnc from '../../pedidos_enc/composables/usePedidosEnc';
+import usePedidosEnc from '../../pedidos_enc/composables/usePedidosEnc'
+import { useQuery } from "@tanstack/vue-query"
+import { obtenerListaPedidosDet } from '@/modules/pedidos_det/action/pedidosDetAction'
+import { useCodigo } from '@/modules/codigo_barras/composables/useCodigo'
+import { Notify } from 'quasar'
 
 const props = defineProps({
   pedidoId: {
@@ -243,34 +245,42 @@ const props = defineProps({
   }
 })
 
-const { mutateCrearPedidoDet, obtenerPedidosDetID, mutateActualizarPedidoDetId, mutateEliminarPedidoDetID} = usePedidoDet()
+const { mutateCrearPedidoDet, obtenerPedidosDetID, mutateActualizarPedidoDetId, mutateEliminarPedidoDetID, ListaDet1, ListaDet2, refetchListaDet2} = usePedidoDet()
 const { obtenerPedidoPorId } = usePedidosEnc()
 const { todosProductos, refetchTodosProductos, obtenerProductosId } = useProductos()
 const { obtenerPorCodigo } = useCodigo()
-const { obtenerSucursal } = useSucursales()
 const $q = useQuasar()
 const detallesPedido = ref([])
-
-const productosAgregados = ref([])
 const codigoProducto = ref('')
 const cantidad = ref(1)
 const modalProductos = ref(false)
 const filtroProductos = ref('')
 const loadingProductos = ref(false)
+const loadingPorCodigo = ref(false)
 const loadingDetalle = ref(false)
 const loadingAgregar = ref(false)
 const pedidoStore = usePedidoStore()
+const { consultarCodigo, consultarCodigoM } = useCodigo()
 
 
+
+const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
+
+const { data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedidoEnc)
+
+
+watch(idPedidoEnc, (nuevo) => {
+  if (nuevo && nuevo > 0) {
+    console.log('nuevo detalle')
+    refetchObtenerPedidoID()
+  }
+})
 // focus
 const inputCodigo = ref(null)
 
 const enfocarCodigo = () => {
   inputCodigo.value?.focus()
 }
-
-console.log(pedidoStore.ID_PEDIDO_ENC)
-console.log(pedidoStore.NUMERO_DE_PEDIDO)
 
 //filtro 
 const productosFil = computed(() => {
@@ -308,69 +318,10 @@ const abrirCatalogo = () => {
 
 }
 
-// Columnas de la tabla principal
-const columns = [
-  {
-    name: 'codigo',
-    label: 'Código',
-    align: 'left',
-    field: 'PRODUCT0',
-    sortable: true
-  },
-  {
-    name: 'producto',
-    label: 'Producto',
-    align: 'left',
-    field: 'DESRCIPCION_PROD_AUX',
-    sortable: true
-  },
-  {
-    name: 'cantidad',
-    label: 'Cantidad',
-    align: 'center',
-    field: 'CANTIDAD_PEDIDA',
-    sortable: true
-  },
-  {
-    name: 'precio',
-    label: 'Precio Unit.',
-    align: 'right',
-    field: 'PRECIO_UNIDAD_VENTA',
-    sortable: true
-  },
-  {
-    name: 'subtotal',
-    label: 'Subtotal',
-    align: 'right',
-    field: 'SUBTOTAL_VENTAS',
-    sortable: true
-  },
-  {
-    name: 'acciones',
-    label: 'Acciones',
-    align: 'center'
-  }
-]
-
-// nuevo
-const cargarProductosAgregados = async () => {
-  try {
-    if (!pedidoStore.idPedidoEnc) return
-
-    loadingDetalle.value = true
-    const data = await obtenerPedidosDetID(pedidoStore.idPedidoEnc)
-    productosAgregados.value = Array.isArray(data) ? data : []
-  } catch (error) {
-    productosAgregados.value = []
-    console.error('Error al cargar productos agregados', error)
-  } finally {
-    loadingDetalle.value = false
-  }
+const terminarVenta = () => {
+  modal
 }
 
-onMounted(() => {
-  cargarProductosAgregados()
-})
 
 
 // Columnas del catálogo
@@ -424,36 +375,80 @@ const paginacionCatalogo = ref({
   rowsPerPage: 100
 })
 
-// Computeds
-  const totalPedido = computed(() => {
-  return detallesPedido.value.reduce((total, item) => total + item.SUBTOTAL_VENTAS, 0)
+
+// mostrar total 
+const totalEncabezado = computed(() => {
+  return pedidoData.value?.TOTAL_PEDIDO ?? 0
 })
 
-// Filtar productos
-const productosFiltrados = computed(() => {
-  if (!filtroProductos.value) return todosProductos.value
-  const f = filtroProductos.value.toLowerCase()
-  return todosProductos.value.filter(p =>
-    p.PRODUCT0.toLowerCase().includes(f) ||
-    p.DESCRIPCION_MARCA.toLowerCase().includes(f) ||
-    (p.DESCRIPCION_PROD || '').toLowerCase().includes(f)
-  )
-})
+
+const totalPedido = () =>{
+  return pedidoStore.idPedidoEnc
+}
 
 const limpiarFiltro = () => {
   filtroProductos.value = ''
 }
 
-const filtrarProductos = () => {
-}
-
-
+// agregar productos - manualmente - codigo
 const agregarProducto = () => {
   if (codigoProducto.value.trim()) {
     buscarProductoPorCodigo()
   }
 }
 
+
+// buscar por codigo escaneado 
+const buscarProductoEscaneado = async () => {
+  if (!codigoProducto.value) return
+
+  if (!pedidoStore.idPedidoEnc) {
+    showErrorNotification('Error','Primero debe de crear un pedido')
+    return
+  }
+
+  loadingPorCodigo.value = true
+  const resultado = await consultarCodigoM(codigoProducto.value, 1) 
+
+  if (!resultado || !resultado.producto || !resultado.precio) {
+    showErrorNotification('Producto no encontrado', `El codigo ${codigoProducto.value} no existe`)
+    codigoProducto.value = ''
+    loadingPorCodigo.value = false
+    return
+  }
+
+  const detalle = {
+    ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
+    PRODUCT0: resultado.producto.PRODUCT0,
+    CANTIDAD_PEDIDA: 1,
+    PRECIO_UNIDAD_VENTA: resultado.precio.PRECIO_FINAL,
+    SUBTOTAL_VENTAS: 1 * resultado.precio.PRECIO_FINAL,
+    DESCRIPCION_PROD_AUX: resultado.producto.DESCRIPCION_PROD,
+    ID_SUCURSAL: '1',
+    NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido
+  }
+
+  mutateCrearPedidoDet(detalle, {
+    onSuccess: (data) => {
+      detallesPedido.value.push(data)
+      showSuccessNotification('Producto agregado', `Agregado: ${codigoProducto.value}`)
+      codigoProducto.value = ''
+    },
+    onError: (err) => {
+      console.error('Error al guardar producto:', err)
+      $q.notify({ type: 'negative', message: 'Error al guardar producto' })
+    },
+    onSettled: () => {
+      loadingPorCodigo.value = false
+    }
+  })
+}
+
+
+
+
+
+// escanear o ingresar codigo 
 const buscarProductoPorCodigo = async () => {
   try {
     if (!codigoProducto.value.trim()) return
@@ -467,11 +462,13 @@ const buscarProductoPorCodigo = async () => {
     agregarProductoAlPedido(producto)
   } catch (error) {
     console.error('Error al buscar producto por código', error)
-    $q.notify({ type: 'negative', message: 'Error al buscar el producto' })
+    showErrorNotification('Producto', 'El producto no existe')
   }
 }
 
 
+
+// crea pedido det desde catalogo
 const agregarProductoAlPedido = async (producto) => {
   try {
     if (!producto || !producto.PRODUCT0 || cantidad.value <= 0) {
@@ -479,6 +476,7 @@ const agregarProductoAlPedido = async (producto) => {
       return
     }
 
+    // mostrar en pantalla cargando
     loadingAgregar.value = true
 
     const detalle = {
@@ -495,14 +493,16 @@ const agregarProductoAlPedido = async (producto) => {
       console.log('Detalle a enviar:', detalle)
 
       mutateCrearPedidoDet(detalle, {
-      onSuccess: (data) => {
+      onSuccess: async (data) => {
 
-        cargarDetallesPedido()
+        //agrega el producto
         detallesPedido.value.push(data)
         showSuccessNotification('Producto agregado', 'Se agregó correctamente al pedido')
         codigoProducto.value = ''
         cantidad.value = 1
+
         enfocarCodigo()
+
       },
       onError: (error) => {
         console.error('Error al guardar producto en BD:', error)
@@ -518,73 +518,25 @@ const agregarProductoAlPedido = async (producto) => {
   }
 }
 
-
-const cargarDetallesPedido = async () => {
-  try {
-    loadingDetalle.value = true
-    const detalle = await obtenerPedidosDetID(pedidoId.value)
-    detallesPedido.value = Array.isArray(detalle) ? detalle : [detalle]
-  } catch (e) {
-    detallesPedido.value = []
-  } finally {
-    loadingDetalle.value = false
-  }
-}
-
-
-watch(() => props.pedidoId, () => {
-  cargarDetallesPedido()
-})
-
-
+// agregar producto al seleccionarlo
 const seleccionarProducto = (producto) => {
   agregarProductoAlPedido(producto)
   modalProductos.value = false
 }
 
-
-// no creo que sirva
-const actualizarCantidad = async (detalle) => {
-  try {
-    detalle.SUBTOTAL_VENTAS = detalle.CANTIDAD_PEDIDA * detalle.PRECIO_UNITARIO_VENTA
-    
-    // await mutateActualizarPedidoDetId(detalle)
-    $q.notify({
-      type: 'positive',
-      message: 'Cantidad actualizada'
-    })
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Error al actualizar la cantidad'
-    })
+// mantener focus - nto working so far
+watch(modalProductos, (val) => {
+  if(!val){
+    enfocarCodigo()
   }
-}
 
-//eliminar producto
-const eliminarProducto = async (detalle) => {
-  const confirmado = await showConfirmationDialog('Eliminar producto', '¿Desea eliminar este producto?')
-  if (!confirmado) return
-
-  const index = detallesPedido.value.findIndex(d => d.ID_PEDIDO_DET === detalle.ID_PEDIDO_DET)
-  if (index !== -1) {
-    detallesPedido.value.splice(index, 1);
-    showSuccessNotification('Producto eliminado', 'El producto se ha eliminado correctamente')
-  } else {
-    showErrorNotification('Error', 'Producto no encontrado en la lista')
-  }
-}
-
-// Watch para pedido
-watch(() => props.pedidoId, () => {
-  cargarDetallesPedido()
 })
+
 
 defineExpose({
   enfocarCodigo,
   totalPedido
 })
-
 
 </script>
 

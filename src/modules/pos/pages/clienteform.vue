@@ -103,7 +103,7 @@
                     </thead>
                     <tbody>
                       <tr v-for="pedido in pedidosPendientes" :key="pedido.NUMERO_DE_PEDIDO">
-                        <td>{{ pedido.ID_PEDIDO_ENC}}</td>
+                        <td>{{ pedido.NUMERO_DE_PEDIDO}}</td>
                         <td>{{ pedido.NOMBRE_A_FACTURAR }}</td>
                         <td>{{ pedido.NIT_A_FACTURAR }}</td>
                         <td>{{ pedido.DIRECCION_FACTURAR}}</td>
@@ -129,35 +129,25 @@
               <!-- Número de Pedido -->
               <div v-if="mostrarNumPedido" class="row items-center q-gutter-xs">
                 <q-icon name="receipt_long" color="primary" size="sm" />
-                <div class="text-subtitle2 text-primary "style="font-size: 160%">
+                <div class="text-subtitle2 text-primary " style="font-size: 160%">
                   Pedido #{{ numPedido  }}
                 </div>
               </div>
 
               <q-separator vertical class="q-mx-sm" />
 
-              <!-- Total -->
-              <div v-if="mostrarTotalReal" class="row items-center q-gutter-xs">
-                <q-icon name="paid" color="primary" size="sm" />
-                <div class="text-subtitle2 text-primary "style="font-size: 160%">
-                  Total: Q. {{ totalReal  }}
-                </div>
-              </div>
-
-
               <!-- Total de Venta -->
-              <div v-if="mostrarSubtotal" class="row items-center q-gutter-xs">
               <div class="row items-center q-gutter-xs total-card q-pa-xs">
                 <q-icon name="paid" size="sm" class="text-amber-9" />
-                <div>
-                  <div v-if="mostrarTotal"  class="text-body1 text-amber-10 text-weight-bold">
-                    Total: Q. {{ total }}
-                  </div>
+
+                  <div class="text-body1 text-amber-10 text-weight-bold " style="font-size: 160%" >
+                    Total: Q. {{ totalStore.totalGeneral.toFixed(2) }}
+                      <q-spinner v-if="isLoading" color="primary" size="40px" />
+
                 </div>
               </div>
               </div>
 
-                </div>
               </q-card>
 
             </div>
@@ -172,55 +162,73 @@
           </div>
       </div>
 
+      
+
+
    </div>
 
+   
+
    <ProductosTab ref="productosTabRef" />
+   <TablaProductos ref="tablaProductosRef"/>
 </template>
 
 
 <script setup lang="ts">
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watchEffect, watch } from 'vue'
 import { QExpansionItem } from 'quasar'
-import useClientes from '../../clientes/composables/use.clientes';
-import { showErrorNotification, showSuccessNotification } from '@/common/helper/notification';
-import ModalEditarCliente from '@/modals/modalEditarCliente.vue';
+import useClientes from '../../clientes/composables/use.clientes'
+import { showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
+import ModalEditarCliente from '@/modals/modalEditarCliente.vue'
 import type { Cliente } from '@/modules/clientes/interfaces/clientesInterface'
-import usePedidosEnc from '@/modules/pedidos_enc/composables/usePedidosEnc';
-import { useUserStore } from '../../../stores/user';
-import { nextTick } from 'vue';
+import usePedidosEnc from '@/modules/pedidos_enc/composables/usePedidosEnc'
+import { useUserStore } from '../../../stores/user'
+import { nextTick } from 'vue'
 import ProductosTab from '@/modules/pos/pages/productosTab.vue'
-import { usePedidoStore } from '@/stores/pedido';
-import { PedidosEnc } from '../../pedidos_enc/interfaces/pedidoEncInterface';
+import { usePedidoStore } from '@/stores/pedido'
+import { PedidosEnc } from '../../pedidos_enc/interfaces/pedidoEncInterface'
+import TablaProductos from './tablaProductos.vue'
+import { useTotalStore } from '@/stores/total'
 
-
+const totalStore = useTotalStore()
+const tablaProductosRef = ref()
 const pedidoStore = usePedidoStore()
-const userStore = useUserStore();
+const userStore = useUserStore()
 const abrirModalCliente = ref(false)
 const mostrarCardPedidoCreado = ref(false)
 const mostrarCardTotal = ref(false)
-
 const expansion = ref<any>(null)
 const { obtenerClientePorDocumento,refetchMostrarCF, mutateCrearCliente } = useClientes()
 const { mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId } = usePedidosEnc()
-const total = ref(0)
-const numPedido = ref(0)
-const totalReal = ref(0)
-const numero = ref('')
 
-//mostrar total mayor a 0
-const mostrarTotal = computed(() => total.value > 0)
+const total = ref(0)
+let numPedido = ref(0)
+let totalReal = ref(0)
+
+const mostrarModalFacturacion = ref (false)
 const productosTabRef = ref(null)
 const focus = ref(null)
 const modalPendientes = ref (false)
 
+const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
+const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc)
 
-// pendiente la sucursal *******
+watchEffect(() => {
+  console.log('pedidoEnc recibido:', pedidoEnc.value)
+})
+
+watchEffect(() => {
+  console.log('ID desde store:', idPedidoEnc.value)
+})
+
+
+
+// sucursal siempre: 1
 const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
   1,
   userStore.codigoVendedor
 )
-
 
 // focus para pedido a DPI
 onMounted(() => {
@@ -291,6 +299,9 @@ const crearPedido = () => {
 
       //store pedido
        pedidoStore.setPedidoEncabezado(data.ID_PEDIDO_ENC, data.NUMERO_DE_PEDIDO)
+      console.log('ID_PEDIDO_ENC guardado en store:', pedidoStore.idPedidoEnc)
+
+
 
       mostrarCardPedidoCreado.value = true;
       mostrarCardTotal.value = true;
@@ -400,6 +411,7 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
     }
   })
 }
+
 
 
 </script>

@@ -1,5 +1,6 @@
-import { PedidosDet } from '../interfaces/pedidosDetInterface';
-import { useQuery } from "@tanstack/vue-query";
+import { PedidosDet } from '../interfaces/pedidosDetInterface'
+import { computed, ref, Ref } from 'vue'
+import { useQuery } from "@tanstack/vue-query"
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { showConfirmationDialog } from "@/common/helper/notification";
 import { crearPedidoDetAction, actualizarDescripcionPedidoDetAction, eliminarPedidoDetId, obtenerPedidoDetIdAction, obtenerListaPedidosDet } from "../action/pedidosDetAction";
@@ -46,21 +47,36 @@ export const usePedidoDet = () => {
     })
 
     // obtener lista pedidos det
-        const ListaDet = (idPedidoEnc: number) => {
-        return useQuery({
-        queryKey: ['pedido-det', idPedidoEnc],
-        queryFn: () => obtenerListaPedidosDet(idPedidoEnc),
-        enabled: !!idPedidoEnc, 
-        refetchOnWindowFocus: false,
-    })
-    }
+    const ListaDet1 = (idPedidoEnc: Ref<number | null>) => {
+     return useQuery({
+    queryKey: computed(() => ['pedido-det', idPedidoEnc.value]),
+    queryFn: () => obtenerListaPedidosDet(idPedidoEnc.value),
+    enabled: computed(() => !!idPedidoEnc.value && idPedidoEnc.value > 0),
+    refetchInterval: 1000,
+    refetchOnWindowFocus: false,
+
+  })
+}
+
+    
+    const useListaProductosPedidoDet = (idPedidoEnc: number) => {
+    return useQuery({
+    queryKey: ['pedidoDet', idPedidoEnc],
+    queryFn: () => obtenerListaPedidosDet(idPedidoEnc),
+    enabled: !!idPedidoEnc,
+    refetchOnWindowFocus: false,
+  })
+}
 
     return {
         mutateCrearPedidoDet,
         obtenerPedidosDetID,
         mutateActualizarPedidoDetId,
         mutateEliminarPedidoDetID,
-        ListaDet
+        ListaDet1,
+        useListaProductosPedidoDet
+        // ListaDet2,
+        // refetchListaDet2
     }
 
 }

@@ -8,6 +8,7 @@ import {
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { showConfirmationDialog } from '@/common/helper/notification';
+import{ Ref } from 'vue'
 
 export const usePedidosEnc = () => {
 
@@ -31,16 +32,24 @@ export const usePedidosEnc = () => {
   });
 
   // Obtener pedido por ID
-  const obtenerPedidoPorId = (id: number) => {
+  const obtenerPedidoPorId = (id: Ref<number | null>) => {
     const { data, refetch: refetchObtenerPedidoID } =  useQuery({
-      queryKey: ['pedido', id],
-      queryFn: () => obtenerPedidoEncPorIdAction(id),
-      enabled: !!id
+      queryKey: ['pedido', id.value],
+      queryFn: () => obtenerPedidoEncPorIdAction(id.value),
+      enabled: !!id.value,
+      refetchInterval: 2000,
+      refetchOnWindowFocus: false
     });
 
     return { data, refetchObtenerPedidoID }
   }
-  
+
+
+  // NUEVO:
+  const refetchPedidoPorId = async (id: number) => {
+  await queryClient.invalidateQueries({ queryKey: ['pedido-enc-id', id] })
+}
+
   const obtenerPedido2 = (id:number) => {
   const {data: obtenerPedido2, refetch: refetchObtenerPedido2 } = useQuery ({
     queryKey: ['pedido-enc', id],
@@ -60,7 +69,7 @@ export const usePedidosEnc = () => {
     mutationFn: eliminarPedidoEncAction,
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: ['pedidos-pendientes'] });
-      queryClient.invalidateQueries({ queryKey: ['pedido', id] });
+      queryClient.invalidateQueries({ queryKey: ['pedido-eliminar', id] });
     }
   });
 
@@ -79,7 +88,8 @@ export const usePedidosEnc = () => {
     mutateCrearPedidoEnc,
     obtenerPedidoPorId,
     eliminarPedido,
-    obtenerPedido2
+    obtenerPedido2,
+    refetchPedidoPorId
   };
 };
 

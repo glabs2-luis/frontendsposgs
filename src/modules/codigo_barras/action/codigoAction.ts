@@ -5,10 +5,10 @@ import { Codigo } from "../interfaces/codigoInterface";
 export const obtenerCodigoBarrasAction = async (codigo: string, cantidad: number): Promise<Codigo> => {
   try {
     const { data } = await posApi.get<Codigo>(`/codigo-barra/${codigo}/${cantidad}`);
-    return data;
+    return data
   } catch (error) {
     console.error('Error', error);
-    const message = getAxiosErrorMessage(error, 'Hubo un error consultando el código de barras');
+    const message = getAxiosErrorMessage('error', 'El Producto no existe');
     throw new Error(message);
   }
 }

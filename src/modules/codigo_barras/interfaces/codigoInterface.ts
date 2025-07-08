@@ -13,4 +13,5 @@ export interface ProductoCodigo {
     PRODUCT0?:              string;
     CODIGO_BARRA?:          string;
     FECHA_SYNC?:            string | null;
+    DESCRIPCION_PROD?:      string;
 }
