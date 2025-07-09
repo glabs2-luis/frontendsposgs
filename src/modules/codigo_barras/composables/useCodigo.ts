@@ -24,7 +24,7 @@ export const useCodigo = () => {
       return data
     } catch (error) {
       console.error('Error consultando código de barras', error)
-      return null;
+
     }
   }
 

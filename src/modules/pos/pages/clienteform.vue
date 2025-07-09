@@ -203,8 +203,8 @@ const { obtenerClientePorDocumento,refetchMostrarCF, mutateCrearCliente } = useC
 const { mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId } = usePedidosEnc()
 
 const total = ref(0)
-let numPedido = ref(0)
-let totalReal = ref(0)
+const numPedido = ref(0)
+const totalReal = ref(0)
 
 const mostrarModalFacturacion = ref (false)
 const productosTabRef = ref(null)
@@ -213,6 +213,31 @@ const modalPendientes = ref (false)
 
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc)
+
+
+
+watchEffect(() => {
+  if (pedidoEnc.value) {
+    numPedido.value = pedidoEnc.value.NUMERO_DE_PEDIDO || 0
+    totalReal.value = pedidoEnc.value.TOTAL_GENERAL_PEDIDO || 0
+    console.log('Pedido actualizado desde query:', {
+      numero: numPedido.value,
+      total: totalReal.value
+    })
+  }
+})
+
+
+watch(idPedidoEnc, (nuevoId) => {
+  if (nuevoId && nuevoId > 0) {
+   console.log('Pedido actualizado desde query:', {
+     total: totalReal.value
+    })
+
+   }
+  
+})
+
 
 watchEffect(() => {
   console.log('pedidoEnc recibido:', pedidoEnc.value)
@@ -288,14 +313,10 @@ const crearPedido = () => {
     mutateCrearPedidoEnc(pedidoEnc, {
     onSuccess: async (data) => {
 
-      console.log('prueba 1: ', data)
-      numPedido.value=data.NUMERO_DE_PEDIDO
-      console.log('numPedido asignado:', numPedido.value)
-
-
+    // Actualizar variables reactivas
+      numPedido.value = data.NUMERO_DE_PEDIDO
       totalReal.value = data.TOTAL_GENERAL_PEDIDO
-      console.log('totalReal asignado:', totalReal.value)
-
+      totalStore.setTotal(data.TOTAL_GENERAL_PEDIDO)
 
       //store pedido
        pedidoStore.setPedidoEncabezado(data.ID_PEDIDO_ENC, data.NUMERO_DE_PEDIDO)
@@ -309,7 +330,7 @@ const crearPedido = () => {
       showSuccessNotification('Pedido creado', 'Pedido registrado correctamente');
       
       await nextTick() 
-      
+       productosTabRef.value?.enfocarCodigo()
 
     },
     onError: (error: any) => {

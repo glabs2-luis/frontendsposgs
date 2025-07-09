@@ -237,6 +237,7 @@ import { useQuery } from "@tanstack/vue-query"
 import { obtenerListaPedidosDet } from '@/modules/pedidos_det/action/pedidosDetAction'
 import { useCodigo } from '@/modules/codigo_barras/composables/useCodigo'
 import { Notify } from 'quasar'
+import { useTotalStore } from '@/stores/total'
 
 const props = defineProps({
   pedidoId: {
@@ -261,7 +262,7 @@ const loadingDetalle = ref(false)
 const loadingAgregar = ref(false)
 const pedidoStore = usePedidoStore()
 const { consultarCodigo, consultarCodigoM } = useCodigo()
-
+const totalStore = useTotalStore()
 
 
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
@@ -321,6 +322,8 @@ const abrirCatalogo = () => {
 const terminarVenta = () => {
   modal
 }
+
+
 
 
 
@@ -428,11 +431,19 @@ const buscarProductoEscaneado = async () => {
     NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido
   }
 
-  mutateCrearPedidoDet(detalle, {
-    onSuccess: (data) => {
+ 
+      mutateCrearPedidoDet(detalle, {
+      onSuccess: async (data) => {
+
       detallesPedido.value.push(data)
       showSuccessNotification('Producto agregado', `Agregado: ${codigoProducto.value}`)
-      codigoProducto.value = ''
+      codigoProducto.value = '',
+      
+      await refetchObtenerPedidoID() 
+        totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0)
+        console.log(totalStore.TOTAL_GENERAL_PEDIDO)
+
+
     },
     onError: (err) => {
       console.error('Error al guardar producto:', err)
@@ -501,6 +512,9 @@ const agregarProductoAlPedido = async (producto) => {
         codigoProducto.value = ''
         cantidad.value = 1
 
+        await refetchObtenerPedidoID() 
+        totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0)
+        console.log(totalStore.TOTAL_GENERAL_PEDIDO)
         enfocarCodigo()
 
       },

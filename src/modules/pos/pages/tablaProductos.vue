@@ -2,7 +2,7 @@
 
     <q-card flat bordered class="productos-table-card">
     <q-card-section class="row items-center justify-between">
-      <div class="text-h6">Detalle del Pedido #{{ totalGeneral }}</div>
+      <div class="text-h6">Detalle del Pedido #{{ pedidoStore.numeroDePedido }}</div>
       <q-btn icon="refresh" flat dense round @click="refetch()" />
     </q-card-section>
 
@@ -73,8 +73,9 @@ const numero = pedidoStore.idPedidoEnc
 const { ListaDet1, useListaProductosPedidoDet, mutateEliminarPedidoDetID } = usePedidoDet()
 const { data, isLoading, refetch } = ListaDet1(idPedidoEnc)
 
-const { obtenerPedidoPorId, obtenerPedido2 } = usePedidosEnc()
+const { obtenerPedidoPorId, obtenerPedido2, refetchPedidoPorId } = usePedidosEnc()
 
+const { data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedidoEnc)
 // refetch
 const { data: listaProductosPedido, refetch: refetchListaProductosPedidoDet } = useListaProductosPedidoDet(idPedidoEnc.value)
 
@@ -86,13 +87,16 @@ const idTotal = computed(() => pedidoStore.idPedidoEnc)
 
 const { data: dataPedido } = obtenerPedidoPorId(idTotal)
 
-const totalGeneral = computed(()=> dataPedido.value?.TOTAL_GENERAL_PEDIDO ?? 0)
+const totalGeneral = computed(() => {
+  if (!dataPedido.value) return 0
+  return Number(dataPedido.value.TOTAL_GENERAL_PEDIDO) || 0
+})
 
-watch (totalGeneral, (nuevoTotal) => {
-    totalStore.setTotal(nuevoTotal) 
-    console.log('nuevo Total:', nuevoTotal)
-}, {deep:true} )
-// totalGeneral calcula el total
+// Watch para actualizar el store 
+watch(totalGeneral, (nuevoTotal) => {
+  totalStore.setTotal(nuevoTotal)
+  console.log('Total actualizado:', nuevoTotal)
+}, { immediate: true })
 
 
 
@@ -112,6 +116,7 @@ const detallesPedido = ref([])
 watch(idPedidoEnc, (nuevo) => {
   if (nuevo && nuevo > 0) {
     refetch()
+    // refetchPedido no necesita parámetros porque ya está vinculado al computed idPedidoEnc
   }
 })
 
@@ -137,8 +142,13 @@ const eliminarProducto = async (detalle) => {
 
 
     await refetch()
-    // cargand
     await nextTick()
+
+    const result = await refetchObtenerPedidoID()
+    const nuevoTotal = result?.data?.TOTAL_GENERAL_PEDIDO || 0
+    totalStore.setTotal(nuevoTotal)
+    console.log('Nuevo total actualizado desde backend:', nuevoTotal)
+
 
 
   } catch (error) {
