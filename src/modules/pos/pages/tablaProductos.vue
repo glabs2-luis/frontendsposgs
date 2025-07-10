@@ -51,6 +51,7 @@
       </q-table>
 
     </q-card-section>
+    
   </q-card>
 </template>
 

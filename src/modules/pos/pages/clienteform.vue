@@ -1,9 +1,10 @@
 <template>
+  
   <div class="row">
-    <div class="col-12 col-md-8 col-lg-7">
+    <div class="col-12">
       
       <!-- informacion mas pedido y cantidad-->
-      <div class="row items-start">
+      <div class="row items-start no-wrap q-gutter-sm">
 
         <!-- ExpansionItem -->
         <div class="col">
@@ -434,8 +435,8 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 }
 
 
-
 </script>
+
 
 <style scoped>
 

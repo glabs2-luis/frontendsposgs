@@ -1,6 +1,6 @@
 import posApi from "@/api/apiPos";
-import { getAxiosErrorMessage } from "@/common/helper/geterrordb";
-import { PedidosEnc } from "../interfaces/pedidoEncInterface";
+import { getAxiosErrorMessage } from "@/common/helper/geterrordb"
+import { PedidosEnc } from "../interfaces/pedidoEncInterface"
 
 //  Crear pedido
 export const crearPedidoEncAction = async (pedido: Partial<PedidosEnc>): Promise<PedidosEnc> => {

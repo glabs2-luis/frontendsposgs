@@ -1,18 +1,18 @@
-import { PedidosEnc } from '../interfaces/pedidoEncInterface';
+import { PedidosEnc } from '../interfaces/pedidoEncInterface'
 import {
   crearPedidoEncAction,
   obtenerPedidosPendientesAction,
   obtenerPedidoEncPorIdAction,
   eliminarPedidoEncAction, obtenerPedidoEncPorIdAction2
-} from '../action/pedidosEnc-action';
+} from '../action/pedidosEncAction'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
-import { showConfirmationDialog } from '@/common/helper/notification';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+import { showConfirmationDialog } from '@/common/helper/notification'
 import{ Ref } from 'vue'
 
 export const usePedidosEnc = () => {
 
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   // Pedidos pendientes
   const obtenerPedidosPendientes = (id_sucursal: number, codigo_vendedor: number) => {
@@ -20,16 +20,16 @@ export const usePedidosEnc = () => {
       queryKey: ['pedidos-pendientes', id_sucursal, codigo_vendedor],
       queryFn: () => obtenerPedidosPendientesAction(id_sucursal, codigo_vendedor),
       enabled: !!id_sucursal && !!codigo_vendedor 
-    });
-  };
+    })
+  }
 
   // Crear pedido
   const { mutate: mutateCrearPedidoEnc } = useMutation({
     mutationFn: (pedido: Partial<PedidosEnc>) => crearPedidoEncAction(pedido),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pedidos-pendientes'] });
+      queryClient.invalidateQueries({ queryKey: ['pedidos-pendientes'] })
     }
-  });
+  })
 
   // Obtener pedido por ID
   const obtenerPedidoPorId = (id: Ref<number | null>) => {
@@ -39,7 +39,7 @@ export const usePedidosEnc = () => {
       enabled: !!id.value,
       refetchInterval: 2000,
       refetchOnWindowFocus: false
-    });
+    })
 
     return { data, refetchObtenerPedidoID }
   }
@@ -63,25 +63,24 @@ export const usePedidosEnc = () => {
 
   }
 
-
   // Eliminar pedido por ID
   const { mutate: mutateEliminarPedido } = useMutation({
     mutationFn: eliminarPedidoEncAction,
     onSuccess: (_data, id) => {
-      queryClient.invalidateQueries({ queryKey: ['pedidos-pendientes'] });
-      queryClient.invalidateQueries({ queryKey: ['pedido-eliminar', id] });
+      queryClient.invalidateQueries({ queryKey: ['pedidos-pendientes'] })
+      queryClient.invalidateQueries({ queryKey: ['pedido-eliminar', id] })
     }
-  });
+  })
 
   const eliminarPedido = async (ID_PEDIDO_ENC: number) => {
     const confirmar = await showConfirmationDialog(
       'Eliminar pedido',
       '¿Estás seguro de que deseas eliminar este pedido?'
-    );
+    )
     if (confirmar) {
-      mutateEliminarPedido(ID_PEDIDO_ENC);
+      mutateEliminarPedido(ID_PEDIDO_ENC)
     }
-  };
+  }
 
   return {
     obtenerPedidosPendientes,
@@ -90,7 +89,7 @@ export const usePedidosEnc = () => {
     eliminarPedido,
     obtenerPedido2,
     refetchPedidoPorId
-  };
-};
+  }
+}
 
-export default usePedidosEnc;
+export default usePedidosEnc

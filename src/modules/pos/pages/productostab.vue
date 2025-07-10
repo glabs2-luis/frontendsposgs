@@ -53,82 +53,6 @@
 
 </q-card>
 
-    <!-- Tabla de productos agregados 
-    <q-card flat bordered class="productos-table-card">
-      <q-card-section class="q-pa-none">
-        <q-table
-          :rows="detallesPedido"
-          :columns="columns"
-          row-key="ID_PEDIDO_DET"
-          flat
-          :loading="loadingDetalle"
-          :pagination="{ rowsPerPage: 50 }"
-          class="productos-table" >
-        
-          <template v-slot:body="props">
-            <q-tr :props="props" class="producto-row">
-              <q-td key="codigo" :props="props">
-                <div class="text-weight-medium"> {{ props.row.PRODUCT0 }}</div>
-              </q-td>
-              
-              <q-td key="producto" :props="props">
-                <div class="producto-info">
-                  <div class="text-caption text-grey-9 text-weight bold" v-if="props.row. DESCRIPCION_PROD_AUX">
-                    {{ props.row.DESCRIPCION_PROD_AUX }}
-                  </div>
-                </div>
-              </q-td>
-              
-              <q-td key="cantidad" :props="props">
-                <q-input v-model.number="props.row.CANTIDAD_PEDIDA" type="number" dense outlined min="1" @change="actualizarCantidad(props.row)" class="cantidad-edit" style="width: 80px"
-                />
-              </q-td>
-              
-              <q-td key="precio" :props="props">
-                <div class="precio-info">
-                  <div class="text-weight-medium">Q  {{ props.row.PRECIO_UNIDAD_VENTA}}</div>
-                  <div class="text-caption text-grey-6" v-if="props.row.PRECIO_AFECTADO !== props.row.PRECIO_UNITARIO_VENTA">
-                    Afectado: Q{{ props.row.PRECIO_AFECTADO.toFixed(2) }}
-                  </div>
-                </div>
-              </q-td>
-              
-              <q-td key="subtotal" :props="props">
-                <div class="text-weight-bold text-primary">
-                  Q  {{ props.row.SUBTOTAL_VENTAS }}
-                </div>
-              </q-td>
-              
-              <q-td key="acciones" :props="props">
-                <div class="row q-gutter-xs">
-                  <q-btn size="sm" color="negative" icon="delete" round flat
-                    @click.stop="eliminarProducto(props.row)" class="delete-btn"
-                  >
-                    <q-tooltip>Eliminar producto</q-tooltip>
-                  </q-btn>
-                </div>
-
-              </q-td>
-            </q-tr>
-          </template>
-
-          <template v-slot:no-data>
-            <div class="full-width row justify-center items-center text-grey-6 q-pa-xl">
-              <div class="text-center">
-                <q-icon name="inventory_2" size="48px" class="q-mb-md" />
-                <div class="text-h6">No hay productos agregados</div>
-                <div class="text-body2">Escanea un código o busca productos en el catálogo</div>
-              </div>
-            </div>
-          </template>
-          
-        </q-table>
-      </q-card-section>
-    </q-card>
-  -->
-
-
-
 <!-- Modal de catálogo de productos -->
 <q-dialog v-model="modalProductos" maximized>
   <q-card class="catalogo-modal">
@@ -221,13 +145,103 @@
     </q-card>
   </q-dialog>
 
+
+  <!-- Modal Para Facturacion -->
+  <q-dialog v-model="modalFacturacion" persistent transition-show="fade" transition-hide="fade">
+    <q-card class="q-dialog-plugin q-pa-md" style="min-width: 800px; max-width: 90vw; max-height: 90vh">
+
+      <!-- header-->
+       <q-card-section class="row items-center justify-between">
+        <div class="text-h6 text-primary">Facturación</div>
+        <q-btn icon="close" flat round dense v-close-popup />
+       </q-card-section > 
+        
+       <q-separator />
+
+       <q-card-section class="scroll q-pt-sm" style="max-height: 65vh">
+        <div class="text-subtitle2 text-gray-8">Pedido # {{ pedidoStore.numeroDePedido }} </div>
+        </q-card-section>
+
+          <!-- Mostrar info cliente-->
+        <q-card-section>
+        <q-card class="q-mb-md bg-grey-1">
+        <q-card-section class="q-pa-sm row q-col-gutter-sm items-start">
+          <div class="col-auto">
+            <q-icon name="person" size="36px" color="primary" />
+          </div>
+          <div class="col">
+            <div class="text-subtitle2 text-weight-bold text-primary">
+               {{ pedidoData.NOMBRE_A_FACTURAR  }}
+            </div>
+            <div class="text-body2 text-grey-8">
+              Documento: <strong>{{ pedidoData.NIT_A_FACTURAR }}</strong>
+            </div>
+            <div class="text-body2 text-grey-8">
+              Dirección: <strong>{{ pedidoData.DIRECCION_FACTURAR }}</strong>
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
+        
+          <!-- Lista de productos -->
+      <q-markup-table dense flat bordered class="q-mb-md">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody v-if="!cargandoProductosFactura && productosFactura">
+          <tr v-for="item in productosFactura" :key="item.ID_PEDIDO_DET">
+            <td>{{ item.PRODUCT0 }}</td>
+            <td>{{ item.DESCRIPCION_PROD }}</td>
+            <td class="text-right">{{ item.CANTIDAD_PEDIDA }}</td>
+            <td class="text-right">Q {{ Number(item.PRECIO_UNIDAD_VENTA).toFixed(2) }}</td>
+            <td class="text-right">Q {{ Number(item.SUBTOTAL_VENTAS).toFixed(2) }}</td>
+          </tr>
+        </tbody>
+          <tbody v-else>
+          <tr>
+            <td colspan="5" class="text-center text-grey-6 q-pa-md">
+              <q-spinner-dots color="primary" size="20px" v-if="cargandoProductosFactura" />
+              <span v-else>No hay productos en este pedido</span>
+            </td>
+          </tr>
+        </tbody>
+
+      </q-markup-table>
+
+           <!-- Totales -->
+      <div class="row justify-end q-gutter-sm text-right text-subtitle2">
+        <div class="col-12 col-md-4">
+          <div>Subtotal: <strong>Q {{ pedidoData.TOTAL_GENERAL_PEDIDO }}</strong></div>
+          <div>Descuento: <strong> {{ pedidoData.MONTO_DESCUENTO_PEDI }}</strong></div>
+          <div class="text-weight-bold text-primary"><strong> Total: Q {{ pedidoData.TOTAL_GENERAL_PEDIDO - pedidoData.MONTO_DESCUENTO_PEDI }}</strong></div>
+        </div>
+      </div>
+
+    </q-card-section>
+
+      <!-- Acciones -->
+    <q-card-actions align="right">
+      <q-btn flat label="Cancelar" v-close-popup />
+      <q-btn icon="taskalt" label="Confirmar Factura" class="boton-amarillo q-ml-auto" @click="confirmarFactura"  />
+    </q-card-actions>
+       
+    </q-card>
+  </q-dialog>
+
+
   </div>
 </template>
 
-<script setup>
+<script setup >
 
 import { useQuasar } from 'quasar'
-import { ref, computed, onMounted, watch, watchEffect } from 'vue'
+import { ref, computed, onMounted, watch, watchEffect, onBeforeUnmount} from 'vue'
 import { useProductos } from '@/modules/Productos/composables/useProductos'
 import { usePedidoDet } from '@/modules/pedidos_det/composables/usePedidosDet'
 import { showConfirmationDialog, showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
@@ -247,7 +261,9 @@ const props = defineProps({
 })
 
 const { mutateCrearPedidoDet, obtenerPedidosDetID, mutateActualizarPedidoDetId, mutateEliminarPedidoDetID, ListaDet1, ListaDet2, refetchListaDet2} = usePedidoDet()
+
 const { obtenerPedidoPorId } = usePedidosEnc()
+
 const { todosProductos, refetchTodosProductos, obtenerProductosId } = useProductos()
 const { obtenerPorCodigo } = useCodigo()
 const $q = useQuasar()
@@ -263,24 +279,48 @@ const loadingAgregar = ref(false)
 const pedidoStore = usePedidoStore()
 const { consultarCodigo, consultarCodigoM } = useCodigo()
 const totalStore = useTotalStore()
+const modalFacturacion = ref(false)
 
 
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
-
 const { data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedidoEnc)
 
+// para facturacion
+const { data: productosFactura, refetch: refetchProductosFactura, isLoading: cargandoProductosFactura } = ListaDet1(idPedidoEnc)
 
+//cargar productos en factura
+watch(modalFacturacion, (val) => {
+  if (val) {
+    refetchProductosFactura()
+  }
+})
+
+// cargar nuevos productos
 watch(idPedidoEnc, (nuevo) => {
   if (nuevo && nuevo > 0) {
     console.log('nuevo detalle')
     refetchObtenerPedidoID()
   }
 })
+
+// actualizar cliente en facturacion
+watch(pedidoData, () => {
+  console.log('📦 pedidoData actualizado:', pedidoData.value)
+})
+
 // focus
 const inputCodigo = ref(null)
 
 const enfocarCodigo = () => {
   inputCodigo.value?.focus()
+}
+
+// usar F4
+const usarF4 = (e) => {
+  if (e.key === 'F4') {
+    e.preventDefault()
+    terminarVenta()
+  }
 }
 
 //filtro 
@@ -319,12 +359,32 @@ const abrirCatalogo = () => {
 
 }
 
+onMounted(() => {
+  window.addEventListener('keydown', usarF4)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', usarF4)
+})
+
+// modal factura
 const terminarVenta = () => {
-  modal
+  // si no existe pedido
+if(!pedidoStore.idPedidoEnc ){
+  showErrorNotification('No existe un pedido','Debes de crear un pedido primero' )
+  return 
+}
+
+
+  modalFacturacion.value = true
 }
 
 
 
+// Guarda factura enc y det
+const confirmarFactura = () => {
+
+}
 
 
 // Columnas del catálogo
@@ -384,7 +444,6 @@ const totalEncabezado = computed(() => {
   return pedidoData.value?.TOTAL_PEDIDO ?? 0
 })
 
-
 const totalPedido = () =>{
   return pedidoStore.idPedidoEnc
 }
@@ -399,7 +458,6 @@ const agregarProducto = () => {
     buscarProductoPorCodigo()
   }
 }
-
 
 // buscar por codigo escaneado 
 const buscarProductoEscaneado = async () => {
@@ -431,7 +489,6 @@ const buscarProductoEscaneado = async () => {
     NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido
   }
 
- 
       mutateCrearPedidoDet(detalle, {
       onSuccess: async (data) => {
 
@@ -443,7 +500,6 @@ const buscarProductoEscaneado = async () => {
         totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0)
         console.log(totalStore.TOTAL_GENERAL_PEDIDO)
 
-
     },
     onError: (err) => {
       console.error('Error al guardar producto:', err)
@@ -454,9 +510,6 @@ const buscarProductoEscaneado = async () => {
     }
   })
 }
-
-
-
 
 
 // escanear o ingresar codigo 
@@ -476,7 +529,6 @@ const buscarProductoPorCodigo = async () => {
     showErrorNotification('Producto', 'El producto no existe')
   }
 }
-
 
 
 // crea pedido det desde catalogo
@@ -514,7 +566,6 @@ const agregarProductoAlPedido = async (producto) => {
 
         await refetchObtenerPedidoID() 
         totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0)
-        console.log(totalStore.TOTAL_GENERAL_PEDIDO)
         enfocarCodigo()
 
       },
@@ -538,14 +589,13 @@ const seleccionarProducto = (producto) => {
   modalProductos.value = false
 }
 
-// mantener focus - nto working so far
+// mantener focus - not working so far
 watch(modalProductos, (val) => {
   if(!val){
     enfocarCodigo()
   }
 
 })
-
 
 defineExpose({
   enfocarCodigo,

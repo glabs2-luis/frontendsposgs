@@ -34,7 +34,7 @@ export const usePedidoDet = () => {
         actualizarDescripcionPedidoDetAction(params.id, params.descripcion),
 
         onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['pedidos-det'] })
+        queryClient.invalidateQueries({ queryKey: ['pedidos-det-actualizar-descripcion'] })
         }
     })
     
@@ -57,7 +57,6 @@ export const usePedidoDet = () => {
 
   })
 }
-
     
     const useListaProductosPedidoDet = (idPedidoEnc: number) => {
     return useQuery({
