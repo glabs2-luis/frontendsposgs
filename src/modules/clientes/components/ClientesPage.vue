@@ -57,7 +57,7 @@
 import { ref, computed } from 'vue'
 import type { QTableColumn } from 'quasar'
 import { Cliente } from '../interfaces/clientesInterface';
-import { useClientes } from '../composables/use.clientes'
+import { useClientes } from '../composables/useClientes'
 import { eliminarClienteIdAction, crearClientesAction } from '../action/clientes-action';
 import ModalEditarCliente from '@/modals/modalEditarCliente.vue';
 import { showErrorNotification, showSuccessNotification } from '@/common/helper/notification';

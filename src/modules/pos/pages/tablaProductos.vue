@@ -1,57 +1,118 @@
 <template>
-
-    <q-card flat bordered class="productos-table-card">
-    <q-card-section class="row items-center justify-between">
-      <div class="text-h6">Detalle del Pedido #{{ pedidoStore.numeroDePedido }}</div>
-      <q-btn icon="refresh" flat dense round @click="refetch()" />
+  <q-card flat bordered class="productos-table-card">
+    <q-card-section class="card-header">
+      <div class="header-content">
+        <div class="order-info">
+          <q-icon name="receipt_long" size="24px" class="text-primary q-mr-sm" />
+          <div>
+            <div class="text-h6 text-weight-medium">Detalle del Pedido</div>
+            <div class="text-body2 text-grey-6">#{{ pedidoStore.numeroDePedido }}</div>
+          </div>
+        </div>
+        <q-btn icon="refresh" flat dense round @click="refetch()" class="refresh-btn"
+        >
+          <q-tooltip>Actualizar datos</q-tooltip>
+        </q-btn>
+      </div>
     </q-card-section>
 
-    <q-card-section>
+    <q-separator />
 
+    <q-card-section class="table-section">
       <q-table
         :rows="rows"
         :columns="columnas"
         row-key="ID_PEDIDO_DET"
         dense
         flat
-        bordered
         :loading="isLoading"
         :pagination="{ rowsPerPage: 10 }"
+        class="elegant-table"
       >
-        <!-- Formateo: precio y subtotal -->
-        <template v-slot:body-cell-PRECIO_UNIDAD_VENTA="props">
-          <q-td :props="props">
-            Q {{ Number(props.row.PRECIO_UNIDAD_VENTA).toFixed(2) }}
-          </q-td>
+        <!-- Header personalizado -->
+        <template v-slot:header="props">
+          <q-tr :props="props" class="table-header">
+            <q-th v-for="col in props.cols" :key="col.name" :props="props" class="header-cell"
+            >
+              <div class="header-content">
+                <span class="text-weight-medium">{{ col.label }}</span>
+              </div>
+            </q-th>
+          </q-tr>
+        </template>
 
-            <q-td key="acciones" :props="props">
-                <div class="row q-gutter-xs">
-                  <q-btn size="sm" color="negative" icon="delete" round flat
-                    @click.stop="eliminarProducto(props.row)" class="delete-btn"
+        <!-- Filas personalizadas -->
+        <template v-slot:body="props">
+          <q-tr :props="props" class="table-row">
+            <q-td
+              v-for="col in props.cols"
+              :key="col.name"
+              :props="props"
+              class="body-cell"
+            >
+              <!-- Precio formateado -->
+              <template v-if="col.name === 'PRECIO_UNIDAD_VENTA'">
+                <div class="price-cell">
+                  <span class="text-weight-medium">
+                    Q {{ Number(props.row.PRECIO_UNIDAD_VENTA).toFixed(2) }}
+                  </span>
+                </div>
+              </template>
+
+              <!-- Acciones -->
+              <template v-else-if="col.name === 'acciones'">
+                <div class="actions-cell">
+                  <q-btn 
+                    size="sm" 
+                    color="negative" 
+                    icon="delete" 
+                    round 
+                    flat
+                    @click.stop="eliminarProducto(props.row)" 
+                    class="delete-btn"
                   >
                     <q-tooltip>Eliminar producto</q-tooltip>
                   </q-btn>
                 </div>
-                
-              </q-td>
-          
+              </template>
 
+              <!-- Otras columnas -->
+              <template v-else>
+                {{ col.value }}
+              </template>
+            </q-td>
+          </q-tr>
         </template>
 
-          <template v-slot:no-data>
-            <div class="full-width row justify-center items-center text-grey-6 q-pa-xl">
-              <div class="text-center">
-                <q-icon name="inventory_2" size="48px" class="q-mb-md" />
-                <div class="text-h6">No hay productos agregados</div>
-                <div class="text-body2">Escanea un código o busca productos en el catálogo</div>
+        <!-- Estado sin datos -->
+        <template v-slot:no-data>
+          <div class="no-data-container">
+            <div class="no-data-content">
+              <q-icon name="inventory_2" size="64px" class="no-data-icon" />
+              <div class="text-h6 text-weight-medium q-mb-xs">No hay productos agregados</div>
+              <div class="text-body2 text-grey-6">
+                Escanea un código o busca productos en el catálogo
               </div>
+              <q-btn 
+                color="primary" 
+                outline 
+                icon="add" 
+                label="Agregar Producto" 
+                class="q-mt-md"
+              />
             </div>
-          </template>
+          </div>
+        </template>
 
+        <!-- Loading personalizado -->
+        <template v-slot:loading>
+          <q-inner-loading showing class="custom-loading">
+            <q-spinner-dots size="40px" color="primary" />
+            <div class="text-body2 text-grey-6 q-mt-sm">Cargando productos...</div>
+          </q-inner-loading>
+        </template>
       </q-table>
-
     </q-card-section>
-    
   </q-card>
 </template>
 
@@ -163,7 +224,196 @@ const eliminarProducto = async (detalle) => {
 </script>
 
 <style scoped>
-.text-h6 {
-  font-weight: bold;
+.productos-table-card {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 20px 24px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-info {
+  display: flex;
+  align-items: center;
+}
+
+.refresh-btn {
+  transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+  transform: rotate(180deg);
+  background-color: rgba(25, 118, 210, 0.1);
+}
+
+.table-section {
+  padding: 0;
+}
+
+.elegant-table {
+  background: white;
+}
+
+.table-header {
+  background: linear-gradient(135deg, #536103 0%, #6b745b 100%);
+  color: rgb(255, 255, 255);
+}
+
+.header-cell {
+  padding: 16px 12px;
+  border-bottom: none;
+  position: relative;
+}
+
+.header-cell:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 60%;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.table-row {
+  transition: all 0.2s ease;
+}
+
+.table-row:hover {
+  background-color: rgba(25, 118, 210, 0.03);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.body-cell {
+  padding: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.price-cell {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #010a01;
+}
+
+.actions-cell {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.delete-btn {
+  transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+  background-color: rgba(244, 67, 54, 0.1);
+  transform: scale(1.1);
+}
+
+.no-data-container {
+  width: 100%;
+  padding: 60px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+}
+
+.no-data-content {
+  text-align: center;
+  max-width: 300px;
+}
+
+.no-data-icon {
+  color: #9e9e9e;
+  margin-bottom: 16px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.custom-loading {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card-header {
+    padding: 16px 20px;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .order-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .body-cell {
+    padding: 8px;
+  }
+  
+  .no-data-container {
+    padding: 40px 20px;
+    min-height: 200px;
+  }
+}
+
+/* Animaciones adicionales */
+.productos-table-card {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scroll suave en la tabla */
+.q-table__container {
+  border-radius: 0 0 12px 12px;
+}
+
+/* Estilo para el paginador */
+.q-table__bottom {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: #fafafa;
+  padding: 12px 16px;
 }
 </style>

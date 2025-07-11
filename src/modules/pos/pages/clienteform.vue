@@ -163,12 +163,7 @@
           </div>
       </div>
 
-      
-
-
    </div>
-
-   
 
    <ProductosTab ref="productosTabRef" />
    <TablaProductos ref="tablaProductosRef"/>
@@ -179,7 +174,7 @@
 
 import { ref, computed, onMounted, watchEffect, watch } from 'vue'
 import { QExpansionItem } from 'quasar'
-import useClientes from '../../clientes/composables/use.clientes'
+import useClientes from '../../clientes/composables/useClientes'
 import { showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
 import ModalEditarCliente from '@/modals/modalEditarCliente.vue'
 import type { Cliente } from '@/modules/clientes/interfaces/clientesInterface'

@@ -1,7 +1,7 @@
 import { FacturaEnc } from "../interfaces/facturaEncInterface"
-import { obtenerFacturasEncAction, obtenerFacturasEncIdAction, obtenerDetalleFacturaPorIdAction } from '../action/facturasEncAction';
+import { obtenerFacturasEncAction, obtenerFacturasEncIdAction, obtenerDetalleFacturaPorIdAction, crearFacturaEncAction, crearFacturaEncAction2 } from '../action/facturasEncAction'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
-import { showConfirmationDialog } from '@/common/helper/notification';
+import { showConfirmationDialog } from '@/common/helper/notification'
 import{ Ref } from 'vue'
 
 export const useFacturasEnc = () => {
@@ -14,7 +14,6 @@ const obtenerFacturasEnc = () => {
         queryFn: () => obtenerFacturasEncAction()
     })
 }
-
 
 const obtenerDetalleFactura2 = (idFacturaEnc: number) => {
     return useQuery({
@@ -29,11 +28,28 @@ const obtenerDetalleFactura2 = (idFacturaEnc: number) => {
     return await obtenerDetalleFacturaPorIdAction(idFacturaEnc)
   }
 
+  //crear factura
+  const { mutate: mutateCrearFacturaEnc } = useMutation({
+    mutationFn: crearFacturaEncAction,
+    onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['facturas-enc']})
+    }
+  })
+
+    const { mutate: mutateCrearFacturaEnc2 } = useMutation({
+    mutationFn: crearFacturaEncAction2,
+    onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['facturas-enc']})
+    }
+  })
+
 
 
 return {
     obtenerFacturasEnc,
-    obtenerDetalleFactura
+    obtenerDetalleFactura,
+    mutateCrearFacturaEnc,
+    mutateCrearFacturaEnc2
 }
 
 }

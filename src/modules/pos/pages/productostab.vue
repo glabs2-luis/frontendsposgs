@@ -247,11 +247,13 @@ import { usePedidoDet } from '@/modules/pedidos_det/composables/usePedidosDet'
 import { showConfirmationDialog, showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
 import { usePedidoStore } from '@/stores/pedido'
 import usePedidosEnc from '../../pedidos_enc/composables/usePedidosEnc'
-import { useQuery } from "@tanstack/vue-query"
 import { obtenerListaPedidosDet } from '@/modules/pedidos_det/action/pedidosDetAction'
 import { useCodigo } from '@/modules/codigo_barras/composables/useCodigo'
 import { Notify } from 'quasar'
 import { useTotalStore } from '@/stores/total'
+import useFacturasEnc from '../../facturas_enc/composables/useFacturasEnc'
+import { useUserStore } from '@/stores/user';
+import { useRoute } from 'vue-router';
 
 const props = defineProps({
   pedidoId: {
@@ -262,8 +264,9 @@ const props = defineProps({
 
 const { mutateCrearPedidoDet, obtenerPedidosDetID, mutateActualizarPedidoDetId, mutateEliminarPedidoDetID, ListaDet1, ListaDet2, refetchListaDet2} = usePedidoDet()
 
+const { mutateCrearFacturaEnc } = useFacturasEnc()
+const { mutateCrearFacturaEnc2 } = useFacturasEnc()
 const { obtenerPedidoPorId } = usePedidosEnc()
-
 const { todosProductos, refetchTodosProductos, obtenerProductosId } = useProductos()
 const { obtenerPorCodigo } = useCodigo()
 const $q = useQuasar()
@@ -280,7 +283,7 @@ const pedidoStore = usePedidoStore()
 const { consultarCodigo, consultarCodigoM } = useCodigo()
 const totalStore = useTotalStore()
 const modalFacturacion = ref(false)
-
+const userStore = useUserStore()
 
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
 const { data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedidoEnc)
@@ -305,7 +308,7 @@ watch(idPedidoEnc, (nuevo) => {
 
 // actualizar cliente en facturacion
 watch(pedidoData, () => {
-  console.log('📦 pedidoData actualizado:', pedidoData.value)
+  console.log('pedidoData actualizado:', pedidoData.value)
 })
 
 // focus
@@ -359,6 +362,7 @@ const abrirCatalogo = () => {
 
 }
 
+// abrir facturacion con F4
 onMounted(() => {
   window.addEventListener('keydown', usarF4)
 })
@@ -374,18 +378,48 @@ if(!pedidoStore.idPedidoEnc ){
   showErrorNotification('No existe un pedido','Debes de crear un pedido primero' )
   return 
 }
-
-
   modalFacturacion.value = true
 }
 
 
-
 // Guarda factura enc y det
-const confirmarFactura = () => {
+const confirmarFactura = async () => {
+  console.log('Confirmar factura presionada')
+  try {
+    const datos = {
+      ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
+      USUARIO_QUE_FACTURA: userStore.nombreVendedor,
+      SERIE: '14AT'
+    }
 
+    // Validación
+    if (!datos.ID_PEDIDO_ENC || !datos.SERIE) {
+      showErrorNotification('Factura','Faltan datos en la factura')
+      return
+    }
+
+    console.log('ID_PEDIDO_ENC enviado:', pedidoStore.idPedidoEnc)
+    console.log('🟩 Datos enviados al backend:', datos)
+    // Ejecutar la facturación
+    mutateCrearFacturaEnc2(datos, {
+    onSuccess: (respuesta) => {
+    showSuccessNotification('Factura', 'Factura creada con éxito')
+    console.log('Respuesta del backend:', respuesta)
+
+      },
+      onError: (error) => {
+        showErrorNotification('Factura', 'Error al crear la factura')
+        console.error('Error', error)
+      }
+    })
+
+    // acciones posteriores como limpiar, imprimir, cerrar modal
+
+  } catch (error) {
+    showErrorNotification('Factura','No se puedo crear la factura')
+    console.error(error)
+  }
 }
-
 
 // Columnas del catálogo
 const columnasCatalogo = [
@@ -437,7 +471,6 @@ const paginacionCatalogo = ref({
   page: 1,
   rowsPerPage: 100
 })
-
 
 // mostrar total 
 const totalEncabezado = computed(() => {

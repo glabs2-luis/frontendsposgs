@@ -1,8 +1,9 @@
 import posApi from "@/api/apiPos"
 import { getAxiosErrorMessage } from "@/common/helper/geterrordb"
 import { FacturaEnc } from '../interfaces/facturaEncInterface';
+import { FacturaEnc2 } from '../interfaces/facturaEnc2Interface';
 
-// Obtener toas las Facturas enc
+// Obtener todas las Facturas enc
 export const obtenerFacturasEncAction = async () : Promise<FacturaEnc[]> => {
     try {
         const { data } = await posApi.get<FacturaEnc[]>(`/facturas-enc`)
@@ -30,7 +31,30 @@ export const obtenerDetalleFacturaPorIdAction = async (idFacturaEnc:number) => {
         const { data } = await posApi.get(`/facturas-enc/detalles/${idFacturaEnc}`)
         return data.ENC.DET
      } catch(error){
-            const message = getAxiosErrorMessage(error, 'Hubo un erro obteniedo los detalles de la factura')
-            throw new Error(message)
+        const message = getAxiosErrorMessage(error, 'Hubo un error obteniendo los detalles de la factura')
+        throw new Error(message)
         }
     }
+
+export const crearFacturaEncAction = async () => {
+    try {
+        const { data } = await posApi.post<FacturaEnc[]>(`/facturas-enc/facturacion`)
+        console.log('📤 Enviando a backend:', data)
+        return data
+    } catch(error){
+        const message = getAxiosErrorMessage(error, 'Hubo un error creando la factura Enc')
+        throw new Error(message)
+    }
+}
+
+export const crearFacturaEncAction2 = async (factura: FacturaEnc2): Promise<FacturaEnc2> => {
+  try {
+    console.log('📤 Enviando a backend:', factura)
+
+    const { data } = await posApi.post<FacturaEnc2>(`/facturas-enc/facturacion`, factura)
+    return data
+  } catch (error) {
+    const message = getAxiosErrorMessage(error, 'Hubo un error creando la factura Enc')
+    throw new Error(message)
+  }
+}
