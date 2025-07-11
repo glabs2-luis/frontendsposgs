@@ -93,7 +93,6 @@ const facturasFiltradas = computed(() => {
   )
 })
 
-
 const verDetalleFactura = async (id: number) => {
   idSeleccionado.value = id
   const resultado = await obtenerDetalleFactura(id)

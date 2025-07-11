@@ -5,7 +5,7 @@
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
 
-## Customize configuration
+## Configuracion
 
 See [Vite Configuration Reference](https://vite.dev/config/).
 
@@ -15,10 +15,12 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+### Compilar
 
 ```sh
 npm run dev
 ```
 
+# Installed
 
+Pinia, router , quasar 
