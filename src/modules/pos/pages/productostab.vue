@@ -252,8 +252,9 @@ import { useCodigo } from '@/modules/codigo_barras/composables/useCodigo'
 import { Notify } from 'quasar'
 import { useTotalStore } from '@/stores/total'
 import useFacturasEnc from '../../facturas_enc/composables/useFacturasEnc'
-import { useUserStore } from '@/stores/user';
-import { useRoute } from 'vue-router';
+import { useUserStore } from '@/stores/user'
+import { useRoute } from 'vue-router'
+import { useConfiguracionStore } from '@/stores/serie'
 
 const props = defineProps({
   pedidoId: {
@@ -263,7 +264,7 @@ const props = defineProps({
 })
 
 const { mutateCrearPedidoDet, obtenerPedidosDetID, mutateActualizarPedidoDetId, mutateEliminarPedidoDetID, ListaDet1, ListaDet2, refetchListaDet2} = usePedidoDet()
-
+const configuracionStore = useConfiguracionStore()
 const { mutateCrearFacturaEnc } = useFacturasEnc()
 const { mutateCrearFacturaEnc2 } = useFacturasEnc()
 const { obtenerPedidoPorId } = usePedidosEnc()
@@ -373,6 +374,8 @@ onBeforeUnmount(() => {
 
 // modal factura
 const terminarVenta = () => {
+
+
   // si no existe pedido
 if(!pedidoStore.idPedidoEnc ){
   showErrorNotification('No existe un pedido','Debes de crear un pedido primero' )
@@ -384,14 +387,18 @@ if(!pedidoStore.idPedidoEnc ){
 
 // Guarda factura enc y det
 const confirmarFactura = async () => {
+
   console.log('Confirmar factura presionada')
+  console.log('Serie seleccionada desde el store:', configuracionStore.serieSeleccionada)
   try {
     const datos = {
       ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
       USUARIO_QUE_FACTURA: userStore.nombreVendedor,
-      SERIE: '14AT'
+      // aqui debo enviar la serie correcta
+      SERIE: configuracionStore.serieSeleccionada
     }
 
+    console.log('Datos enviados al backend:', datos)
     // Validación
     if (!datos.ID_PEDIDO_ENC || !datos.SERIE) {
       showErrorNotification('Factura','Faltan datos en la factura')
@@ -399,7 +406,7 @@ const confirmarFactura = async () => {
     }
 
     console.log('ID_PEDIDO_ENC enviado:', pedidoStore.idPedidoEnc)
-    console.log('🟩 Datos enviados al backend:', datos)
+    console.log('Datos enviados al backend:', datos)
     // Ejecutar la facturación
     mutateCrearFacturaEnc2(datos, {
     onSuccess: (respuesta) => {
@@ -413,7 +420,7 @@ const confirmarFactura = async () => {
       }
     })
 
-    // acciones posteriores como limpiar, imprimir, cerrar modal
+    // acciones como limpiar, imprimir, cerrar modal
 
   } catch (error) {
     showErrorNotification('Factura','No se puedo crear la factura')

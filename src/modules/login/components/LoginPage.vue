@@ -150,7 +150,7 @@ onMounted(
 }
 
 .logo-principal {
-  max-width: 140px;
+  max-width: 160px;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }

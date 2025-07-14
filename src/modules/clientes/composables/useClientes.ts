@@ -4,11 +4,11 @@ import { obtenerClientesAction,
     usarClienteCFAction, obtenerClienteIdAction, 
     actualizarClienteIdAction, 
     eliminarClienteIdAction, 
-    obtenerClienteDPINITAction } from '../action/clientes-action';
+    obtenerClienteDPINITAction } from '../action/clientesAction'
     
-import { useQuery } from '@tanstack/vue-query';
-import { useMutation, useQueryClient } from "@tanstack/vue-query";
-import { showConfirmationDialog } from '@/common/helper/notification';
+import { useQuery } from '@tanstack/vue-query'
+import { useMutation, useQueryClient } from "@tanstack/vue-query"
+import { showConfirmationDialog } from '@/common/helper/notification'
 
 export const useClientes = () => {
 
@@ -108,4 +108,4 @@ export const useClientes = () => {
     }
 }
 
-export default useClientes;
+export default useClientes

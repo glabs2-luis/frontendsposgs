@@ -22,7 +22,8 @@ export const usePedidoStore = defineStore('pedido', {
     clearPedidoEncabezado() {
         this.idPedidoEnc = null
         this.numeroDePedido = null
+        this.cliente = null
     }
-  }
-
-})
+  },
+ persist: true
+}, )

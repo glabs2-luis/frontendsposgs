@@ -30,6 +30,11 @@
           <q-item-section>Reportes</q-item-section>
         </q-item>
 
+        <q-item clickable v-ripple @click="router.push('/configuracion')">
+          <q-item-section avatar><q-icon name="settings" /></q-item-section>
+          <q-item-section>Configuracion</q-item-section>
+        </q-item>
+
       </q-list>
     </q-drawer>
 
@@ -42,6 +47,16 @@
         <q-toolbar-title>
           POS GS - {{obtenerSucursal?.NOMBRE_DE_SUCURSAL}}
         </q-toolbar-title>
+
+        <div class="q-mr-md text-weight-medium">
+          <div v-if="!configuracionStore.serieSeleccionada || configuracionStore.serieSeleccionada === '0'" class="text-negative">
+            No hay serie para facturación
+          </div>
+          <div v-else>
+            {{ configuracionStore.serieSeleccionada }}
+          </div>
+        </div>
+
         <div class="q-mr-md text-weight-medium">
         {{ nombreVendedor }}
         </div>
@@ -50,7 +65,6 @@
         @click="cerrarSesion" />
 
       </q-toolbar>
-
     </q-header>
 
     <!-- Paginas -->
@@ -66,16 +80,15 @@ import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Swal from 'sweetalert2'
 import { useUserStore } from '@/stores/user'
-import { useSucursales} from '@/modules/Sucursales/composables/useSucursales';
+import { useSucursales} from '@/modules/Sucursales/composables/useSucursales'
+import { useConfiguracionStore } from '@/stores/serie'
+
 const { obtenerSucursal } = useSucursales()
-
 const { nombreVendedor, codigoVendedor } = useUserStore()
-
-
 const router = useRouter()
 const route = useRoute()
 const menuAbierto = ref(false)
-
+const configuracionStore = useConfiguracionStore()
 
 const cerrarSesion = async () => {
 

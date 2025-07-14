@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-
 import { loginRoutes } from '@/modules/login/router'
 import { posRoutes } from '@/modules/pos/router'
 import { clientesRoutes } from '@/modules/clientes/router'
@@ -7,6 +6,7 @@ import { facturasRoutes } from '@/modules/facturas/router'
 import { notasRoutes } from '@/modules/notas_credito/router'
 import { reportesRoutes } from '@/modules/reportes/router'
 import { useUserStore } from '@/stores/user'
+import { settingsRoutes } from '@/modules/configuracion/router'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,7 +17,8 @@ const router = createRouter({
     clientesRoutes,
     facturasRoutes,
     notasRoutes,
-    reportesRoutes
+    reportesRoutes,
+    settingsRoutes
   ]
 })
 
@@ -41,6 +42,5 @@ router.beforeEach((to, from, next) => {
 
   next()
 })
-
 
 export default router

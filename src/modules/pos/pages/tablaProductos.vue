@@ -93,13 +93,6 @@
               <div class="text-body2 text-grey-6">
                 Escanea un código o busca productos en el catálogo
               </div>
-              <q-btn 
-                color="primary" 
-                outline 
-                icon="add" 
-                label="Agregar Producto" 
-                class="q-mt-md"
-              />
             </div>
           </div>
         </template>
