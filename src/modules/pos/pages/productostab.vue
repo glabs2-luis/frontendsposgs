@@ -1,6 +1,6 @@
 <template>
   <div class="pedido-detalle-container">
-   <q-card flat bordered class="q-pa-md q-mb-md bg-yellow-1 text-black rounded-borders shadow-2">
+   <q-card flat bordered class="q-pa-md q-mb-xs bg-yellow-1 text-black rounded-borders shadow-2 " >
 
   <!-- título + total -->
   <div class="row items-center justify-between q-mb-md">
@@ -255,6 +255,7 @@ import useFacturasEnc from '../../facturas_enc/composables/useFacturasEnc'
 import { useUserStore } from '@/stores/user'
 import { useRoute } from 'vue-router'
 import { useConfiguracionStore } from '@/stores/serie'
+import { cleanAllStores } from '@/common/helper/cleanStore'
 
 const props = defineProps({
   pedidoId: {
@@ -394,7 +395,6 @@ const confirmarFactura = async () => {
     const datos = {
       ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
       USUARIO_QUE_FACTURA: userStore.nombreVendedor,
-      // aqui debo enviar la serie correcta
       SERIE: configuracionStore.serieSeleccionada
     }
 
@@ -407,6 +407,7 @@ const confirmarFactura = async () => {
 
     console.log('ID_PEDIDO_ENC enviado:', pedidoStore.idPedidoEnc)
     console.log('Datos enviados al backend:', datos)
+
     // Ejecutar la facturación
     mutateCrearFacturaEnc2(datos, {
     onSuccess: (respuesta) => {
@@ -420,7 +421,8 @@ const confirmarFactura = async () => {
       }
     })
 
-    // acciones como limpiar, imprimir, cerrar modal
+    // limpiar stores
+    cleanAllStores()
 
   } catch (error) {
     showErrorNotification('Factura','No se puedo crear la factura')
@@ -536,7 +538,8 @@ const buscarProductoEscaneado = async () => {
       showSuccessNotification('Producto agregado', `Agregado: ${codigoProducto.value}`)
       codigoProducto.value = '',
       
-      await refetchObtenerPedidoID() 
+      // await comentado
+      //await refetchObtenerPedidoID() 
         totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0)
         console.log(totalStore.TOTAL_GENERAL_PEDIDO)
 
@@ -611,7 +614,7 @@ const agregarProductoAlPedido = async (producto) => {
       },
       onError: (error) => {
         console.error('Error al guardar producto en BD:', error)
-        $q.notify({ type: 'negative', message: 'No se pudo guardar el producto en la base de datos' })
+        $q.notify({ type: 'negative', message: 'Debe crear un pedido primero' })
       },
       onSettled: () => {
         loadingAgregar.value = false
@@ -648,9 +651,10 @@ defineExpose({
 <style scoped>
 
 .pedido-detalle-container {
-  padding: 16px;
-  max-width: 1400px;
+  padding: 6px 6px 0px 0;
+  max-width: auto;
   margin: 0 auto;
+
 }
 
 .pedido-header {
@@ -658,7 +662,7 @@ defineExpose({
   padding: 20px;
   border-radius: 12px;
   color: white;
-  margin-bottom: 16px;
+  margin-bottom: 8%;
 }
 
 .total-badge {

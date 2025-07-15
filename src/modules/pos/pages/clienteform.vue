@@ -28,6 +28,7 @@
                 <q-form>
                   <div class="row q-col-gutter-xs">
                     <div class="col-4">
+
                       <!-- DPI-->
                       <q-input ref="focus" v-model="cliente.DOCUMENTO" label="DPI/NIT" dense outlined :rules="[val => !!val || 'Requerido']"
                         style="font-size: 13px;" @keydown.enter.prevent="buscarClienteDPINIT" @keydown="usarF2">
@@ -76,7 +77,7 @@
         <!-- Ver Pedidos Pendientes -->
         <div class="col-auto q-ml-sm">
             <q-card flat bordered class="q-pa-sm bg-white shadow-3">
-              <q-btn label="Pedidos Pendientes" icon="assignment" size="sm" color="deep-orange-5" class="text-caption" unelevated rounded @click="abrirModalPedidosPendientes"
+              <q-btn label="Pedidos Pendientes" icon="assignment" size="sm" color="deep-orange-5" class="text-caption" unelevated rounded  style="min-height: 38px" @click="abrirModalPedidosPendientes"
               />
             </q-card>
 
@@ -131,7 +132,7 @@
               <div v-if="mostrarNumPedido" class="row items-center q-gutter-xs">
                 <q-icon name="receipt_long" color="primary" size="sm" />
                 <div class="text-subtitle2 text-primary " style="font-size: 160%">
-                  Pedido #{{ numPedido  }}
+                  Pedido #{{ numPedido2  }}
                 </div>
               </div>
 
@@ -139,9 +140,9 @@
 
               <!-- Total de Venta -->
               <div class="row items-center q-gutter-xs total-card q-pa-xs">
-                <q-icon name="paid" size="sm" class="text-amber-9" />
+                <q-icon name="paid" size="sm" class="text-amber-10" />
 
-                  <div class="text-body1 text-amber-10 text-weight-bold " style="font-size: 160%" >
+                  <div class="text-body1 text-amber-10 text-weight-bold " style="font-size: 280%" >
                     Total: Q. {{ totalStore.totalGeneral.toFixed(2) }}
                       <q-spinner v-if="isLoading" color="primary" size="40px" />
 
@@ -183,7 +184,6 @@ import { useUserStore } from '../../../stores/user'
 import { nextTick } from 'vue'
 import ProductosTab from '@/modules/pos/pages/productosTab.vue'
 import { usePedidoStore } from '@/stores/pedido'
-import { PedidosEnc } from '../../pedidos_enc/interfaces/pedidoEncInterface'
 import TablaProductos from './tablaProductos.vue'
 import { useTotalStore } from '@/stores/total'
 
@@ -199,7 +199,8 @@ const { obtenerClientePorDocumento,refetchMostrarCF, mutateCrearCliente } = useC
 const { mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId } = usePedidosEnc()
 
 const total = ref(0)
-const numPedido = ref(0)
+const numPedido = ref(0) // mostrar pedido
+
 const totalReal = ref(0)
 
 const mostrarModalFacturacion = ref (false)
@@ -210,7 +211,7 @@ const modalPendientes = ref (false)
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc)
 
-
+const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0) // pedido funcional
 
 watchEffect(() => {
   if (pedidoEnc.value) {
@@ -244,7 +245,6 @@ watchEffect(() => {
 })
 
 
-
 // sucursal siempre: 1
 const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
   1,
@@ -256,10 +256,10 @@ onMounted(() => {
   focus.value?.focus()
 })
 
-const mostrarNumPedido = computed(() => numPedido.value > 0)
+const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0)
 const mostrarTotalReal = computed(() => totalReal.value > 0)
 
-const mostrarSubtotal = computed(() => total.value > 0)
+
 
 const abrirModalPedidosPendientes = () => {
   modalPendientes.value = true
@@ -281,6 +281,40 @@ const clienteTemp = ref ({
   TELEFONO: '',
   CORREO_ELECTRONICO: ''
 })
+
+
+
+ //limpiar info cliente
+// watch(() => numPedido2.value, (nuevo) => {
+//   if (nuevo === 0 && idPedidoEnc.value === 0) {
+//     resetCliente()
+
+//     nextTick(() => {
+//       focus.value?.focus()
+//     })
+//   }
+// })
+
+//Limpiar los datos del cliente
+const resetCliente = () => {
+  clienteTemp.value = {
+    NIT: '',
+    NOMBRE: '',
+    DIRECCION: '',
+    TELEFONO: '',
+    CORREO_ELECTRONICO: ''
+  }
+  cliente.value = {
+    DOCUMENTO: '',
+    NOMBRE: '',
+    DIRECCION: '',
+    TELEFONO: '',
+    EMAIL: ''
+  }
+
+}
+
+
 
 const crearPedido = () => {
   const nombre = cliente.value.NOMBRE?.trim();
@@ -436,11 +470,11 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 <style scoped>
 
 .total-card {
-  background-color: #fff9db;
-  border: 1px solid #ffecb3;
-  border-radius: 8px;
+  background-color: #fcf5d6;
+  border: 1px solid #fae4a2;
+  border-radius: 6px;
   min-width: 130px;
-  max-height: 40px;
+  max-height: 50px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 

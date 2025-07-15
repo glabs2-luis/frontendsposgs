@@ -82,6 +82,7 @@ import Swal from 'sweetalert2'
 import { useUserStore } from '@/stores/user'
 import { useSucursales} from '@/modules/Sucursales/composables/useSucursales'
 import { useConfiguracionStore } from '@/stores/serie'
+import { cleanAllStores } from '@/common/helper/cleanStore'
 
 const { obtenerSucursal } = useSucursales()
 const { nombreVendedor, codigoVendedor } = useUserStore()
@@ -93,6 +94,7 @@ const configuracionStore = useConfiguracionStore()
 const cerrarSesion = async () => {
 
   localStorage.removeItem('token')
+  cleanAllStores()
 
   Swal.fire({
   title: "Cerrar Sesión",
