@@ -14,19 +14,19 @@
         :pagination="{ rowsPerPage: 20 }"
         class="elegant-table"
       >
-        <!-- Header personalizado -->
+        <!-- Header -->
         <template v-slot:header="props">
           <q-tr :props="props" class="table-header">
             <q-th v-for="col in props.cols" :key="col.name" :props="props" class="header-cell"
             >
-              <div class="header-content">
+              <div class="header-content justify-center">
                 <span class="text-weight-medium">{{ col.label }}</span>
               </div>
             </q-th>
           </q-tr>
         </template>
 
-        <!-- Filas personalizadas -->
+        <!-- Filas  -->
         <template v-slot:body="props">
           <q-tr :props="props" class="table-row">
             <q-td
@@ -43,6 +43,17 @@
                   </span>
                 </div>
               </template>
+
+              <!-- Subtotal General -->
+              <template v-else-if="col.name === 'SUBTOTAL_GENERAL'">
+                <div class="price-cell">
+                  <span class="text-weight-medium">
+                    <!-- Calculo  manual-->
+                  Q {{ (props.row.CANTIDAD_PEDIDA * props.row.PRECIO_UNIDAD_VENTA).toFixed(2) }}
+                  </span>
+                </div>
+              </template>
+
 
               <!-- Acciones -->
               <template v-else-if="col.name === 'acciones'">
@@ -145,7 +156,8 @@ const columnas: QTableColumn[] = [
   { name: 'DESCRIPCION_PROD', label: 'Descripción', field: 'DESCRIPCION_PROD', align: 'left' },
   { name: 'CANTIDAD_PEDIDA', label: 'Cantidad', field: 'CANTIDAD_PEDIDA', align: 'right' },
   { name: 'PRECIO_UNIDAD_VENTA', label: 'Precio Unitario', field: 'PRECIO_UNIDAD_VENTA', align: 'right' },
-  
+  { name: 'SUBTOTAL_GENERAL', label: 'Subtotal', field: 'SUBTOTAL_GENERAL', align: 'right' },
+  { name: 'acciones', label: 'Eliminar', field:'', align:'right'}
 ]
 
 // variable para usar en tabla

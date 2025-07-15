@@ -53,8 +53,9 @@
               <div class="col">
                 <div class="text-subtitle1 text-weight-bold text-grey-8">
                   <q-icon name="receipt" size="xs" class="q-mr-xs" />
-                  #{{ factura.NUMERO_FACTURA }}
+                  #{{ `${factura.NUMERO_FACTURA} - Serie: ${factura.SERIE}`  }}
                 </div>
+
                 <div class="text-caption text-grey-6 fecha-factura">
                   {{ formatearFecha(factura.FECHA_DE_FACTURA) }}
                 </div>

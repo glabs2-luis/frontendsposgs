@@ -144,10 +144,10 @@
 
                   <div class="text-body1 text-amber-10 text-weight-bold " style="font-size: 280%" >
                     Total: Q. {{ totalStore.totalGeneral.toFixed(2) }}
-                      <q-spinner v-if="isLoading" color="primary" size="40px" />
-
+  
                 </div>
               </div>
+              
               </div>
 
               </q-card>
@@ -195,7 +195,7 @@ const abrirModalCliente = ref(false)
 const mostrarCardPedidoCreado = ref(false)
 const mostrarCardTotal = ref(false)
 const expansion = ref<any>(null)
-const { obtenerClientePorDocumento,refetchMostrarCF, mutateCrearCliente } = useClientes()
+const { obtenerClientePorDocumento, refetchMostrarCF, mutateCrearCliente } = useClientes()
 const { mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId } = usePedidosEnc()
 
 const total = ref(0)
