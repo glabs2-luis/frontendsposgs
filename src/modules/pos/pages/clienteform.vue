@@ -18,7 +18,7 @@
               <q-item-section>
                 <q-item-label>Información del Cliente</q-item-label>
                 <q-item-label caption class="text-black text-weight-bold">
-                  {{ cliente.DOCUMENTO }} - {{ cliente.NOMBRE }} - {{ cliente.DIRECCION }}
+                  {{ clienteStore.documento }} - {{ clienteStore.nombre }} - {{ clienteStore.direccion }}
                 </q-item-label>
               </q-item-section>
             </template>
@@ -30,12 +30,12 @@
                     <div class="col-4">
 
                       <!-- DPI-->
-                      <q-input ref="focus" v-model="cliente.DOCUMENTO" label="DPI/NIT" dense outlined :rules="[val => !!val || 'Requerido']"
+                      <q-input ref="focus" v-model="clienteStore.documento" label="DPI/NIT" dense outlined :rules="[val => !!val || 'Requerido']"
                         style="font-size: 13px;" @keydown.enter.prevent="buscarClienteDPINIT" @keydown="usarF2">
                       
                         <template v-slot:append>
                           <q-btn flat dense icon="search" color="primary"
-                            @click="buscarClienteDPINIT" :disable="!cliente.DOCUMENTO" size="xs" />
+                            @click="buscarClienteDPINIT" :disable="!clienteStore.documento" size="xs" />
                           
                         </template>
 
@@ -43,22 +43,22 @@
                     </div>
 
                     <div class="col-5">
-                      <q-input v-model="cliente.NOMBRE" label="Nombre" dense outlined :rules="[val => !!val || 'Requerido']" style="font-size: 13px;"
+                      <q-input v-model="clienteStore.nombre" label="Nombre" dense outlined :rules="[val => !!val || 'Requerido']" style="font-size: 13px;"
                       />
                     </div>
 
                     <div class="col-3">
-                      <q-input v-model="cliente.DIRECCION" label="Dirección" dense outlined :rules="[val => !!val || 'Requerido']" style="font-size: 13px;"
+                      <q-input v-model="clienteStore.direccion" label="Dirección" dense outlined :rules="[val => !!val || 'Requerido']" style="font-size: 13px;"
                       />
                     </div>
 
                     <div class="col-3">
-                      <q-input v-model="cliente.TELEFONO" label="Teléfono" dense outlined mask="####-####" style="font-size: 13px;"   />
+                      <q-input v-model="clienteStore.telefono" label="Teléfono" dense outlined mask="####-####" style="font-size: 13px;"   />
                     
                     </div>
 
                     <div class="col-6">
-                      <q-input v-model="cliente.EMAIL" label="Email" dense outlined type="email" style="font-size: 13px;" />
+                      <q-input v-model="clienteStore.email" label="Email" dense outlined type="email" style="font-size: 13px;" />
                       
                     </div>
 
@@ -166,8 +166,10 @@
 
    </div>
 
-   <ProductosTab ref="productosTabRef" />
-   <TablaProductos ref="tablaProductosRef"/>
+   <ProductosTab ref="productosTabRef" :onNuevoPedido="nuevoPedido"/>
+    Prueba 
+   <TablaProductos ref="tablaProductosRef"/>  
+   <Tabla2 ref="Tabla2Ref"/>
 </template>
 
 
@@ -186,7 +188,10 @@ import ProductosTab from '@/modules/pos/pages/productosTab.vue'
 import { usePedidoStore } from '@/stores/pedido'
 import TablaProductos from './tablaProductos.vue'
 import { useTotalStore } from '@/stores/total'
+import { useClienteStore } from '@/stores/cliente'
+import Tabla2 from './tabla2.vue'
 
+const clienteStore = useClienteStore()
 const totalStore = useTotalStore()
 const tablaProductosRef = ref()
 const pedidoStore = usePedidoStore()
@@ -195,7 +200,7 @@ const abrirModalCliente = ref(false)
 const mostrarCardPedidoCreado = ref(false)
 const mostrarCardTotal = ref(false)
 const expansion = ref<any>(null)
-const { obtenerClientePorDocumento, refetchMostrarCF, mutateCrearCliente } = useClientes()
+const { obtenerClientePorDocumento,refetchMostrarCF, mutateCrearCliente } = useClientes()
 const { mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId } = usePedidosEnc()
 
 const total = ref(0)
@@ -212,6 +217,15 @@ const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc)
 
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0) // pedido funcional
+
+watchEffect(() => {
+  const hayCliente = clienteStore.documento || clienteStore.nombre || clienteStore.direccion
+
+  if (hayCliente ) {
+    expansion.value?.toggle()
+  }
+})
+
 
 watchEffect(() => {
   if (pedidoEnc.value) {
@@ -245,6 +259,7 @@ watchEffect(() => {
 })
 
 
+
 // sucursal siempre: 1
 const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
   1,
@@ -265,13 +280,6 @@ const abrirModalPedidosPendientes = () => {
   modalPendientes.value = true
 }
 
-const cliente = ref({
-  DOCUMENTO: '',
-  NOMBRE: '',
-  DIRECCION: '',
-  TELEFONO: '',
-  EMAIL: ''
-})
 
 //Llenar modal desde esta pagina
 const clienteTemp = ref ({
@@ -283,18 +291,6 @@ const clienteTemp = ref ({
 })
 
 
-
- //limpiar info cliente
-// watch(() => numPedido2.value, (nuevo) => {
-//   if (nuevo === 0 && idPedidoEnc.value === 0) {
-//     resetCliente()
-
-//     nextTick(() => {
-//       focus.value?.focus()
-//     })
-//   }
-// })
-
 //Limpiar los datos del cliente
 const resetCliente = () => {
   clienteTemp.value = {
@@ -304,22 +300,17 @@ const resetCliente = () => {
     TELEFONO: '',
     CORREO_ELECTRONICO: ''
   }
-  cliente.value = {
-    DOCUMENTO: '',
-    NOMBRE: '',
-    DIRECCION: '',
-    TELEFONO: '',
-    EMAIL: ''
-  }
-
 }
 
+const nuevoPedido = () => {
+  resetCliente()
+  }
 
 
 const crearPedido = () => {
-  const nombre = cliente.value.NOMBRE?.trim();
-  const direccion = cliente.value.DIRECCION?.trim();
-  const nit = cliente.value.DOCUMENTO?.trim();
+  const nombre = clienteStore.nombre?.trim()
+  const direccion = clienteStore.direccion?.trim()
+  const nit = clienteStore.documento?.trim()
 
   if (!nombre || !direccion || !nit) {
     showErrorNotification('Datos incompletos', 'Debe seleccionar un cliente válido antes de crear el pedido');
@@ -353,11 +344,8 @@ const crearPedido = () => {
       console.log('ID_PEDIDO_ENC guardado en store:', pedidoStore.idPedidoEnc)
 
 
-
       mostrarCardPedidoCreado.value = true;
       mostrarCardTotal.value = true;
-
-      showSuccessNotification('Pedido creado', 'Pedido registrado correctamente');
       
       await nextTick() 
        productosTabRef.value?.enfocarCodigo()
@@ -379,21 +367,21 @@ const colocarCF = async () => {
   const cf = await refetchMostrarCF()
 
   if (cf.data) {
-    Object.assign(cliente.value, {
-      DOCUMENTO: cf.data.NIT || '',
-      NOMBRE: cf.data.NOMBRE || '',
-      DIRECCION: cf.data.DIRECCION || '',
-      TELEFONO: cf.data.TELEFONO || '',
-      EMAIL: cf.data.CORREO_ELECTRONICO || ''
-    })
+  clienteStore.setCliente({
+  documento: cf.data.NIT || '',
+  nombre: cf.data.NOMBRE || '',
+  direccion: cf.data.DIRECCION || '',
+  telefono: cf.data.TELEFONO || '',
+  email: cf.data.CORREO_ELECTRONICO || ''
+})
 
-    expansion.value?.toggle()
+
     crearPedido()
   }
 }
 
 const buscarClienteDPINIT = async () => {
-    const doc = cliente.value.DOCUMENTO.trim()
+    const doc = clienteStore.documento.trim()
     if(!doc) return 
 
     const tipo: 'dpi' | 'nit' = doc.length > 9 ? 'dpi' : 'nit'
@@ -401,21 +389,23 @@ const buscarClienteDPINIT = async () => {
     // Buscar cliente
     const clienteEncontrado = await obtenerClientePorDocumento(doc, tipo)
 
-    if (clienteEncontrado) {
-      Object.assign(cliente.value, {
-        DOCUMENTO: clienteEncontrado.NIT || '',
-        NOMBRE: clienteEncontrado.NOMBRE || '',
-        DIRECCION: clienteEncontrado.DIRECCION || '',
-        TELEFONO: clienteEncontrado.TELEFONO || '',
-        EMAIL: clienteEncontrado.CORREO_ELECTRONICO || '',
-      })
+     if (clienteEncontrado) {
+       clienteStore.setCliente({
+         documento: clienteEncontrado.NIT || '',
+         nombre: clienteEncontrado.NOMBRE || '',
+         direccion: clienteEncontrado.DIRECCION || '',
+         telefono: clienteEncontrado.TELEFONO || '',
+         email: clienteEncontrado.CORREO_ELECTRONICO || ''
+       })
+
 
       expansion.value?.toggle()
       crearPedido()
 
     } else {
-    clienteTemp.value.NIT = doc // prellenar el NIT buscado
-   abrirModalCliente.value = true
+      
+      abrirModalCliente.value = true
+      clienteTemp.value.NIT = doc // prellenar el NIT buscado
   }
 
 }
@@ -443,13 +433,13 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 
   mutateCrearCliente(payload, {
     onSuccess: (creado: any) => {
-      cliente.value = {
-        DOCUMENTO: creado.DPI || creado.NIT || '',
-        NOMBRE: creado.NOMBRE,
-        DIRECCION: creado.DIRECCION,
-        TELEFONO: creado.TELEFONO || '',
-        EMAIL: creado.CORREO_ELECTRONICO || ''
-      }
+      clienteStore.setCliente({
+        documento: creado.DPI || creado.NIT || '',
+        nombre: creado.NOMBRE,
+        direccion: creado.DIRECCION,
+        telefono: creado.TELEFONO || '',
+        email: creado.CORREO_ELECTRONICO || ''
+      })
 
       abrirModalCliente.value = false
       expansion.value?.toggle()

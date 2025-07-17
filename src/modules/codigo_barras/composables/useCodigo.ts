@@ -23,7 +23,7 @@ export const useCodigo = () => {
       const data = await obtenerCodigoBarrasAction(codigo, cantidad)
       return data
     } catch (error) {
-      console.error('Error consultando código de barras', error)
+      console.error('El producto no tiene codigo de barras', error)
 
     }
   }

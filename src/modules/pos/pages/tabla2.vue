@@ -142,17 +142,20 @@ const totalStore = useTotalStore()
 const pedidoStore = usePedidoStore()
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc) 
 const numero = pedidoStore.idPedidoEnc
-const { ListaDet1, useListaProductosPedidoDet, mutateEliminarPedidoDetID } = usePedidoDet()
-const { data, isLoading, refetch } = ListaDet1(idPedidoEnc)
+const { ListaDet1, ListaDet2, useListaProductosPedidoDet, mutateEliminarPedidoDetID } = usePedidoDet()
+
 
 const { obtenerPedidoPorId, obtenerPedido2, refetchPedidoPorId } = usePedidosEnc()
 
 const { data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedidoEnc)
-// refetch
-const { data: listaProductosPedido, refetch: refetchListaProductosPedidoDet } = useListaProductosPedidoDet(idPedidoEnc.value)
 
+
+// usando actualmente 
+const { data, isLoading, refetch } = ListaDet1(idPedidoEnc)
+const { data: data2, refetch: refetch2 } = ListaDet2(idPedidoEnc)
 // procesar filas 
-const rows = computed(() => data.value || [])
+const rows = computed(() => data2.value || [])
+
 
 // calcular total
 const idTotal = computed(() => pedidoStore.idPedidoEnc) 
@@ -195,8 +198,8 @@ watch(idPedidoEnc, (nuevo) => {
 
 // respuesta del query 
 watchEffect(() => {
-  if (data.value) {
-    detallesPedido.value = data.value
+  if (data2.value) {
+    detallesPedido.value = data2.value
   }
 })
 

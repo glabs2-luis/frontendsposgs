@@ -48,11 +48,21 @@ export const usePedidoDet = () => {
 
     // obtener lista pedidos det
     const ListaDet1 = (idPedidoEnc: Ref<number | null>) => {
+    return useQuery({
+    queryKey: computed(() => ['pedido-det', idPedidoEnc.value]),
+    queryFn: () => obtenerListaPedidosDet(idPedidoEnc.value),
+    enabled: computed(() => !!idPedidoEnc.value && idPedidoEnc.value > 0),
+ //  refetchInterval: 1000,
+  //  refetchOnWindowFocus: false,
+
+  })
+}
+
+    const ListaDet2 = (idPedidoEnc: Ref<number | null>) => {
      return useQuery({
     queryKey: computed(() => ['pedido-det', idPedidoEnc.value]),
     queryFn: () => obtenerListaPedidosDet(idPedidoEnc.value),
     enabled: computed(() => !!idPedidoEnc.value && idPedidoEnc.value > 0),
-    refetchInterval: 1000,
     refetchOnWindowFocus: false,
 
   })
@@ -73,8 +83,8 @@ export const usePedidoDet = () => {
         mutateActualizarPedidoDetId,
         mutateEliminarPedidoDetID,
         ListaDet1,
-        useListaProductosPedidoDet
-        // ListaDet2,
+        useListaProductosPedidoDet,
+        ListaDet2,
         // refetchListaDet2
     }
 

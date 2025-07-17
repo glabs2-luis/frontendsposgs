@@ -37,7 +37,7 @@ export const usePedidosEnc = () => {
       queryKey: ['pedido', id.value],
       queryFn: () => obtenerPedidoEncPorIdAction(id.value),
       enabled: !!id.value,
-      refetchInterval: 2000,
+      refetchInterval: 1000,
       refetchOnWindowFocus: false
     })
 

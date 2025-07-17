@@ -71,6 +71,14 @@
     <q-page-container>
       <router-view />
     </q-page-container>
+
+    <q-footer>
+      <div class="bg-yellow-8 text-black text-center q-pa-sm">
+      Made by Hugo Boss
+      </div>
+    </q-footer>
+
+
   </q-layout>
 </template>
 
