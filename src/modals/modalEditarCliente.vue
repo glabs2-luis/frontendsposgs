@@ -32,7 +32,7 @@
 
 import { Cliente } from '@/modules/clientes/interfaces/clientesInterface'
 import { ref, watch, computed } from 'vue'
-import { showSuccessNotification } from '@/common/helper/notification';
+import { showSuccessNotification } from '@/common/helper/notification'
 
 const props = defineProps<{
   modelValue: boolean

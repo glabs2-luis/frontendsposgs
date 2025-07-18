@@ -34,8 +34,8 @@
       </q-card-section>
     </q-card>
 
-    <!-- Grid optimizado para mejor aprovechamiento -->
-    <div v-if="facturasFiltradas.length" class="row q-gutter-sm">
+    <!-- Grid  -->
+    <div v-if="facturasFiltradas.length" class="row q-gutter-md">
       <div 
         v-for="factura in facturasFiltradas" 
         :key="factura.ID_FACTURA_ENC"

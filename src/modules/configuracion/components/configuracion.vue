@@ -15,11 +15,26 @@
 
     </q-card-section>
 
+  </q-card>
 
-    <!-- Mas configuraciones -->
+    <!-- Sincronizar Facturas -->
+  <q-card flat bordered class="q-pa-md q-mt-md">
+    <q-card-section flat bordered class="q-pa-xs">
+      <div class="text-h6 text-primary">Sincronizar Facturas</div>
+
+      <q-separator class="q-my-md" />
+
+      <q-btn class="q-mt-md" color="primary" icon="sync" label="Sincronizar" @click=""  />
+    </q-card-section>
+
+  </q-card>
 
 
-    </q-card>
+
+      <!-- Mas configuraciones -->
+
+
+
   </q-page>
 </template>
 

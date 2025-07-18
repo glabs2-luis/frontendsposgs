@@ -49,8 +49,6 @@ export const crearFacturaEncAction = async () => {
 
 export const crearFacturaEncAction2 = async (factura: FacturaEnc2): Promise<FacturaEnc2> => {
   try {
-    console.log('📤 Enviando a backend:', factura)
-
     const { data } = await posApi.post<FacturaEnc2>(`/facturas-enc/facturacion`, factura)
     return data
   } catch (error) {

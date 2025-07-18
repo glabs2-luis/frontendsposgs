@@ -74,10 +74,9 @@
 
     <q-footer>
       <div class="bg-yellow-8 text-black text-center q-pa-sm">
-      Made by Hugo Boss
+      Made by Hugo Boss - 2025
       </div>
     </q-footer>
-
 
   </q-layout>
 </template>
@@ -101,9 +100,6 @@ const configuracionStore = useConfiguracionStore()
 
 const cerrarSesion = async () => {
 
-  localStorage.removeItem('token')
-  cleanAllStores()
-
   Swal.fire({
   title: "Cerrar Sesión",
   text: "Estas seguro que deseas salir?",
@@ -115,7 +111,9 @@ const cerrarSesion = async () => {
   confirmButtonText: "Si, Cerrar Sesion"
 }).then((result) => {
   if (result.isConfirmed) {
-      router.push('/login')
+    router.push('/login')
+    localStorage.removeItem('token')
+    cleanAllStores()
   }
 })
 

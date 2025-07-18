@@ -2,27 +2,30 @@
   <div class="pedido-detalle-container">
    <q-card flat bordered class="q-pa-md q-mb-xs bg-yellow-1 text-black rounded-borders shadow-2 " >
 
-  <!-- título + total -->
-  <div class="row items-center justify-between q-mb-md">
+    <!-- título + total -->
+    <div class="row items-center justify-between q-mb-md">
 
-    <!-- Título -->
-    <div class="col-auto row items-center q-gutter-sm">
-      <q-icon name="receipt_long" size="24px" color="black" />
-      <div>
-        <div class="text-subtitle2 text-weight-bold text-dark">
-          Detalle del Pedido 
-        </div>
-        <div class="text-caption text-grey-8">
-          Registra productos escaneando o ingresando manualmente
+      <!-- Título -->
+      <div class="col-auto row items-center q-gutter-sm">
+        <q-icon name="receipt_long" size="24px" color="black" />
+        <div>
+          <div class="text-subtitle2 text-weight-bold text-dark">
+            Detalle del Pedido 
+          </div>
+          <div class="text-caption text-grey-8">
+            Registra productos escaneando o ingresando manualmente
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Terminar Venta-->
-    <q-btn label="Terminar Venta (F4)" icon="point_of_sale" @click="terminarVenta" class="boton-amarillo q-ml-auto" />
+      <!-- Botones alineados a la derecha -->
+      <div class="col-auto row items-center q-gutter-sm">
+        <q-btn label="" icon="restart_alt" class="" @click="limpiar" />
+        <q-btn label="Terminar Venta (F4)" icon="point_of_sale" @click="terminarVenta" class="boton-amarillo" />
+      </div>
 
+      </div>
 
-  </div>
 
   <!-- Segunda fila: inputs + botones -->
   <div class="row q-col-gutter-sm items-end">
@@ -222,71 +225,78 @@
 -->
 
           
-        <!-- Opcion de pago -->
+                    <!-- Opcion de pago -->
+            <q-card-section class="q-gutter-md">
+              <div class="row q-col-gutter-md items-start">
+              
+                <!-- Selector de tipo de pago -->
+                <div class="col-12 col-sm-4">
+                  <q-select
+                    v-model="tipoPago"
+                    :options="opcionesPago2"
+                    label="Tipo de Pago"
+                    outlined
+                    dense
+                    class="bg-grey-3"
+                    input-class="text-bold"
+                  >
+                    <template v-slot:prepend>
+                      <q-icon name="payment" color="primary" />
+                    </template>
+                  </q-select>
+                </div>
+              
+                <!-- Campo efectivo -->
+                <div class="col-12 col-sm-4">
+                  <q-input
+                    v-model="montoEfectivo"
+                    label="Efectivo"
+                    prefix="Q"
+                    :disable="tipoPago !== 'EFECTIVO' && tipoPago !== 'MIXTO'"
+                    outlined
+                    dense
+                    class="bg-grey-3"
+                    input-class="text-bold"
+                    type="number"
+                    min="0"
+                  >
+                    <template v-slot:prepend>
+                      <q-icon name="account_balance_wallet" color="brown" />
+                    </template>
+                  </q-input>
+                </div>
+              
+                <!-- Campo tarjeta -->
+                <div class="col-12 col-sm-4">
+                  <q-input
+                    v-model="montoTarjeta"
+                    label="Tarjeta"
+                    prefix="Q"
+                    :disable="tipoPago !== 'TARJETA' && tipoPago !== 'MIXTO'"
+                    outlined
+                    dense
+                    class="bg-grey-3"
+                    input-class="text-bold"
+                    type="number"
+                    min="0"
+                  >
+                    <template v-slot:prepend>
+                      <q-icon name="credit_card" color="blue" />
+                    </template>
+                  </q-input>
+                </div>
+              
+              </div>
+            </q-card-section>
 
-        <q-card-section class="q-gutter-md">
-          <div class="row q-col-gutter-md items-start">
 
-    <!-- Selector de tipo de pago -->
-        <div class="col-12 col-sm-4">
-          <q-select
-            v-model="tipoPago"
-            :options="opcionesPago"
-            label="Tipo de Pago"
-            outlined
-            dense
-            class="bg-grey-3"
-            input-class="text-bold"
-          >
-            <template v-slot:prepend>
-              <q-icon name="payment" color="primary" />
-            </template>
-          </q-select>
-        </div>
+            <q-card-section class="q-pa-sm">
+            
+            <div class="text-subtitle2 text-weight-bold text-grey-8 q-mb-sm">
+              {{  calcularCambio > 0 ? `Cambio: Q. ${calcularCambio.toFixed(2)}` : 'No hay cambio' }} 
+            </div>
 
-    <!-- Campo efectivo -->
-    <div class="col-12 col-sm-4">
-      <q-input
-        v-model="montoEfectivo"
-        label="Efectivo"
-        prefix="Q"
-        :disable="opcionesPago !== 'EFECTIVO'"
-        outlined
-        dense
-        class="bg-grey-3"
-        input-class="text-bold"
-        type="number"
-        min="0"
-      >
-        <template v-slot:prepend>
-          <q-icon name="account_balance_wallet" color="brown" />
-        </template>
-      </q-input>
-    </div>
-
-    <!-- Campo tarjeta -->
-    <div class="col-12 col-sm-4">
-      <q-input
-        label="Tarjeta "
-        prefix="Q"
-        v-model="montoTarjeta"
-        :disable="opcionesPago !== 'TARJETA'"
-        outlined
-        dense
-        class="bg-grey-3"
-        input-class="text-bold"
-        type="number"
-        min="0"
-      >
-        <template v-slot:prepend>
-          <q-icon name="credit_card" color="blue" />
-        </template>
-      </q-input>
-    </div>
-
-  </div>
-
-</q-card-section>
+            </q-card-section>
 
 
         
@@ -326,7 +336,6 @@ import { usePedidoDet } from '@/modules/pedidos_det/composables/usePedidosDet'
 import { showConfirmationDialog, showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
 import { usePedidoStore } from '@/stores/pedido'
 import usePedidosEnc from '../../pedidos_enc/composables/usePedidosEnc'
-import { obtenerListaPedidosDet } from '@/modules/pedidos_det/action/pedidosDetAction'
 import { useCodigo } from '@/modules/codigo_barras/composables/useCodigo'
 import { Notify } from 'quasar'
 import { useTotalStore } from '@/stores/total'
@@ -348,7 +357,6 @@ const props = defineProps({
 
 const { mutateCrearPedidoDet, obtenerPedidosDetID, mutateActualizarPedidoDetId, mutateEliminarPedidoDetID, ListaDet1, ListaDet2, refetchListaDet2} = usePedidoDet()
 const configuracionStore = useConfiguracionStore()
-const { mutateCrearFacturaEnc } = useFacturasEnc()
 const { mutateCrearFacturaEnc2 } = useFacturasEnc()
 const { obtenerPedidoPorId } = usePedidosEnc()
 const { todosProductos, refetchTodosProductos, obtenerProductosId } = useProductos()
@@ -358,8 +366,12 @@ const detallesPedido = ref([])
 const codigoProducto = ref('')
 const cantidad = ref(1)
 
-const tipoPago = ref('EFECTIVO') // o null si querés que empiece vacío
+const montoEfectivo = ref(null)
+const montoTarjeta = ref(null)
+const opcionesPago2 = ['EFECTIVO', 'TARJETA', 'MIXTO']
+const tipoPago = ref('') 
 const calcularCambio = ref(0)
+
 const modalProductos = ref(false)
 const filtroProductos = ref('')
 const loadingProductos = ref(false)
@@ -376,7 +388,8 @@ const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
 const { data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedidoEnc)
 
 const { refetch: relistaDet2 } = ListaDet2(idPedidoEnc)
-// para facturacion
+
+// para facturacion, no mostrar por ahora
 const { data: productosFactura, refetch: refetchProductosFactura, isLoading: cargandoProductosFactura } = ListaDet1(idPedidoEnc)
 
 //cargar productos en factura
@@ -445,13 +458,20 @@ watch(modalProductos, async (val) => {
   }
 })
 
+// limpiar pantalla
+const limpiar = async () => {
+  const confirmado = await showConfirmationDialog(
+    'Limpiar Pedido',
+    '¿Estás seguro de que deseas limpiar el pedido actual?'
+  )
 
-const opcionesPago = [
-  { label: 'Efectivo', value: 'EFECTIVO', icon: 'attach_money' },
-  { label: 'Tarjeta', value: 'TARJETA', icon: 'credit_card' },
-  { label: 'Mixto', value: 'MIXTO', icon: 'account_balance' },
-]
-
+  if (confirmado) {
+    cleanAllStores()
+    enfocarCodigo()
+    
+   // await expansion.value.show()
+  }
+}
 
 // modal cuponazo
 const abrirCuponazo = () => {
@@ -464,7 +484,7 @@ const abrirCatalogo = () => {
 
 }
 
-// abrir facturacion con F4
+// Abrir facturacion con F4
 onMounted(() => {
   window.addEventListener('keydown', usarF4)
 })
@@ -473,15 +493,34 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', usarF4)
 })
 
-// modal factura
-const terminarVenta = () => {
-
-
-  // calcular cambi
-const calcularCambio = () => {
-  calcularCambio.value = pedidoStore.TOTAL_GENERAL_PEDIDO - dinero
+// calcular cambio
+const calcularCambioModal = () => {
+calcularCambio.value = montoEfectivo.value - totalStore.totalGeneral
 }
 
+// si el efectivo cambia, calcular cambio
+watch(montoEfectivo, (nuevoValor) => {
+  if (nuevoValor !== null && nuevoValor >= 0) {
+    calcularCambioModal()
+  } else {
+    calcularCambio.value = 0
+  }
+})
+
+// limpiar campos de pago 
+watch(tipoPago, (nuevo) => {
+  if( nuevo === 'EFECTIVO'){
+    montoTarjeta.value = null
+  } else if (nuevo === 'TARJETA') {
+    montoEfectivo.value = null
+  } else if (nuevo === 'MIXTO') {
+    montoEfectivo.value = null
+    montoTarjeta.value = null
+  }
+})
+
+// modal factura
+const terminarVenta = () => {
   // si no existe pedido
 if(!pedidoStore.idPedidoEnc ){
   showErrorNotification('No existe un pedido','Debes de crear un pedido primero' )
@@ -490,29 +529,23 @@ if(!pedidoStore.idPedidoEnc ){
   modalFacturacion.value = true
 }
 
-
 // Guarda factura enc y det
 const confirmarFactura = async () => {
 
-  console.log('Confirmar factura presionada')
-  console.log('Serie seleccionada desde el store:', configuracionStore.serieSeleccionada)
   try {
     const datos = {
       ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
       USUARIO_QUE_FACTURA: userStore.nombreVendedor,
       SERIE: configuracionStore.serieSeleccionada,
      // POR_DESCUENTO_GLOB: 1  // temporal hasta agregar descuento
-
     }
 
-    console.log('Datos enviados al backend:', datos)
     // Validación
     if (!datos.ID_PEDIDO_ENC || !datos.SERIE) {
       showErrorNotification('Factura','Faltan datos en la factura')
       return
     }
 
-    console.log('ID_PEDIDO_ENC enviado:', pedidoStore.idPedidoEnc)
     console.log('Datos enviados al backend:', datos)
 
     // Ejecutar la facturación
@@ -525,14 +558,13 @@ const confirmarFactura = async () => {
     cleanAllStores()
     props.onNuevoPedido()
     modalFacturacion.value = false
-
       },
+
       onError: (error) => {
         showErrorNotification('Factura', 'Error al crear la factura')
         console.error(error)
       }
     })
-
 
   } catch (error) {
     showErrorNotification('Factura','Faltan datos en la factura')
@@ -610,7 +642,6 @@ const totalPedido = () =>{
 const limpiarFiltro = () => {
   filtroProductos.value = ''
 }
-
 
 const buscarProductoEscaneado = async () => {
   if (!codigoProducto.value) return
@@ -690,8 +721,6 @@ const buscarProductoEscaneado = async () => {
 }
 
 
-
-
 // escanear o ingresar codigo 
 const buscarProductoPorCodigo = async () => {
   try {
@@ -732,8 +761,6 @@ const agregarProductoAlPedido = async (producto) => {
       ID_SUCURSAL: '1',
       NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido
     }
-
-      console.log('Detalle a enviar:', detalle)
 
       mutateCrearPedidoDet(detalle, {
       onSuccess: async (data) => {
@@ -790,7 +817,6 @@ defineExpose({
   padding: 6px 6px 0px 0;
   max-width: auto;
   margin: 0 auto;
-
 }
 
 .pedido-header {
@@ -896,7 +922,6 @@ defineExpose({
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   border-radius: 12px;
-  
 }
 
 .boton-amarillo {
@@ -993,7 +1018,7 @@ defineExpose({
   font-weight: 500;
 }
 
-/* Mejoras visuales para la tabla */
+/* tabla */
 .q-table tbody td {
   padding: 12px 16px;
 }

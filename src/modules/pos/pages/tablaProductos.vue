@@ -114,7 +114,7 @@
           </div>
         </template>
 
-        <!-- Loading personalizado -->
+        <!-- Loading -->
         <template v-slot:loading>
           <q-inner-loading showing class="custom-loading">
             <q-spinner-dots size="40px" color="primary" />

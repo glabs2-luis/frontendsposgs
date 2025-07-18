@@ -200,33 +200,59 @@ const abrirModalCliente = ref(false)
 const mostrarCardPedidoCreado = ref(false)
 const mostrarCardTotal = ref(false)
 const expansion = ref<any>(null)
-const { obtenerClientePorDocumento,refetchMostrarCF, mutateCrearCliente } = useClientes()
-const { mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId } = usePedidosEnc()
-
-const total = ref(0)
-const numPedido = ref(0) // mostrar pedido
-
+const numPedido = ref(0) 
 const totalReal = ref(0)
-
-const mostrarModalFacturacion = ref (false)
 const productosTabRef = ref(null)
 const focus = ref(null)
 const modalPendientes = ref (false)
+const mostrarModalFacturacion = ref(false)
 
+const { obtenerClientePorDocumento,refetchMostrarCF, mutateCrearCliente } = useClientes()
+const { mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId } = usePedidosEnc()
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc)
-
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0) // pedido funcional
 
-watchEffect(() => {
-  const hayCliente = clienteStore.documento || clienteStore.nombre || clienteStore.direccion
 
-  if (hayCliente ) {
-    expansion.value?.toggle()
+// toggle a expansion cuando se actualiza el pedido
+watchEffect(() => {
+  const cerrar = pedidoStore.idPedidoEnc
+  console.log('toggle ahora:', cerrar)
+
+  if (cerrar > 0){
+    expansion.value?.hide()
   }
 })
 
+// toggle  abierto si no hay cliente
+// watchEffect(() => {
+//   const abrir = pedidoStore.idPedidoEnc
+//   console.log('toggle ahora:', abrir)
 
+//   if (abrir === null){
+//     expansion.value?.show()
+//     focus.value = true
+//     console.log('mostrando el focus', focus.value)
+//   }
+// })
+
+
+
+watch(
+  () => pedidoStore.idPedidoEnc,
+  async (nuevoValor) => {
+    if (nuevoValor === null) {
+      expansion.value?.show();
+
+      await nextTick(); // espera a que se renderice el input
+
+      focus.value?.focus(); // enfoca directamente el q-input
+    }
+  },
+  { immediate: true }
+)
+
+// Actualizar numPedido y Total
 watchEffect(() => {
   if (pedidoEnc.value) {
     numPedido.value = pedidoEnc.value.NUMERO_DE_PEDIDO || 0
@@ -238,7 +264,7 @@ watchEffect(() => {
   }
 })
 
-
+// controla que exista un pedido
 watch(idPedidoEnc, (nuevoId) => {
   if (nuevoId && nuevoId > 0) {
    console.log('Pedido actualizado desde query:', {
@@ -249,17 +275,6 @@ watch(idPedidoEnc, (nuevoId) => {
   
 })
 
-
-watchEffect(() => {
-  console.log('pedidoEnc recibido:', pedidoEnc.value)
-})
-
-watchEffect(() => {
-  console.log('ID desde store:', idPedidoEnc.value)
-})
-
-
-
 // sucursal siempre: 1
 const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
   1,
@@ -268,18 +283,16 @@ const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
 
 // focus para pedido a DPI
 onMounted(() => {
+  if(focus.value)
   focus.value?.focus()
 })
 
 const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0)
 const mostrarTotalReal = computed(() => totalReal.value > 0)
 
-
-
 const abrirModalPedidosPendientes = () => {
   modalPendientes.value = true
 }
-
 
 //Llenar modal desde esta pagina
 const clienteTemp = ref ({
@@ -289,7 +302,6 @@ const clienteTemp = ref ({
   TELEFONO: '',
   CORREO_ELECTRONICO: ''
 })
-
 
 //Limpiar los datos del cliente
 const resetCliente = () => {
@@ -306,7 +318,7 @@ const nuevoPedido = () => {
   resetCliente()
   }
 
-
+// crear pedido xd
 const crearPedido = () => {
   const nombre = clienteStore.nombre?.trim()
   const direccion = clienteStore.direccion?.trim()
@@ -326,7 +338,7 @@ const crearPedido = () => {
     ID_SUCURSAL: 1,                // Sera unica
     USUARIO_INGRESO_PEDI: (userStore.nombreVendedor).substring(0,10) , 
     CODIGO_VENDEDOR: userStore.codigoVendedor ,          
-    CODIGO_DE_CLIENTE: 1020      // 
+    CODIGO_DE_CLIENTE: 1021      // 
   }
 
   console.log('Pedido a guardar:', JSON.stringify(pedidoEnc, null, 2));
@@ -343,7 +355,6 @@ const crearPedido = () => {
        pedidoStore.setPedidoEncabezado(data.ID_PEDIDO_ENC, data.NUMERO_DE_PEDIDO)
       console.log('ID_PEDIDO_ENC guardado en store:', pedidoStore.idPedidoEnc)
 
-
       mostrarCardPedidoCreado.value = true;
       mostrarCardTotal.value = true;
       
@@ -358,7 +369,6 @@ const crearPedido = () => {
   
     //focus
     productosTabRef.value?.enfocarCodigo()
-   
 }
 
 
@@ -374,8 +384,6 @@ const colocarCF = async () => {
   telefono: cf.data.TELEFONO || '',
   email: cf.data.CORREO_ELECTRONICO || ''
 })
-
-
     crearPedido()
   }
 }
@@ -398,7 +406,6 @@ const buscarClienteDPINIT = async () => {
          email: clienteEncontrado.CORREO_ELECTRONICO || ''
        })
 
-
       expansion.value?.toggle()
       crearPedido()
 
@@ -407,15 +414,14 @@ const buscarClienteDPINIT = async () => {
       abrirModalCliente.value = true
       clienteTemp.value.NIT = doc // prellenar el NIT buscado
   }
-
 }
 
+// Pues usar F2 que mas la funcion lo dice
 const usarF2 = (e: KeyboardEvent) => {
   if (e.key === 'F2') {
     e.preventDefault()
     colocarCF()
   }
-
 }
 
 const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
@@ -452,7 +458,6 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
     }
   })
 }
-
 
 </script>
 
@@ -515,7 +520,5 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 .tabla-elegante tbody tr:last-child td {
   border-bottom: none;
 }
-
-
 
 </style>
