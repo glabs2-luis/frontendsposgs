@@ -18,11 +18,10 @@ export const obtenerClientesAction = async (): Promise<Cliente[]> => {
         const { data } = await posApi.post<Cliente>(`/clientes`, cliente);
         return data
     } catch (error) {
-        console.log('error', error);
+        console.error('[crearClientesAction]', error)
         const message = getAxiosErrorMessage(error, "Hubo un error al crear el cliente")
         throw new Error(message)
     }
-
  }
 
  export const usarClienteCFAction = async ():
@@ -49,15 +48,14 @@ Promise<Cliente> => {
     }
 }
 
-export const actualizarClienteIdAction = async (id: number):
-Promise<Cliente> => {
-    try {
-        const { data } = await posApi.patch<Cliente>(`/clientes/${id}`)
-        return data
-    } catch (error){
-        const message = getAxiosErrorMessage(error, "Hubo un error actualizando cliente por ID")
-        throw new Error(message)
-    }
+export const actualizarClienteIdAction = async (id: number, datos: Partial<Cliente>): Promise<Cliente> => {
+  try {
+    const { data } = await posApi.patch<Cliente>(`/clientes/${id}`, datos)
+    return data
+  } catch (error) {
+    const message = getAxiosErrorMessage(error, "Hubo un error actualizando cliente por ID")
+    throw new Error(message)
+  }
 }
 
 export const eliminarClienteIdAction = async (id: number):

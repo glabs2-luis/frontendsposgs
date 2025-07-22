@@ -42,12 +42,12 @@
     </q-input>
 
     <!-- Cantidad -->
-    <q-input v-model.number="cantidad" label="Cantidad" type="number" outlined dense min="1" class="col-6 col-md-2"
+    <q-input v-model.number="cantidad2" label="Cantidad" type="number" outlined dense min="1" class="col-6 col-md-2"
     />
 
     <!-- Botones -->
     <div class="col-6 col-md-5 row q-gutter-sm">
-      <q-btn @click="agregarProducto" class="boton-amarillo" icon="add" label="Agregar" :loading="loadingAgregar" :disable="!codigoProducto"/>
+      <q-btn @click="buscarProductoEscaneado" class="boton-amarillo" icon="add" label="Agregar" :loading="loadingAgregar" :disable="!codigoProducto"/>
       
       <q-btn @click="abrirCatalogo" color="secondary" icon="inventory_2" label="Catálogo" class="col" outline/>
     </div>
@@ -136,9 +136,9 @@
                 </span>
 
                 <!-- Fecha local -->
-                <q-tooltip class="text-subtitle2" anchor="top middle" self="bottom middle">
+               <div class="text-subtitle2" anchor="top middle" self="bottom middle">
                  Vigente al {{ new Date(props.row.FECHA_VIGENCIA_F).toLocaleDateString('es-GT', { day: '2-digit', month: '2-digit', year: 'numeric' }) }}
-                </q-tooltip>
+               </div>
               </div>
               <div v-else class="text-grey-5">–</div>
             </q-td>
@@ -323,6 +323,49 @@
     </q-card>
   </q-dialog>
 
+  <!-- Modal de cuponazo -->
+<q-dialog v-model="modalCuponazo" persistent transition-show="fade" transition-hide="fade">
+    <q-card class="q-dialog-plugin q-pa-md" style="min-width: 400px; max-width: 90vw; max-height: 90vh">
+      <q-card-section class="row items-center justify-between">
+        <div class="text-h6 text-primary">Cuponazo</div>
+        <q-btn icon="close" flat round dense v-close-popup />
+      </q-card-section>
+
+      <q-separator />
+
+      <q-card-section>
+        <q-input v-model="cupon" label="Código del Cuponazo" outlined dense />
+        <q-input v-model="clave" label="Clave " type="password" outlined dense class="q-mt-md" />
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn flat label="Cancelar" v-close-popup />
+        <q-btn label="Aplicar Cuponazo" class="boton-amarillo"   @click="aplicarCuponazo" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+
+<!-- Modal de cantidad-->
+ <q-dialog v-model="modalCantidad" persistent transition-show="fade" transition-hide="fade">
+    <q-card class="q-dialog-plugin q-pa-md" style="min-width: 400px; max-width: 90vw; max-height: 90vh">
+      <q-card-section class="row items-center justify-between">
+        <div class="text-h6 text-primary">Cantidad del Producto</div>
+        <q-btn icon="close" flat round dense v-close-popup />
+      </q-card-section>
+
+      <q-separator />
+
+      <q-card-section>
+        <q-input v-model.number="cantidad2" ref="focusCantidad" label="Cantidad" type="number" outlined dense min="1" @keyup.enter="actualizarCantidad()"/>
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn flat label="Cancelar" v-close-popup />
+      </q-card-actions>
+    </q-card>
+ </q-dialog>
+
+
 
   </div>
 </template>
@@ -330,7 +373,7 @@
 <script setup >
 
 import { useQuasar } from 'quasar'
-import { ref, computed, onMounted, watch, watchEffect, onBeforeUnmount} from 'vue'
+import { ref, computed, onMounted, watch, watchEffect, onBeforeUnmount, nextTick} from 'vue'
 import { useProductos } from '@/modules/Productos/composables/useProductos'
 import { usePedidoDet } from '@/modules/pedidos_det/composables/usePedidosDet'
 import { showConfirmationDialog, showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
@@ -343,6 +386,8 @@ import useFacturasEnc from '../../facturas_enc/composables/useFacturasEnc'
 import { useUserStore } from '@/stores/user'
 import { useConfiguracionStore } from '@/stores/serie'
 import { cleanAllStores } from '@/common/helper/cleanStore'
+import { useSync } from '@/modules/sync/composables/useSync'
+import { ObtenerProductosPrecioAction } from '../../Productos/action/productosAction'
 
 const props = defineProps({
   pedidoId: {
@@ -355,23 +400,27 @@ const props = defineProps({
   }
 })
 
+const { mutateCrearSincronizacion } = useSync()
 const { mutateCrearPedidoDet, obtenerPedidosDetID, mutateActualizarPedidoDetId, mutateEliminarPedidoDetID, ListaDet1, ListaDet2, refetchListaDet2} = usePedidoDet()
 const configuracionStore = useConfiguracionStore()
 const { mutateCrearFacturaEnc2 } = useFacturasEnc()
 const { obtenerPedidoPorId } = usePedidosEnc()
-const { todosProductos, refetchTodosProductos, obtenerProductosId } = useProductos()
+const { todosProductos, refetchTodosProductos, obtenerProductosId, precioReal } = useProductos()
 const { obtenerPorCodigo } = useCodigo()
 const $q = useQuasar()
 const detallesPedido = ref([])
 const codigoProducto = ref('')
-const cantidad = ref(1)
-
+const cantidad = ref(1) // Cantidad en el boton
+const cantidad2 = ref(1) // para modal cantidad
 const montoEfectivo = ref(null)
 const montoTarjeta = ref(null)
 const opcionesPago2 = ['EFECTIVO', 'TARJETA', 'MIXTO']
 const tipoPago = ref('') 
 const calcularCambio = ref(0)
-
+const cupon = ref('')
+const clave = ref('')
+const cantidadProductos = ref(0)
+const modalCantidad = ref(false)
 const modalProductos = ref(false)
 const filtroProductos = ref('')
 const loadingProductos = ref(false)
@@ -386,11 +435,20 @@ const userStore = useUserStore()
 const modalCuponazo = ref(false)
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
 const { data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedidoEnc)
-
+const focusCantidad = ref(null) // foucs modal cantidad
 const { refetch: relistaDet2 } = ListaDet2(idPedidoEnc)
 
 // para facturacion, no mostrar por ahora
 const { data: productosFactura, refetch: refetchProductosFactura, isLoading: cargandoProductosFactura } = ListaDet1(idPedidoEnc)
+
+//focus al modal cantidad
+watch(modalCantidad, (val) => {
+  if (val) {
+    nextTick(() => {
+     focusCantidad.value?.$el.querySelector('input')?.select()
+    })
+  }
+})
 
 //cargar productos en factura
 watch(modalFacturacion, (val) => {
@@ -424,6 +482,31 @@ const usarF4 = (e) => {
   if (e.key === 'F4') {
     e.preventDefault()
     terminarVenta()
+  }
+}
+
+// limpiar pedido
+const usarDelete = (e) => {
+  if (e.key === 'Delete') {
+    e.preventDefault()
+    limpiar()
+  }
+}
+
+// usar multiplicador
+const usarMultiplicador = (e) =>{
+  if (e.key === '*') {
+    e.preventDefault()
+    abrirModalCantidad()
+  }
+}
+
+// cerrar modal de cantidad con enter
+const actualizarCantidad = () => {
+  if(cantidad2.value > 1) 
+  {
+    modalCantidad.value = false
+    return
   }
 }
 
@@ -483,6 +566,29 @@ const abrirCatalogo = () => {
   modalProductos.value = true
 
 }
+
+const abrirModalCantidad = () => {
+  modalCantidad.value = true
+}
+
+// Multiplicador
+onMounted(() => {
+  window.addEventListener('keydown', usarMultiplicador)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', usarMultiplicador)
+})
+
+// limpiar
+onMounted(() => {
+  window.addEventListener('keydown', usarDelete)
+})
+
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', usarDelete)
+})
 
 // Abrir facturacion con F4
 onMounted(() => {
@@ -550,12 +656,19 @@ const confirmarFactura = async () => {
 
     // Ejecutar la facturación
     mutateCrearFacturaEnc2(datos, {
+
     onSuccess: (respuesta) => {
     showSuccessNotification('Factura', 'Factura creada con éxito')
     console.log('Respuesta del backend:', respuesta)
 
+    console.log(respuesta.ID_FACTURA_ENC)
+
+    // crear sincronización
+    mutateCrearSincronizacion(respuesta.ID_FACTURA_ENC)
+
     // limpiar stores
     cleanAllStores()
+
     props.onNuevoPedido()
     modalFacturacion.value = false
       },
@@ -643,11 +756,12 @@ const limpiarFiltro = () => {
   filtroProductos.value = ''
 }
 
+// Buscar producto por código escaneado o ingresado manualmente
 const buscarProductoEscaneado = async () => {
   if (!codigoProducto.value) return
 
   if (!pedidoStore.idPedidoEnc) {
-    showErrorNotification('Error', 'Primero debe de crear un pedido')
+    showErrorNotification('No hay pedido', 'Debe de crear un pedido primero')
     return
   }
 
@@ -656,22 +770,36 @@ const buscarProductoEscaneado = async () => {
 
   // 1. buscar por código de barras
   try {
-    resultado = await consultarCodigoM(codigoProducto.value, 1) // cantidad fija como 1
+    resultado = await consultarCodigoM(codigoProducto.value, cantidad2.value) // cantidad fija como 1
+    console.log('Resultado de código de barras:', resultado)
+
   } catch (error) {
     console.warn('Código no encontrado por código de barras:', error)
   }
 
   // 2. buscar por ID de producto
-  if (!resultado || !resultado.producto || !resultado.precio) {
+  if (!resultado || !resultado.producto ) {
+
+
     try {
-      const productoDirecto = await obtenerProductosId(codigoProducto.value)
+     // const productoDirecto = await obtenerProductosId(codigoProducto.value, )
+      const productoDirecto = await precioReal(codigoProducto.value, 1)
+
+      if(productoDirecto.PRECIO_FINAL === 0){
+       showErrorNotification('Producto sin precio', `El código ${codigoProducto.value} no tiene precio`)
+        codigoProducto.value = ''
+        loadingPorCodigo.value = false
+        return
+      }
 
       const prod = Array.isArray(productoDirecto) ? productoDirecto[0] : productoDirecto
 
       if (!prod || !prod.PRODUCT0) {
-
         throw new Error('No encontrado')
+
       }
+
+      
 
       resultado = {
         producto: {
@@ -679,22 +807,24 @@ const buscarProductoEscaneado = async () => {
           DESCRIPCION_PROD: prod.DESCRIPCION_PROD
         },
         precio: {
-          PRECIO_FINAL: prod.COSTO_UNITARIO
+          PRECIO_FINAL: prod.PRECIO_FINAL,
         }
       }
     } catch (err) {
+
       showErrorNotification('Producto no encontrado', `El código ${codigoProducto.value} no existe`)
       codigoProducto.value = ''
       loadingPorCodigo.value = false
       return
     }
-  }
+  } 
+  
 
   // 3. Insertar producto al pedido
   const detalle = {
     ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
     PRODUCT0: resultado.producto.PRODUCT0,
-    CANTIDAD_PEDIDA: 1,
+    CANTIDAD_PEDIDA: cantidad2.value || 1, // usar cantidad del modal o 1 por defecto
     PRECIO_UNIDAD_VENTA: Number(resultado.precio.PRECIO_FINAL.toFixed(4)),
     SUBTOTAL_VENTAS: Number((1 * resultado.precio.PRECIO_FINAL).toFixed(4)),
     DESCRIPCION_PROD_AUX: resultado.producto.DESCRIPCION_PROD,
@@ -709,6 +839,7 @@ const buscarProductoEscaneado = async () => {
       codigoProducto.value = ''
       totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0)
       relistaDet2() // Refrescar lista de detalles
+      cantidad2.value = 1 // Resetear cantidad del modal
     },
     onError: (err) => {
       console.error('Error al guardar producto:', err)
@@ -777,7 +908,7 @@ const agregarProductoAlPedido = async (producto) => {
       },
       onError: (error) => {
         console.error('Error al guardar producto en BD:', error)
-        $q.notify({ type: 'negative', message: 'Debe crear un pedido primero' })
+        showErrorNotification('No hay pedido', 'Debe de crear un pedido primero')
       },
       onSettled: () => {
         loadingAgregar.value = false

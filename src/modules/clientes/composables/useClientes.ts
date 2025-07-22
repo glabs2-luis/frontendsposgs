@@ -35,15 +35,14 @@ export const useClientes = () => {
             console.error('Error buscando cliente:', error)
             return null
         }
-    
     }
+
     // Crear Cliente
-    const { mutate: mutateCrearCliente, } = useMutation ({
+    const { mutate: mutateCrearCliente } = useMutation ({
         mutationFn: (cliente: Partial<Cliente>) => crearClientesAction(cliente),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['clientes']})
         }
-
     })
 
     // Mostrar Cliente CF
@@ -52,15 +51,6 @@ export const useClientes = () => {
         queryFn: () => usarClienteCFAction(),
     })
 
-    // Actualizar cliente por ID
-      const { mutate: mutateActualizarClienteId } = useMutation({
-      mutationFn: actualizarClienteIdAction,
-
-      onSuccess: (_data, id) => {
-      queryClient.invalidateQueries({ queryKey: ['clientes'] })
-      queryClient.invalidateQueries({ queryKey: ['cliente', id] })
-    }
-  })
 
     // Eliminar cliente por ID
         const { mutate: mutateEliminarclienteId } = useMutation ({
@@ -69,30 +59,26 @@ export const useClientes = () => {
         onSuccess: (_data, id) => {
         queryClient.invalidateQueries({ queryKey: ['clientes'] })         
         queryClient.invalidateQueries({ queryKey: ['cliente', id] })      
-
     }   
 
   })
 
         const eliminarClienteId = async  (id: number) => { 
-            console.log('ID a eliminar:', id);
-                const confirmar = await showConfirmationDialog('Eliminar cliente', '¿Estás seguro de que deseas eliminar este cliente? ');
+            console.log('ID a eliminar:', id)
+                const confirmar = await showConfirmationDialog('Eliminar cliente', '¿Estás seguro de que deseas eliminar este cliente? ')
 
                 if (confirmar) {
-                    mutateEliminarclienteId(id);
+                    mutateEliminarclienteId(id)
                 }
-                
         }
 
-        const actualizarClienteIdActionClienteId = async  (id: number) => { 
-            console.log('ID a actualizar:', id);
-                const confirmar = await showConfirmationDialog('Editar cliente', '¿Estás seguro de que deseas editareste cliente? ');
-
-                if (confirmar) {
-                    mutateActualizarClienteId(id);
-                }
-                
-        }
+        const { mutate: mutateActualizarClienteId2 } = useMutation({
+          mutationFn: ({ id, data }: { id: number, data: any }) => actualizarClienteIdAction(id, data),
+          onSuccess: (_data, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ['clientes'] })
+            queryClient.invalidateQueries({ queryKey: ['cliente', id] })
+          }
+        })
 
 
     return { 
@@ -101,10 +87,10 @@ export const useClientes = () => {
         mutateCrearCliente,
         mostrarcf,
         refetchMostrarCF,
-        mutateActualizarClienteId,
         mutateEliminarclienteId,
         eliminarClienteId,
-        obtenerClientePorDocumento
+        obtenerClientePorDocumento,
+        mutateActualizarClienteId2,
     }
 }
 

@@ -248,6 +248,8 @@ const facturasFiltradas = computed(() => {
       String(f.NOMBRE_CLI_A_FACTUAR).toLowerCase().includes(filtro.value.toLowerCase())
     )
 })
+
+// Cargar detalle al abrir el modal
 const verDetalleFactura = async (id: number) => {
   idSeleccionado.value = id
   const resultado = await obtenerDetalleFactura(id)

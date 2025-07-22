@@ -1,39 +1,106 @@
 <template>
+
   <q-page class="q-pa-md">
+
     <q-card flat bordered class="q-pa-md">
-      <div class="text-h6 text-primary">Configuracion del Sistema</div>
+
+    <q-expansion-item flat bordered class="text-h6 text-black prueba" icon="compare_arrows" label="Cambiar Serie de Facturación" >
 
       <q-separator class="q-my-md" />
 
     <q-card-section>
-
         <q-select v-model="serie" :options="seriesOptions" label="Seleccionar Serie" option-label="SERIE" option-value="SERIE" emit-value map-options @update:model-value="guardarSerieSeleccionada" dense filled
         />
         <q-banner class="q-mt-md bg-grey-2 text-dark" rounded>
         Serie activa: <strong>{{ configuracionStore.serieSeleccionada }}</strong>
         </q-banner>
-
-    </q-card-section>
+      </q-card-section>
+    </q-expansion-item>
 
   </q-card>
+
 
     <!-- Sincronizar Facturas -->
   <q-card flat bordered class="q-pa-md q-mt-md">
-    <q-card-section flat bordered class="q-pa-xs">
-      <div class="text-h6 text-primary">Sincronizar Facturas</div>
-
+    <q-expansion-item icon="sync" flat bordered class="text-h6 text-black prueba" label="Sincronizar Facturas">
       <q-separator class="q-my-md" />
+        <q-banner class="bg-grey-2 text-dark q-pa-xs q-ma-md" rounded>
+        Facturas sin enviar: <strong> {{ archivosErrores?.count }} </strong> <br>
+        Última revisión: <strong>
+        {{ new Date(archivosErrores?.timestamp).toLocaleString('es-GT') }} </strong>
+        </q-banner>
+          <q-btn class="q-ma-md" color="primary" icon="sync" label="Sincronizar" @click="reintentarEnviarArchivos()"    />
+        <q-btn class="q-ma-md" color="secondary" icon="information" @click="mostrarConexion" />
 
-      <q-btn class="q-mt-md" color="primary" icon="sync" label="Sincronizar" @click=""  />
-    </q-card-section>
+    </q-expansion-item>
 
   </q-card>
 
+  <!-- Mensaje de conexión -->
+    <q-dialog v-model="conexionMensaje" persistent>
+      <q-card>
+        <q-card-section class="text-h6 text-primary">
+          Estado de la conexión
+          <q-btn flat icon="close" v-close-popup class="float-right" />
+        </q-card-section>
+        <q-card-section>
+          <p><strong> Estado: {{ estadoConexion.serverConnected }}</strong></p>
+        </q-card-section>
 
+      </q-card>
+    </q-dialog>
 
+      <!-- shortcuts -->
+
+        <q-card flat bordered class="q-pa-md q-mt-md">
+          <q-expansion-item class="text-h6 text-black prueba" icon="keyboard_alt" label="Mostrar Atajos de Teclado" dense-toggle expand-icon="keyboard_arrow_down"  header-class="text-black"
+          >
+            <q-markup-table flat bordered class="q-mt-md">
+              <thead>
+                <tr>
+                  <th class="text-left"><strong>Tecla</strong></th>
+                  <th class="text-left"><strong>Acción a Realizar</strong></th>
+                </tr>
+              </thead>
+              <tbody>
+
+                <tr>
+                  <td><kbd>F2</kbd></td>
+                  <td>Consumidor Final (CF)</td>
+                </tr>
+
+                <tr>
+                  <td><kbd>Delete</kbd></td>
+                  <td>Limpiar pedido actual</td>
+                </tr>
+                
+                <tr>
+                  <td><kbd>*</kbd></td>
+                  <td>Cambiar Cantidad de productos</td>
+                </tr>
+
+                <tr>
+                  <td><kbd>Enter</kbd></td>
+                  <td>Confirmar cantidad y cerrar ventana</td>
+                </tr>
+
+                <tr>
+                  <td><kbd>F4</kbd></td>
+                  <td>Facturar</td>
+                </tr>
+                
+                <tr>
+                  <td><kbd>-</kbd></td>
+                  <td>Pedidos Pendientes</td>
+                </tr>
+
+              </tbody>
+            </q-markup-table>
+          </q-expansion-item>
+        </q-card>
+
+    
       <!-- Mas configuraciones -->
-
-
 
   </q-page>
 </template>
@@ -49,9 +116,14 @@ import { showConfirmationDialog } from '@/common/helper/notification'
 const configuracionStore = useConfiguracionStore()
 const { seriesSucursal } = useSeries()
 
+// sync
+import { useSync } from '@/modules/sync/composables/useSync'
+const { refetchArchivosCreados, archivosTransferidos, refetchArchivosTransferidos, refetchArchivosErrores, reintentarEnviarArchivos, archivosErrores, estadoConexion } = useSync()
+
 // Parámetros
 const idSucursal = ref(1)
 const serie = ref(configuracionStore.serieSeleccionada || '')
+const conexionMensaje = ref(false)
 
 const { data: series, isLoading, error } = seriesSucursal(idSucursal.value)
 
@@ -72,9 +144,25 @@ const guardarSerieSeleccionada = async (valor: string) => {
   }
 }
 
+// mostrar la conexion de la base de datos
+const mostrarConexion = () => {
+  conexionMensaje.value = true
+}
+
 </script>
 
 
 <style scoped>
+
+.prueba {
+
+  color: #212121; 
+  border-radius: 8px;
+  border: 1px solid #faf9b8; 
+  transition: all 0.3s ease;
+  margin-bottom: 0;
+  padding: 0 0 0 0;
+}
+
 
 </style>

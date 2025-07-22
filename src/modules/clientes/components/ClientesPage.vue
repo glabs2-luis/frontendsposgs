@@ -54,7 +54,7 @@
 
 <script setup lang="ts">
 
-import { ref, computed } from 'vue'
+import { ref, computed, toRaw } from 'vue'
 import type { QTableColumn } from 'quasar'
 import { Cliente } from '../interfaces/clientesInterface';
 import { useClientes } from '../composables/useClientes'
@@ -62,7 +62,7 @@ import { eliminarClienteIdAction, crearClientesAction } from '../action/clientes
 import ModalEditarCliente from '@/modals/modalEditarCliente.vue';
 import { showErrorNotification, showSuccessNotification } from '@/common/helper/notification';
 
-const { todosClientes, eliminarClienteId, mutateActualizarClienteId } = useClientes()
+const { todosClientes, eliminarClienteId, mutateActualizarClienteId2, mutateCrearCliente } = useClientes()
 
 const filtro = ref('')
 const modalEditar = ref(false)
@@ -102,24 +102,35 @@ function abrirModalCrearCliente() {
   modalEditar.value = true
 }
 
-async function guardarCliente(cliente: Cliente) {
-  try {
-    if (esNuevo.value) {
-      const creado = await crearClientesAction(cliente)
-      if (creado) {
+function guardarCliente(cliente: Cliente) {
+  if (esNuevo.value) {
+    console.log('cliente a crear', cliente)
+    
+    
+    mutateCrearCliente(cliente, {
+      onSuccess: () => {
         showSuccessNotification('Nuevo Cliente', 'Cliente creado satisfactoriamente')
-
+        modalEditar.value = false
+      },
+      onError: () => {
+        showErrorNotification('Error', 'No se pudo crear el cliente')
       }
-    } else {
-      // Actualizar cliente existente
-      await mutateActualizarClienteId(cliente.ID_ACLIENTE!)
-      showSuccessNotification('Cliente Actualizado', 'Cliente actualizado satisfactoriamente')
-    }
-    modalEditar.value = false
-  } catch (error) {
-    showErrorNotification('Error', esNuevo.value ? 'No se pudo crear el cliente' : 'No se pudo actualizar el cliente')
+    })
+  } else {
+    const { ID_ACLIENTE, ...datosActualizados } = cliente
+
+    mutateActualizarClienteId2({ id: ID_ACLIENTE, data: datosActualizados }, {
+      onSuccess: () => {
+        showSuccessNotification('Cliente Actualizado', 'Cliente actualizado satisfactoriamente')
+        modalEditar.value = false
+      },
+      onError: () => {
+        showErrorNotification('Error', 'No se pudo actualizar el cliente')
+      }
+    })
   }
 }
+
 
 </script>
 

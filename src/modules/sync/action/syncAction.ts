@@ -1,10 +1,19 @@
 import posApi from "@/api/apiPos"
 import { getAxiosErrorMessage } from "@/common/helper/geterrordb"
+import { SyncFac } from "../interface/syncInterface"
+import { SyncStatus } from "../interface/syncStatusInterface"
+import { SyncConfig } from "../interface/syncConfigInterface"
+import { TransferConfig } from "../interface/transferConfigInterface"
+import { ConexionStatus } from "../interface/conexionStatusInterface"
+import { RetryErrors } from "../interface/retryInterface"
+import { FilesError } from "../interface/filesErrorInterface"
+import { FilesTransferred } from "../interface/filesTransferredInterface"
+import { FilesCreated } from "../interface/filesCreatedInterface"
 
 // crear Sincronizacion
-export const crearSincronizacionAction = async (idFacturaEnc: number): Promise<void> => {
+export const crearSincronizacionAction = async (idFacturaEnc: number): Promise<SyncFac> => {
     try {
-    const { data } = await posApi.post(`/sync/export-transfer-background/factura/${idFacturaEnc}`)
+    const { data } = await posApi.post<SyncFac>(`/sync/export-transfer-background/factura/${idFacturaEnc}`)
     return data
     } catch (error) {           
    console.error('Error al crear sincronización:', error)
@@ -13,10 +22,10 @@ export const crearSincronizacionAction = async (idFacturaEnc: number): Promise<v
     }
 }
 
-// obteneer estado de sincronización
-export const statusSincronizacionAction = async (): Promise<void> => {
+// obtener estado de sincronización
+export const statusSincronizacionAction = async (): Promise<SyncStatus> => {
     try {
-        const { data } = await posApi.get(`/sync/status`)
+        const { data } = await posApi.get<SyncStatus>(`/sync/status`)
         console.log('Datos sincronizados:', data)
         return data
     } catch (error) {
@@ -27,9 +36,9 @@ export const statusSincronizacionAction = async (): Promise<void> => {
 }
 
 // obtener config de la sincronización
-export const obtenerConfigSincronizacionAction = async (): Promise<void> => {
+export const obtenerConfigSincronizacionAction = async (): Promise<SyncConfig> => {
     try {
-        const { data } = await posApi.get(`/sync/config`)
+        const { data } = await posApi.get<SyncConfig>(`/sync/config`)
         console.log('Configuración de sincronización:', data)
         return data
     } catch (error) {
@@ -39,9 +48,23 @@ export const obtenerConfigSincronizacionAction = async (): Promise<void> => {
     }
 }   
 
-export const obtenerEstadoConexionAction = async (): Promise<void> => {
+// obtener configuracion de la transferencia
+export const obtenerConfigTransferenciaAction = async (): Promise<TransferConfig> => {
     try {
-        const { data } = await posApi.get(`/sync/conectionStatus`)
+        const { data } = await posApi.get<TransferConfig>(`/sync/transfer/config`)
+        console.log('Configuración de transferencia:', data)
+        return data
+    } catch (error) {
+        console.error('Error al obtener configuración de transferencia:', error)
+        const message = getAxiosErrorMessage(error, "Hubo un error al obtener la configuración de transferencia")
+        throw new Error(message)
+    }
+}
+
+// Obtener estado de conexion 
+export const obtenerEstadoConexionAction = async (): Promise<ConexionStatus> => {
+    try {
+        const { data } = await posApi.get<ConexionStatus>(`/sync/transfer/conectionStatus`)
         console.log('Estado de conexión:', data)
         return data
     } catch (error) {
@@ -51,9 +74,10 @@ export const obtenerEstadoConexionAction = async (): Promise<void> => {
     }
 }   
 
-export const obtenerArchivosCreadosAction = async (): Promise<void> => {
+// Archivos creados
+export const obtenerArchivosCreadosAction = async (): Promise<FilesCreated> => {
     try {
-        const { data } = await posApi.get(`/sync/files/created`)
+        const { data } = await posApi.get<FilesCreated>(`/sync/files/created`)
         console.log('Archivos creados:', data)
         return data
     } catch (error) {
@@ -63,9 +87,10 @@ export const obtenerArchivosCreadosAction = async (): Promise<void> => {
     }
 }   
 
-export const obtenerArchivosTransferidosAction = async (): Promise<void> => {
+// Archivos transferidos
+export const obtenerArchivosTransferidosAction = async (): Promise<FilesTransferred> => {
     try {
-        const { data } = await posApi.get(`/sync/files/transferred`)
+        const { data } = await posApi.get<FilesTransferred>(`/sync/files/transferred`)
         console.log('Archivos transferidos:', data)
         return data
     } catch (error) {
@@ -75,9 +100,10 @@ export const obtenerArchivosTransferidosAction = async (): Promise<void> => {
     }
 }    
 
-export const obtenerArchivosErroresAction = async (): Promise<void> => {
+// Archivos con errores
+export const obtenerArchivosErroresAction = async (): Promise<FilesError> => {
     try {
-        const { data } = await posApi.get(`/sync/files/error`)
+        const { data } = await posApi.get<FilesError>(`/sync/files/error`)
         console.log('Archivos con errores:', data)
         return data
     } catch (error) {
@@ -87,9 +113,10 @@ export const obtenerArchivosErroresAction = async (): Promise<void> => {
     }
 }   
 
-export const reintentarEnviarArchivosAction = async (): Promise<void> => {
+// Reintentar enviar archivos con errores
+export const reintentarEnviarArchivosAction = async (): Promise<RetryErrors> => {
     try {
-        const { data } = await posApi.post(`/sync/retry/error-files`)
+        const { data } = await posApi.post<RetryErrors>(`/sync/retry/error-files`)
         console.log('Archivos reintentados:', data)
         return data
     } catch (error) {
@@ -98,6 +125,4 @@ export const reintentarEnviarArchivosAction = async (): Promise<void> => {
         throw new Error(message)
     }
 }   
-
-
 

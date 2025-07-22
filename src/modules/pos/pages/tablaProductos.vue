@@ -12,7 +12,7 @@
         flat
         :loading="isLoading"
         :pagination="{ rowsPerPage: 20 }"
-        class="elegant-table"
+        class="elegant-table h-full full-height-table"
       >
         <!-- Header -->
         <template v-slot:header="props">
@@ -41,12 +41,12 @@
                 <div class="price-cell column">
                   <template v-if="props.row.PRECIO_PROMOCION && props.row.PRECIO_PROMOCION < props.row.PRECIO_UNIDAD_VENTA">
                     <div class="text-grey text-strike">
-                      Q {{ Number(props.row.PRECIO_UNIDAD_VENTA).toFixed(2) }}
+                      Q {{ Number(props.row.PRECIO_UNIDAD_VENTA).toFixed(4) }}
                     </div>
                   </template>
                   <template v-else>
-                    <div class="text-weight-medium">
-                      Q {{ Number(props.row.PRECIO_UNIDAD_VENTA).toFixed(2) }}
+                    <div class="text-weight-medium " style="font-size: 16px;">
+                      Q {{ Number(props.row.PRECIO_UNIDAD_VENTA).toFixed(4) }}
                     </div>
                   </template>
                 </div>
@@ -55,9 +55,9 @@
               <!-- Subtotal General -->
               <template v-else-if="col.name === 'SUBTOTAL_GENERAL'">
                 <div class="price-cell">
-                  <span class="text-weight-medium">
+                  <span class="text-weight-medium" style="font-size: 16px;">
                     <!-- Calculo  manual-->
-                  Q {{ (props.row.CANTIDAD_PEDIDA * props.row.PRECIO_UNIDAD_VENTA).toFixed(2) }}
+                  Q {{ (props.row.CANTIDAD_PEDIDA * props.row.PRECIO_UNIDAD_VENTA).toFixed(4) }}
                   </span>
                 </div>
               </template>
@@ -67,7 +67,7 @@
               <template v-else-if="col.name === 'acciones'">
                 <div class="actions-cell">
                   <q-btn 
-                    size="sm" 
+                    size="md" 
                     color="negative" 
                     icon="delete" 
                     round 
@@ -103,11 +103,14 @@
 
         <!-- Estado sin datos -->
         <template v-slot:no-data>
-          <div class="no-data-container">
-            <div class="no-data-content">
-              <q-icon name="inventory_2" size="64px" class="no-data-icon" />
-              <div class="text-h6 text-weight-medium q-mb-xs">No hay productos agregados</div>
-              <div class="text-body2 text-grey-6">
+          <div
+            class="full-width full-height flex flex-center"
+            style="min-height: 60vh;"
+          >
+            <div class="column items-center justify-center text-center">
+              <q-icon name="inventory_2" size="64px" class="text-grey-5 q-mb-sm" />
+              <div class="text-h6 text-grey-7">No hay productos agregados</div>
+              <div class="text-subtitle2 text-grey-5">
                 Escanea un código o busca productos en el catálogo
               </div>
             </div>
@@ -233,6 +236,7 @@ const eliminarProducto = async (detalle) => {
 <style scoped>
 
 .productos-table-card {
+  height: 100vh;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   border-radius: 6px;
   overflow: hidden;
@@ -268,13 +272,21 @@ const eliminarProducto = async (detalle) => {
 }
 
 .table-section {
+  height: calc(100vh - 60px);
   padding: 0;
   border-radius: 2px;
 }
 
+.full-height-table {
+  height: auto;
+}
+
 .elegant-table {
   background: white;
-  
+  border-radius: 0%;
+  justify-items: center;
+  justify-content: center;
+
 }
 
 .table-header {
@@ -316,7 +328,7 @@ const eliminarProducto = async (detalle) => {
 }
 
 .body-cell {
-  padding: 12px;
+  font-size: 15px; /* tamaño de la letra */
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
@@ -343,18 +355,23 @@ const eliminarProducto = async (detalle) => {
 }
 
 .no-data-container {
+  height: 100%;
   width: 100%;
-  padding: 60px 20px;
+  padding: 20px 10px;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 300px;
   background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
 }
 
 .no-data-content {
+  align-items: center;
+  justify-content: center;
+  height: 100%;
   text-align: center;
   max-width: 300px;
+  color: #555;
+  font-size: 15px;
 }
 
 .no-data-icon {

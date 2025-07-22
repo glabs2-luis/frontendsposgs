@@ -8,7 +8,7 @@
 
         <!-- ExpansionItem -->
         <div class="col">
-          <q-expansion-item ref="expansion" icon="person" label="Información del Cliente" expand-separator default-opened header-class="bg-yellow-1 text-black" >
+          <q-expansion-item ref="expansion" icon="person" label="Información del Cliente" lazy-rules expand-separator default-opened header-class="bg-yellow-1 text-black" >
          
             <template #header>
               <q-item-section avatar>
@@ -97,10 +97,10 @@
                   <q-markup-table flat bordered class="q-mt-sm tabla-elegante">
                     <thead>
                       <tr>
-                        <th class="text-left"># Pedido</th>
-                        <th class="text-left">Cliente</th>
-                        <th class="text-left">Nit</th>
-                        <th class="text-left">Direccion</th>
+                        <th class="text-left"><strong># Pedido</strong></th>
+                        <th class="text-left"><strong>Cliente</strong></th>
+                        <th class="text-left"><strong>Nit</strong></th>
+                        <th class="text-left"><strong>Direccion</strong></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -167,15 +167,13 @@
    </div>
 
    <ProductosTab ref="productosTabRef" :onNuevoPedido="nuevoPedido"/>
-    Prueba 
    <TablaProductos ref="tablaProductosRef"/>  
-   <Tabla2 ref="Tabla2Ref"/>
 </template>
 
 
 <script setup lang="ts">
 
-import { ref, computed, onMounted, watchEffect, watch } from 'vue'
+import { ref, computed, onMounted, watchEffect, watch, onBeforeUnmount } from 'vue'
 import { QExpansionItem } from 'quasar'
 import useClientes from '../../clientes/composables/useClientes'
 import { showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
@@ -189,7 +187,6 @@ import { usePedidoStore } from '@/stores/pedido'
 import TablaProductos from './tablaProductos.vue'
 import { useTotalStore } from '@/stores/total'
 import { useClienteStore } from '@/stores/cliente'
-import Tabla2 from './tabla2.vue'
 
 const clienteStore = useClienteStore()
 const totalStore = useTotalStore()
@@ -214,7 +211,24 @@ const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc)
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0) // pedido funcional
 
 
-// toggle a expansion cuando se actualiza el pedido
+// signo menos
+onMounted(() => {
+  window.addEventListener('keydown', usarMenos)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', usarMenos)
+})
+
+// usar tecla - para abrir modal pendientes
+const usarMenos = (e) =>{
+  if (e.key === '-') {
+    e.preventDefault()
+    abrirModalPedidosPendientes()
+  }
+}
+
+// cerrar expansion item si hay pedido
 watchEffect(() => {
   const cerrar = pedidoStore.idPedidoEnc
   console.log('toggle ahora:', cerrar)
@@ -224,33 +238,25 @@ watchEffect(() => {
   }
 })
 
-// toggle  abierto si no hay cliente
-// watchEffect(() => {
-//   const abrir = pedidoStore.idPedidoEnc
-//   console.log('toggle ahora:', abrir)
 
-//   if (abrir === null){
-//     expansion.value?.show()
-//     focus.value = true
-//     console.log('mostrando el focus', focus.value)
-//   }
-// })
+// Opción A: Solo enfoca cuando el valor queda vacío
+watch(() => clienteStore.documento, (nuevoValor, oldValor) => {
+  if (!nuevoValor) {
+    expansion.value?.show()
+    enfocarCodigo()
+  }
+})
 
 
+// foucs al ref
+const enfocarCodigo = () => {
+  focus.value?.focus()
+}
 
-watch(
-  () => pedidoStore.idPedidoEnc,
-  async (nuevoValor) => {
-    if (nuevoValor === null) {
-      expansion.value?.show();
+onMounted(() => {
+  enfocarCodigo()
+})
 
-      await nextTick(); // espera a que se renderice el input
-
-      focus.value?.focus(); // enfoca directamente el q-input
-    }
-  },
-  { immediate: true }
-)
 
 // Actualizar numPedido y Total
 watchEffect(() => {
@@ -270,7 +276,6 @@ watch(idPedidoEnc, (nuevoId) => {
    console.log('Pedido actualizado desde query:', {
      total: totalReal.value
     })
-
    }
   
 })
@@ -281,11 +286,6 @@ const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
   userStore.codigoVendedor
 )
 
-// focus para pedido a DPI
-onMounted(() => {
-  if(focus.value)
-  focus.value?.focus()
-})
 
 const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0)
 const mostrarTotalReal = computed(() => totalReal.value > 0)
