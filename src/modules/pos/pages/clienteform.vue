@@ -269,15 +269,27 @@ const continuarPedido = async (pedido) => {
   // Actualizar el store con el ID del pedido pendiente
   pedidoStore.setPedidoEncabezado(pedido.ID_PEDIDO_ENC, pedido.NUMERO_DE_PEDIDO)
   
-  // cliente store
-
+  // set new store
   console.log('ID_PEDIDO_ENC guardado en store:', pedidoStore.idPedidoEnc)
+console.log('Contenido de pedido seleccionado:', pedido)
+
+    // set cliente
+    clienteStore.setCliente({
+    documento: pedido.NIT_A_FACTURAR,
+    nombre: pedido.NOMBRE_A_FACTURAR,
+    direccion: pedido.DIRECCION_FACTURAR,
+    telefono: pedido.TELEFONO_CLIENTE || null,// no viene la info
+    email: pedido.EMAIL_CLIENTE || null // no viene la info
+  })
+
   // Cerrar modal de pendientes
   modalPendientes.value = false
   
   // Enfocar productosTab para continuar
   productosTabRef.value?.enfocarCodigo()
 }
+
+
 
 
 // signo menos

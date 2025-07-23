@@ -249,7 +249,7 @@
               
                 <!-- Campo efectivo -->
                 <div class="col-12 col-sm-4">
-                  <q-input ref="focusEfectivo" v-model="montoEfectivo" label="Efectivo" prefix="Q" :disable="tipoPago !== 'EFECTIVO' && tipoPago !== 'MIXTO'" outlined dense class="bg-grey-3" input-class="text-bold" type="number" min="0" @keydown.enter.prevent="confirmarFactura()"
+                  <q-input ref="focusEfectivo" v-model="montoEfectivo" label="Efectivo" prefix="Q" :disable="tipoPago !== 'EFECTIVO' && tipoPago !== 'MIXTO'" outlined dense class="bg-grey-3" input-class="text-bold" type="number" min="0" @keydown.enter.prevent="confirmarFactura"
                   >
                     <template v-slot:prepend>
                       <q-icon name="account_balance_wallet" color="brown" />
@@ -259,7 +259,7 @@
               
                 <!-- Campo tarjeta -->
                 <div class="col-12 col-sm-4">
-                  <q-input v-model="montoTarjeta" label="Tarjeta" prefix="Q" :disable="tipoPago !== 'TARJETA' && tipoPago !== 'MIXTO'" outlined dense class="bg-grey-3" input-class="text-bold" type="number" min="0"
+                  <q-input ref="focusTarjeta" v-model="montoTarjeta" label="Tarjeta" prefix="Q" :disable="tipoPago !== 'TARJETA' && tipoPago !== 'MIXTO'" outlined dense class="bg-grey-3" input-class="text-bold" type="number" min="0" @keydown.enter.prevent="confirmarFactura"
                   >
                     <template v-slot:prepend>
                       <q-icon name="credit_card" color="blue" />
@@ -337,7 +337,7 @@
       <q-separator />
 
       <q-card-section>
-        <q-input v-model.number="cantidad2" ref="focusCantidad" label="Cantidad" type="number" outlined dense min="1" @keyup.enter="actualizarCantidad()"/>
+        <q-input v-model.number="cantidad2" ref="focusCantidad" label="Cantidad" type="number" outlined dense min="1" @keyup.enter.prevent="actualizarCantidad()"/>
       </q-card-section>
 
       <q-card-actions align="right">
@@ -420,6 +420,7 @@ const { data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedido
 const focusCantidad = ref(null) // focus modal cantidad
 const { refetch: relistaDet2 } = ListaDet2(idPedidoEnc)
 const focusEfectivo = ref(null) // focus efectivo
+const focusTarjeta = ref(null)
 
 // para facturacion, no mostrar por ahora
 const { data: productosFactura, refetch: refetchProductosFactura, isLoading: cargandoProductosFactura } = ListaDet1(idPedidoEnc)
@@ -586,7 +587,6 @@ onMounted(() => {
   window.addEventListener('keydown', usarDelete)
 })
 
-
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', usarDelete)
 })
@@ -620,6 +620,31 @@ watch(montoEfectivo, (nuevoValor) => {
   }
 })
 
+//focus a efectivo
+watch(tipoPago, async (nuevo) => {
+  if(nuevo === 'EFECTIVO'){
+    await nextTick()
+      focusEfectivo.value?.focus()
+  }
+})
+
+// focus desde mixto
+watch(tipoPago, async(nuevo) => {
+  if(nuevo === 'MIXTO'){
+    await nextTick()
+    focusEfectivo.value?.focus()
+  }
+  
+}) 
+
+// focus a tarjeta
+watch(tipoPago, async (nuevo) => {
+  if(nuevo === 'TARJETA'){
+    await nextTick()
+    focusTarjeta.value?.focus()
+  }
+})
+
 // limpiar campos de pago 
 watch(tipoPago, (nuevo) => {
   if( nuevo === 'EFECTIVO'){
@@ -633,7 +658,7 @@ watch(tipoPago, (nuevo) => {
 })
 
 // modal factura
-const terminarVenta = () => {
+const terminarVenta = async () => {
   // si no existe pedido
 if(!pedidoStore.idPedidoEnc ){
   showErrorNotification('No existe un pedido','Debes de crear un pedido primero' )
@@ -642,8 +667,17 @@ if(!pedidoStore.idPedidoEnc ){
   modalFacturacion.value = true
 }
 
+
 // Guarda factura enc y det
 const confirmarFactura = async () => {
+
+    // modal confirmacion factura
+    const confirmarFac = await showConfirmationInsideModal('Facturar','Esta seguro que desea facturar')
+
+    // esperar confirmacion de factura
+    await nextTick()
+    if(!confirmarFac) return
+
 
   try {
     const datos = {
@@ -669,7 +703,7 @@ const confirmarFactura = async () => {
 
     // id de factura enc
     console.log(respuesta.ID_FACTURA_ENC)
-
+    
     // crear sincronización
     mutateCrearSincronizacion(respuesta.ID_FACTURA_ENC)
 
@@ -678,20 +712,23 @@ const confirmarFactura = async () => {
 
     props.onNuevoPedido()
     modalFacturacion.value = false
-      },
+
+    //refrescar la pagina
+    window.location.reload()
+    },
 
       onError: (error) => {
-        modalFacturacion.value = false
         showErrorNotification('No hay Productos','Debe ingresar al menos un producto al pedido')
         console.error(error)
       }
     })
 
   } catch (error) {
-    modalFacturacion.value = false
     showErrorNotification('No hay Productos','Debe ingresar al menos un producto al pedido')
     console.error(error)
   }
+  // borrar efectivo
+  montoEfectivo.value = (null)
 }
 
 // Columnas del catálogo
@@ -805,11 +842,8 @@ const buscarProductoEscaneado = async () => {
 
       if (!prod || !prod.PRODUCT0) {
         throw new Error('No encontrado')
-
       }
-
-      
-
+    
       resultado = {
         producto: {
           PRODUCT0: prod.PRODUCT0,
@@ -828,7 +862,6 @@ const buscarProductoEscaneado = async () => {
     }
   } 
   
-
   // 3. Insertar producto al pedido
   const detalle = {
     ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
@@ -878,7 +911,6 @@ const buscarProductoPorCodigo = async () => {
     showErrorNotification('Producto', 'El producto no existe')
   }
 }
-
 
 // crea pedido det desde catalogo
 const agregarProductoAlPedido = async (producto) => {
