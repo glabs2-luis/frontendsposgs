@@ -32,6 +32,7 @@
 
               <q-card-section class="login-form">
                 <q-input
+                  ref="focusUsuario"
                   v-model="usuario"
                   label="Usuario"
                   outlined
@@ -41,6 +42,7 @@
                 />
                 
                 <q-input
+                  ref="focusContra" 
                   v-model="password"
                   label="Contraseña"
                   type="password"
@@ -100,6 +102,9 @@ const recordarUsuario = ref(false)
 const mostrarBodega  = async () => {
   bodega.value = await ObtenerBodegasId2()
 }
+
+
+
 
 const realizarLogin = () => {
   loginMutation({

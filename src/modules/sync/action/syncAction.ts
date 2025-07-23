@@ -26,7 +26,6 @@ export const crearSincronizacionAction = async (idFacturaEnc: number): Promise<S
 export const statusSincronizacionAction = async (): Promise<SyncStatus> => {
     try {
         const { data } = await posApi.get<SyncStatus>(`/sync/status`)
-        console.log('Datos sincronizados:', data)
         return data
     } catch (error) {
         console.error('Error al sincronizar datos:', error)
@@ -39,7 +38,6 @@ export const statusSincronizacionAction = async (): Promise<SyncStatus> => {
 export const obtenerConfigSincronizacionAction = async (): Promise<SyncConfig> => {
     try {
         const { data } = await posApi.get<SyncConfig>(`/sync/config`)
-        console.log('Configuración de sincronización:', data)
         return data
     } catch (error) {
         console.error('Error al obtener configuración de sincronización:', error)
@@ -52,7 +50,6 @@ export const obtenerConfigSincronizacionAction = async (): Promise<SyncConfig> =
 export const obtenerConfigTransferenciaAction = async (): Promise<TransferConfig> => {
     try {
         const { data } = await posApi.get<TransferConfig>(`/sync/transfer/config`)
-        console.log('Configuración de transferencia:', data)
         return data
     } catch (error) {
         console.error('Error al obtener configuración de transferencia:', error)
@@ -65,7 +62,6 @@ export const obtenerConfigTransferenciaAction = async (): Promise<TransferConfig
 export const obtenerEstadoConexionAction = async (): Promise<ConexionStatus> => {
     try {
         const { data } = await posApi.get<ConexionStatus>(`/sync/transfer/conectionStatus`)
-        console.log('Estado de conexión:', data)
         return data
     } catch (error) {
         console.error('Error al obtener estado de conexión:', error)
@@ -78,7 +74,6 @@ export const obtenerEstadoConexionAction = async (): Promise<ConexionStatus> => 
 export const obtenerArchivosCreadosAction = async (): Promise<FilesCreated> => {
     try {
         const { data } = await posApi.get<FilesCreated>(`/sync/files/created`)
-        console.log('Archivos creados:', data)
         return data
     } catch (error) {
         console.error('Error al obtener archivos creados:', error)
@@ -91,7 +86,6 @@ export const obtenerArchivosCreadosAction = async (): Promise<FilesCreated> => {
 export const obtenerArchivosTransferidosAction = async (): Promise<FilesTransferred> => {
     try {
         const { data } = await posApi.get<FilesTransferred>(`/sync/files/transferred`)
-        console.log('Archivos transferidos:', data)
         return data
     } catch (error) {
         console.error('Error al obtener archivos transferidos:', error)
@@ -104,7 +98,6 @@ export const obtenerArchivosTransferidosAction = async (): Promise<FilesTransfer
 export const obtenerArchivosErroresAction = async (): Promise<FilesError> => {
     try {
         const { data } = await posApi.get<FilesError>(`/sync/files/error`)
-        console.log('Archivos con errores:', data)
         return data
     } catch (error) {
         console.error('Error al obtener archivos con errores:', error)
@@ -117,7 +110,6 @@ export const obtenerArchivosErroresAction = async (): Promise<FilesError> => {
 export const reintentarEnviarArchivosAction = async (): Promise<RetryErrors> => {
     try {
         const { data } = await posApi.post<RetryErrors>(`/sync/retry/error-files`)
-        console.log('Archivos reintentados:', data)
         return data
     } catch (error) {
         console.error('Error al obtener archivos reintentados:', error)

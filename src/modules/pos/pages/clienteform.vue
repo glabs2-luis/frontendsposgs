@@ -8,6 +8,7 @@
 
         <!-- ExpansionItem -->
         <div class="col">
+
           <q-expansion-item ref="expansion" icon="person" label="Información del Cliente" lazy-rules expand-separator default-opened header-class="bg-yellow-1 text-black" >
          
             <template #header>
@@ -27,11 +28,16 @@
               <div class="q-pa-sm">
                 <q-form>
                   <div class="row q-col-gutter-xs">
+
+                    <q-option-group class="q-mr-md" v-model="tipoDocumento"
+                    :options="[{ label: 'NIT', value: 'nit' },{ label: 'DPI', value: 'dpi' }]" type="radio" inline />
+
+                    <!-- Campo de búsqueda de cliente -->
                     <div class="col-4">
 
                       <!-- DPI-->
-                      <q-input ref="focus" v-model="clienteStore.documento" label="DPI/NIT" dense outlined :rules="[val => !!val || 'Requerido']"
-                        style="font-size: 13px;" @keydown.enter.prevent="buscarClienteDPINIT" @keydown="usarF2">
+                      <q-input ref="focus" v-model="clienteStore.documento" label="NIT/DPI" dense outlined :rules="[val => !!val || 'Requerido']"
+                        style="font-size: 13px;" @keydown.enter.prevent="buscarClienteDPINIT2" @keydown="usarF2">
                       
                         <template v-slot:append>
                           <q-btn flat dense icon="search" color="primary"
@@ -62,9 +68,6 @@
                       
                     </div>
 
-                    <div class="col-3 flex items-end">
-                      <q-btn flat dense icon="person" color="warning" label="CF (F2)" @click="colocarCF" size="md" class="full-width" style="height: 32px;" />
-                     </div>
 
                   </div>
                 </q-form>
@@ -76,7 +79,7 @@
 
         <!-- Ver Pedidos Pendientes -->
         <div class="col-auto q-ml-sm">
-            <q-card flat bordered class="q-pa-sm bg-white shadow-3">
+            <q-card flat bordered class="q-pa-sm bg-white shadow-3" >
               <q-btn label="Pedidos Pendientes" icon="assignment" size="sm" color="deep-orange-5" class="text-caption" unelevated rounded  style="min-height: 38px" @click="abrirModalPedidosPendientes"
               />
             </q-card>
@@ -84,10 +87,14 @@
             <!-- Modal de Pedidos Pendientes -->
             <q-dialog v-model="modalPendientes">
               <q-card class="q-pa-md" style="min-width: 750px">
+
                 <q-card-section class="row items-center q-pb-none">
                   <q-icon name="assignment" color="deep-orange-6" />
                   <span class="q-ml-md text-subtitle1">Pedidos Pendientes</span>
-
+                
+                  <q-space />
+                
+                  <q-btn icon="close" flat dense round v-close-popup />
                 </q-card-section>
 
                 <q-card-section>
@@ -100,7 +107,9 @@
                         <th class="text-left"><strong># Pedido</strong></th>
                         <th class="text-left"><strong>Cliente</strong></th>
                         <th class="text-left"><strong>Nit</strong></th>
-                        <th class="text-left"><strong>Direccion</strong></th>
+                        <th class="text-left"><strong>Total</strong></th>
+                        <th class="text-center"><strong>Anular</strong></th> 
+                        <th class="text-center"><strong>continuar</strong></th> 
                       </tr>
                     </thead>
                     <tbody>
@@ -108,7 +117,12 @@
                         <td>{{ pedido.NUMERO_DE_PEDIDO}}</td>
                         <td>{{ pedido.NOMBRE_A_FACTURAR }}</td>
                         <td>{{ pedido.NIT_A_FACTURAR }}</td>
-                        <td>{{ pedido.DIRECCION_FACTURAR}}</td>
+                        <td>Q. {{ pedido.TOTAL_GENERAL_PEDIDO.toFixed(2)}}</td>
+                        <td class="text-center">
+                        <q-btn icon="close" color="red-6" flat dense label="" @click="anularPedido(pedido)"></q-btn></td>
+                        <td class="text-center">
+                        <q-btn icon="input" color="green-8" flat dense label="" @click="continuarPedido(pedido)"></q-btn></td>
+                       
                       </tr>
                     </tbody>
                   </q-markup-table>
@@ -176,7 +190,7 @@
 import { ref, computed, onMounted, watchEffect, watch, onBeforeUnmount } from 'vue'
 import { QExpansionItem } from 'quasar'
 import useClientes from '../../clientes/composables/useClientes'
-import { showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
+import { showConfirmationDialog, showErrorNotification, showSuccessNotification, showConfirmationInsideModal } from '@/common/helper/notification'
 import ModalEditarCliente from '@/modals/modalEditarCliente.vue'
 import type { Cliente } from '@/modules/clientes/interfaces/clientesInterface'
 import usePedidosEnc from '@/modules/pedidos_enc/composables/usePedidosEnc'
@@ -187,7 +201,9 @@ import { usePedidoStore } from '@/stores/pedido'
 import TablaProductos from './tablaProductos.vue'
 import { useTotalStore } from '@/stores/total'
 import { useClienteStore } from '@/stores/cliente'
+import { cleanAllStores } from '@/common/helper/cleanStore'
 
+const tipoDocumento = ref<'nit' | 'dpi'>('nit')
 const clienteStore = useClienteStore()
 const totalStore = useTotalStore()
 const tablaProductosRef = ref()
@@ -205,10 +221,63 @@ const modalPendientes = ref (false)
 const mostrarModalFacturacion = ref(false)
 
 const { obtenerClientePorDocumento,refetchMostrarCF, mutateCrearCliente } = useClientes()
-const { mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId } = usePedidosEnc()
+const { mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId, mutateAnularPedidoPendiente } = usePedidosEnc()
+
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc)
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0) // pedido funcional
+
+
+// controla que exista un pedido
+watch(idPedidoEnc, (nuevoId) => {
+  if (nuevoId && nuevoId > 0) {
+   console.log('Pedido actualizado desde query:', {
+     total: totalReal.value
+    })
+   }
+  
+})
+
+// Anular pedido pendiente
+const anularPedido = async (pedido) => {
+  const confirmado = await showConfirmationInsideModal(
+    'Anular Pedido',
+    `¿Está seguro que desea anular el pedido #${pedido.NUMERO_DE_PEDIDO}?`
+  )
+
+  if (!confirmado) return
+
+  mutateAnularPedidoPendiente({
+    id: pedido.ID_PEDIDO_ENC,
+    usuario: userStore.nombreVendedor
+  })
+}
+
+// continuar pedido pendiente
+const continuarPedido = async (pedido) => {
+
+  const confirmado = await showConfirmationInsideModal(
+    'Continuar Pedido',
+    `¿Está seguro que desea continuar con el pedido #${pedido.NUMERO_DE_PEDIDO}?`
+  )
+
+  if (!confirmado) return
+
+  cleanAllStores()
+  await nextTick()
+  
+  // Actualizar el store con el ID del pedido pendiente
+  pedidoStore.setPedidoEncabezado(pedido.ID_PEDIDO_ENC, pedido.NUMERO_DE_PEDIDO)
+  
+  // cliente store
+
+  console.log('ID_PEDIDO_ENC guardado en store:', pedidoStore.idPedidoEnc)
+  // Cerrar modal de pendientes
+  modalPendientes.value = false
+  
+  // Enfocar productosTab para continuar
+  productosTabRef.value?.enfocarCodigo()
+}
 
 
 // signo menos
@@ -228,7 +297,24 @@ const usarMenos = (e) =>{
   }
 }
 
-// cerrar expansion item si hay pedido
+// Crear Pedido con F3
+onMounted(() =>{
+  window.addEventListener('keydown', crearPedidoConF3)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', crearPedidoConF3)
+})
+
+const crearPedidoConF3 = (e: KeyboardEvent) => {
+  if (e.key === 'F3') {
+    e.preventDefault()
+    crearPedido()
+    expansion.value?.hide()
+  }
+}
+
+// Cerrar expansion cuando se crea un pedido
 watchEffect(() => {
   const cerrar = pedidoStore.idPedidoEnc
   console.log('toggle ahora:', cerrar)
@@ -248,7 +334,7 @@ watch(() => clienteStore.documento, (nuevoValor, oldValor) => {
 })
 
 
-// foucs al ref
+// focus al ref
 const enfocarCodigo = () => {
   focus.value?.focus()
 }
@@ -270,15 +356,7 @@ watchEffect(() => {
   }
 })
 
-// controla que exista un pedido
-watch(idPedidoEnc, (nuevoId) => {
-  if (nuevoId && nuevoId > 0) {
-   console.log('Pedido actualizado desde query:', {
-     total: totalReal.value
-    })
-   }
-  
-})
+
 
 // sucursal siempre: 1
 const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
@@ -385,9 +463,47 @@ const colocarCF = async () => {
   email: cf.data.CORREO_ELECTRONICO || ''
 })
     crearPedido()
+    expansion.value?.hide()
   }
 }
 
+
+// Nueva ****************************************
+const buscarClienteDPINIT2 = async () => {
+      const doc = clienteStore.documento.trim()
+    if(!doc) return 
+    const tipo = tipoDocumento.value
+
+    const clienteEncontrado2 = await obtenerClientePorDocumento(doc, tipo)
+
+     if (clienteEncontrado2) {
+    clienteStore.setCliente({
+      documento: clienteEncontrado2.NIT || '',
+      nombre: clienteEncontrado2.NOMBRE || '',
+      direccion: clienteEncontrado2.DIRECCION || '',
+      telefono: clienteEncontrado2.TELEFONO || '',
+      email: clienteEncontrado2.CORREO_ELECTRONICO || ''
+    })
+
+    //expansion.value?.toggle()
+    //crearPedido()
+  } else {
+
+    // prellenar
+    
+    
+    abrirModalCliente.value = true
+    clienteTemp.value.NIT = doc // prellenar el NIT buscado
+    clienteTemp.value.DIRECCION = 'Ciudad'
+    clienteTemp.value.NIT = doc
+  }
+}
+
+
+
+
+
+// actual ****************************************
 const buscarClienteDPINIT = async () => {
     const doc = clienteStore.documento.trim()
     if(!doc) return 
@@ -463,6 +579,8 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 
 
 <style scoped>
+
+
 
 .total-card {
   background-color: #fcf5d6;

@@ -1,8 +1,8 @@
-import posApi from "@/api/apiPos";
-import { getAxiosErrorMessage } from "@/common/helper/geterrordb";
-import { Productos } from "../interfaces/productosInterface";
+import posApi from "@/api/apiPos"
+import { getAxiosErrorMessage } from "@/common/helper/geterrordb"
+import { Productos } from "../interfaces/productosInterface"
 
-// Todos productos
+// Obtener todos los productos
 export const obtenerProductosAction = async (): Promise<Productos[]> => {
     try {
         const { data } = await posApi.get<Productos[]>(`/maestro-productos`)

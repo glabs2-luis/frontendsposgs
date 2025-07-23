@@ -56,6 +56,7 @@
 
 </q-card>
 
+
 <!-- Modal de catálogo de productos -->
 <q-dialog v-model="modalProductos" maximized>
   <q-card class="catalogo-modal">
@@ -160,9 +161,9 @@
     </q-card>
   </q-dialog>
 
-  <!-- Agregar descuento -->
+
   <!-- Modal Para Facturacion -->
-  <q-dialog v-model="modalFacturacion" persistent transition-show="fade" transition-hide="fade">
+  <q-dialog v-model="modalFacturacion" @show="enfocarEfectivo" persistent transition-show="fade" transition-hide="fade">
     <q-card class="q-dialog-plugin q-pa-md" style="min-width: 700px; max-width: 90vw; max-height: 90vh">
       
       <!-- header-->
@@ -248,17 +249,7 @@
               
                 <!-- Campo efectivo -->
                 <div class="col-12 col-sm-4">
-                  <q-input
-                    v-model="montoEfectivo"
-                    label="Efectivo"
-                    prefix="Q"
-                    :disable="tipoPago !== 'EFECTIVO' && tipoPago !== 'MIXTO'"
-                    outlined
-                    dense
-                    class="bg-grey-3"
-                    input-class="text-bold"
-                    type="number"
-                    min="0"
+                  <q-input ref="focusEfectivo" v-model="montoEfectivo" label="Efectivo" prefix="Q" :disable="tipoPago !== 'EFECTIVO' && tipoPago !== 'MIXTO'" outlined dense class="bg-grey-3" input-class="text-bold" type="number" min="0" @keydown.enter.prevent="confirmarFactura()"
                   >
                     <template v-slot:prepend>
                       <q-icon name="account_balance_wallet" color="brown" />
@@ -268,17 +259,7 @@
               
                 <!-- Campo tarjeta -->
                 <div class="col-12 col-sm-4">
-                  <q-input
-                    v-model="montoTarjeta"
-                    label="Tarjeta"
-                    prefix="Q"
-                    :disable="tipoPago !== 'TARJETA' && tipoPago !== 'MIXTO'"
-                    outlined
-                    dense
-                    class="bg-grey-3"
-                    input-class="text-bold"
-                    type="number"
-                    min="0"
+                  <q-input v-model="montoTarjeta" label="Tarjeta" prefix="Q" :disable="tipoPago !== 'TARJETA' && tipoPago !== 'MIXTO'" outlined dense class="bg-grey-3" input-class="text-bold" type="number" min="0"
                   >
                     <template v-slot:prepend>
                       <q-icon name="credit_card" color="blue" />
@@ -317,7 +298,7 @@
       <!-- Acciones -->
     <q-card-actions align="right">
       <q-btn flat label="Cancelar" v-close-popup />
-      <q-btn icon="taskalt" label="Confirmar Factura" class="boton-amarillo q-ml-auto" @click="confirmarFactura"  />
+      <q-btn icon="taskalt" label="Confirmar Factura" class="boton-amarillo q-ml-auto" @click="confirmarFactura()"  />
     </q-card-actions>
        
     </q-card>
@@ -346,7 +327,7 @@
   </q-dialog>
 
 <!-- Modal de cantidad-->
- <q-dialog v-model="modalCantidad" persistent transition-show="fade" transition-hide="fade">
+ <q-dialog v-model="modalCantidad" persistent transition-show="fade" transition-hide="fade" @hide="volverAFocusInput">
     <q-card class="q-dialog-plugin q-pa-md" style="min-width: 400px; max-width: 90vw; max-height: 90vh">
       <q-card-section class="row items-center justify-between">
         <div class="text-h6 text-primary">Cantidad del Producto</div>
@@ -376,7 +357,7 @@ import { useQuasar } from 'quasar'
 import { ref, computed, onMounted, watch, watchEffect, onBeforeUnmount, nextTick} from 'vue'
 import { useProductos } from '@/modules/Productos/composables/useProductos'
 import { usePedidoDet } from '@/modules/pedidos_det/composables/usePedidosDet'
-import { showConfirmationDialog, showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
+import { showConfirmationDialog, showErrorNotification, showSuccessNotification, showConfirmationInsideModal } from '@/common/helper/notification'
 import { usePedidoStore } from '@/stores/pedido'
 import usePedidosEnc from '../../pedidos_enc/composables/usePedidosEnc'
 import { useCodigo } from '@/modules/codigo_barras/composables/useCodigo'
@@ -388,6 +369,7 @@ import { useConfiguracionStore } from '@/stores/serie'
 import { cleanAllStores } from '@/common/helper/cleanStore'
 import { useSync } from '@/modules/sync/composables/useSync'
 import { ObtenerProductosPrecioAction } from '../../Productos/action/productosAction'
+
 
 const props = defineProps({
   pedidoId: {
@@ -415,7 +397,7 @@ const cantidad2 = ref(1) // para modal cantidad
 const montoEfectivo = ref(null)
 const montoTarjeta = ref(null)
 const opcionesPago2 = ['EFECTIVO', 'TARJETA', 'MIXTO']
-const tipoPago = ref('') 
+const tipoPago = ref('EFECTIVO') 
 const calcularCambio = ref(0)
 const cupon = ref('')
 const clave = ref('')
@@ -435,11 +417,19 @@ const userStore = useUserStore()
 const modalCuponazo = ref(false)
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
 const { data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedidoEnc)
-const focusCantidad = ref(null) // foucs modal cantidad
+const focusCantidad = ref(null) // focus modal cantidad
 const { refetch: relistaDet2 } = ListaDet2(idPedidoEnc)
+const focusEfectivo = ref(null) // focus efectivo
 
 // para facturacion, no mostrar por ahora
 const { data: productosFactura, refetch: refetchProductosFactura, isLoading: cargandoProductosFactura } = ListaDet1(idPedidoEnc)
+
+// focus al Efectivo  
+const enfocarEfectivo = async () => {
+  await nextTick()
+  focusEfectivo.value?.focus()
+
+}
 
 //focus al modal cantidad
 watch(modalCantidad, (val) => {
@@ -469,6 +459,15 @@ watch(idPedidoEnc, (nuevo) => {
 watch(pedidoData, () => {
   console.log('pedidoData actualizado:', pedidoData.value)
 })
+
+
+// Despues del cantidad volver al focus del input
+const volverAFocusInput = () => {
+  setTimeout(() => {
+    inputCodigo.value?.focus()
+  }, 100)
+}
+
 
 // focus
 const inputCodigo = ref(null)
@@ -510,7 +509,9 @@ const actualizarCantidad = () => {
   }
 }
 
-//filtro 
+
+
+
 const productosFil = computed(() => {
   if (!filtroProductos.value) return todosProductos.value
 
@@ -545,7 +546,7 @@ watch(modalProductos, async (val) => {
 const limpiar = async () => {
   const confirmado = await showConfirmationDialog(
     'Limpiar Pedido',
-    '¿Estás seguro de que deseas limpiar el pedido actual?'
+    '¿Estás seguro de que deseas iniciar un nuevo pedido?'
   )
 
   if (confirmado) {
@@ -601,7 +602,13 @@ onBeforeUnmount(() => {
 
 // calcular cambio
 const calcularCambioModal = () => {
-calcularCambio.value = montoEfectivo.value - totalStore.totalGeneral
+
+  if (opcionesPago2==='MIXTO')
+    calcularCambio.value = 0
+
+    else {
+  calcularCambio.value = montoEfectivo.value - totalStore.totalGeneral
+    }
 }
 
 // si el efectivo cambia, calcular cambio
@@ -648,7 +655,7 @@ const confirmarFactura = async () => {
 
     // Validación
     if (!datos.ID_PEDIDO_ENC || !datos.SERIE) {
-      showErrorNotification('Factura','Faltan datos en la factura')
+      showErrorNotification('Factura','No hay serie para facturar ')
       return
     }
 
@@ -659,8 +666,8 @@ const confirmarFactura = async () => {
 
     onSuccess: (respuesta) => {
     showSuccessNotification('Factura', 'Factura creada con éxito')
-    console.log('Respuesta del backend:', respuesta)
 
+    // id de factura enc
     console.log(respuesta.ID_FACTURA_ENC)
 
     // crear sincronización
@@ -674,13 +681,15 @@ const confirmarFactura = async () => {
       },
 
       onError: (error) => {
-        showErrorNotification('Factura', 'Error al crear la factura')
+        modalFacturacion.value = false
+        showErrorNotification('No hay Productos','Debe ingresar al menos un producto al pedido')
         console.error(error)
       }
     })
 
   } catch (error) {
-    showErrorNotification('Factura','Faltan datos en la factura')
+    modalFacturacion.value = false
+    showErrorNotification('No hay Productos','Debe ingresar al menos un producto al pedido')
     console.error(error)
   }
 }

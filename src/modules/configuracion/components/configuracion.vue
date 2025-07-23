@@ -2,8 +2,15 @@
 
   <q-page class="q-pa-md">
 
-    <q-card flat bordered class="q-pa-md">
+    <!-- Título -->
+    <q-section flat bordered class="q-pa-md q-ml-lg">
+      <div class="text-h6 text-primary text-bold" color="primary">
+      Configuracion del Sistema
+      </div>
+    </q-section>
 
+    <!-- Cambiar Serie de Facturación -->
+    <q-card flat bordered class="q-pa-md">
     <q-expansion-item flat bordered class="text-h6 text-black prueba" icon="compare_arrows" label="Cambiar Serie de Facturación" >
 
       <q-separator class="q-my-md" />
@@ -65,33 +72,38 @@
               <tbody>
 
                 <tr>
-                  <td><kbd>F2</kbd></td>
+                  <td><kbd><strong>F2</strong></kbd></td>
                   <td>Consumidor Final (CF)</td>
                 </tr>
 
                 <tr>
-                  <td><kbd>Delete</kbd></td>
+                  <td><kbd><strong>Delete</strong></kbd></td>
                   <td>Limpiar pedido actual</td>
                 </tr>
                 
                 <tr>
-                  <td><kbd>*</kbd></td>
+                  <td><kbd><strong>*</strong></kbd></td>
                   <td>Cambiar Cantidad de productos</td>
                 </tr>
 
                 <tr>
-                  <td><kbd>Enter</kbd></td>
+                  <td><kbd><strong>Enter</strong></kbd></td>
                   <td>Confirmar cantidad y cerrar ventana</td>
                 </tr>
 
                 <tr>
-                  <td><kbd>F4</kbd></td>
+                  <td><kbd><strong>F4</strong></kbd></td>
                   <td>Facturar</td>
                 </tr>
                 
                 <tr>
-                  <td><kbd>-</kbd></td>
+                  <td><kbd><strong>-</strong></kbd></td>
                   <td>Pedidos Pendientes</td>
+                </tr>
+
+                <tr>
+                  <td><kbd><strong>F3</strong></kbd></td>
+                  <td>Crear Pedido</td>
                 </tr>
 
               </tbody>
@@ -101,6 +113,7 @@
 
     
       <!-- Mas configuraciones -->
+
 
   </q-page>
 </template>
