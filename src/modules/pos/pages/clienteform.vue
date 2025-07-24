@@ -9,7 +9,7 @@
         <!-- ExpansionItem -->
         <div class="col">
 
-          <q-expansion-item ref="expansion" icon="person" label="Información del Cliente" lazy-rules expand-separator default-opened header-class="bg-yellow-1 text-black" >
+          <q-expansion-item ref="expansion" v-model="expansionCliente" icon="person" label="Información del Cliente" lazy-rules expand-separator header-class="bg-yellow-1 text-black" >
          
             <template #header>
               <q-item-section avatar>
@@ -26,7 +26,8 @@
 
             <q-card flat bordered class="q-pa-xs bg-grey-1" style="border-radius: 6px;">
               <div class="q-pa-sm">
-                <q-form>
+
+                <q-form ref="formRef" lazy-validation>
                   <div class="row q-col-gutter-xs">
 
                     <q-option-group class="q-mr-md" v-model="tipoDocumento"
@@ -36,7 +37,7 @@
                     <div class="col-4">
 
                       <!-- DPI-->
-                      <q-input ref="focus" v-model="clienteStore.documento" label="NIT/DPI" dense outlined :rules="[val => !!val || 'Requerido']"
+                      <q-input ref="focus" v-model="clienteStore.documento" label="NIT/DPI" dense outlined lazy-rules :rules="[val => !!val || 'Requerido']"   hide-bottom-space
                         style="font-size: 13px;" @keydown.enter.prevent="buscarClienteDPINIT2" @keydown="usarF2">
                       
                         <template v-slot:append>
@@ -49,12 +50,12 @@
                     </div>
 
                     <div class="col-5">
-                      <q-input v-model="clienteStore.nombre" label="Nombre" dense outlined :rules="[val => !!val || 'Requerido']" style="font-size: 13px;"
+                      <q-input v-model="clienteStore.nombre" label="Nombre" dense outlined lazy-rules :rules="[val => !!val || 'Requerido']" style="font-size: 13px;"
                       />
                     </div>
 
                     <div class="col-3">
-                      <q-input v-model="clienteStore.direccion" label="Dirección" dense outlined :rules="[val => !!val || 'Requerido']" style="font-size: 13px;"
+                      <q-input v-model="clienteStore.direccion" label="Dirección" dense outlined lazy-rules :rules="[val => !!val || 'Requerido']" style="font-size: 13px;"
                       />
                     </div>
 
@@ -174,7 +175,6 @@
                 :cliente="clienteTemp"
               modo="crear"
             @guardar="guardarClienteDesdeModal"/>
-
           </div>
       </div>
 
@@ -184,11 +184,11 @@
    <TablaProductos ref="tablaProductosRef"/>  
 </template>
 
-
 <script setup lang="ts">
 
+import { useQuasar } from 'quasar'
 import { ref, computed, onMounted, watchEffect, watch, onBeforeUnmount } from 'vue'
-import { QExpansionItem } from 'quasar'
+import { QExpansionItem, Notify } from 'quasar'
 import useClientes from '../../clientes/composables/useClientes'
 import { showConfirmationDialog, showErrorNotification, showSuccessNotification, showConfirmationInsideModal } from '@/common/helper/notification'
 import ModalEditarCliente from '@/modals/modalEditarCliente.vue'
@@ -203,6 +203,7 @@ import { useTotalStore } from '@/stores/total'
 import { useClienteStore } from '@/stores/cliente'
 import { cleanAllStores } from '@/common/helper/cleanStore'
 
+const $q = useQuasar()
 const tipoDocumento = ref<'nit' | 'dpi'>('nit')
 const clienteStore = useClienteStore()
 const totalStore = useTotalStore()
@@ -219,6 +220,8 @@ const productosTabRef = ref(null)
 const focus = ref(null)
 const modalPendientes = ref (false)
 const mostrarModalFacturacion = ref(false)
+const expansionCliente = ref(false)
+const formRef = ref()
 
 const { obtenerClientePorDocumento,refetchMostrarCF, mutateCrearCliente } = useClientes()
 const { mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId, mutateAnularPedidoPendiente } = usePedidosEnc()
@@ -226,6 +229,23 @@ const { mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId, muta
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc)
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0) // pedido funcional
+const focus2 = ref<HTMLInputElement | null>(null)
+
+
+// abrir expansion item y focus a nit
+watch(() => clienteStore.documento, async (nuevo) => {
+    if (!nuevo || nuevo.trim() === '' || nuevo === '0') {
+      
+      await nextTick()  
+      expansion.value?.show()
+      
+      await formRef.value?.resetValidation()
+
+      await nextTick()
+        focus.value?.focus()
+      
+    }
+  }, { immediate: true } )
 
 
 // controla que exista un pedido
@@ -265,6 +285,10 @@ const continuarPedido = async (pedido) => {
 
   cleanAllStores()
   await nextTick()
+
+  await formRef.value?.resetValidation() 
+    // Enfocar productosTab para continuar
+   await productosTabRef.value?.enfocarCodigo()
   
   // Actualizar el store con el ID del pedido pendiente
   pedidoStore.setPedidoEncabezado(pedido.ID_PEDIDO_ENC, pedido.NUMERO_DE_PEDIDO)
@@ -286,10 +310,9 @@ console.log('Contenido de pedido seleccionado:', pedido)
   modalPendientes.value = false
   
   // Enfocar productosTab para continuar
-  productosTabRef.value?.enfocarCodigo()
+   await productosTabRef.value?.enfocarCodigo()
+
 }
-
-
 
 
 // signo menos
@@ -340,6 +363,7 @@ watchEffect(() => {
 // Opción A: Solo enfoca cuando el valor queda vacío
 watch(() => clienteStore.documento, (nuevoValor, oldValor) => {
   if (!nuevoValor) {
+    expansionCliente.value = true
     expansion.value?.show()
     enfocarCodigo()
   }
@@ -367,7 +391,6 @@ watchEffect(() => {
     })
   }
 })
-
 
 
 // sucursal siempre: 1
@@ -444,10 +467,24 @@ const crearPedido = () => {
       //store pedido
        pedidoStore.setPedidoEncabezado(data.ID_PEDIDO_ENC, data.NUMERO_DE_PEDIDO)
       console.log('ID_PEDIDO_ENC guardado en store:', pedidoStore.idPedidoEnc)
-
+      
       mostrarCardPedidoCreado.value = true;
       mostrarCardTotal.value = true;
       
+      // notificaccion de creado
+          $q.notify({
+          type: 'success',
+          message: `Pedido creado`, 
+          position: 'top',
+          color: 'green',
+          timeout: 2000,
+          group: false,  // se muestra de inmediato
+          progress: false
+
+        })
+
+
+
       await nextTick() 
        productosTabRef.value?.enfocarCodigo()
 
@@ -591,8 +628,6 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 
 
 <style scoped>
-
-
 
 .total-card {
   background-color: #fcf5d6;

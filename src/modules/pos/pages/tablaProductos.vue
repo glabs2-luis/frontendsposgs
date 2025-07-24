@@ -144,12 +144,9 @@ import { nextTick } from 'vue'
 const totalStore = useTotalStore()
 const pedidoStore = usePedidoStore()
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc) 
-const numero = pedidoStore.idPedidoEnc
 const { ListaDet1, useListaProductosPedidoDet, mutateEliminarPedidoDetID } = usePedidoDet()
 const { data, isLoading, refetch } = ListaDet1(idPedidoEnc)
-
 const { obtenerPedidoPorId, obtenerPedido2, refetchPedidoPorId } = usePedidosEnc()
-
 const { data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedidoEnc)
 // refetch
 const { data: listaProductosPedido, refetch: refetchListaProductosPedidoDet } = useListaProductosPedidoDet(idPedidoEnc.value)
@@ -202,7 +199,6 @@ watchEffect(() => {
     detallesPedido.value = data.value
   }
 })
-
 
 // Eliminar Producto 
 const eliminarProducto = async (detalle) => {

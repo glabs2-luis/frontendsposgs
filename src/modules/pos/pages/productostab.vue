@@ -50,6 +50,8 @@
       <q-btn @click="buscarProductoEscaneado" class="boton-amarillo" icon="add" label="Agregar" :loading="loadingAgregar" :disable="!codigoProducto"/>
       
       <q-btn @click="abrirCatalogo" color="secondary" icon="inventory_2" label="Catálogo" class="col" outline/>
+      <q-btn @click="abrirCatalogo2" color="secondary" icon="inventory_2" label="Catálogo2" class="col" outline/>
+
     </div>
 
   </div>
@@ -161,6 +163,122 @@
     </q-card>
   </q-dialog>
 
+<!-- --------------------------------------------------------------------------------------------->
+ 
+<!-- Modal de catálogo de productos -->
+
+<q-dialog v-model="modalProductos2" maximized>
+  <q-card class="catalogo-modal">
+
+    <!-- Título y botón cerrar -->
+    <q-card-section class="row items-center q-pb-none">
+      <div class="text-h6">Catálogo de Productos</div>
+      <q-space />
+      <q-btn icon="close" flat round dense v-close-popup />
+    </q-card-section>
+
+    <!-- Buscador -->
+    <q-card-section>
+      <q-input v-model="filtroProductos" label="Buscar productos..." outlined dense class="q-mb-md"
+      >
+        <template #prepend>
+          <q-icon name="search" />
+        </template>
+        <template #append>
+          <q-btn v-if="filtroProductos" @click="limpiarFiltro" icon="clear" flat  round dense
+          />
+        </template>
+      </q-input>
+
+      <!-- Tabla de productos -->
+      <q-table
+        :rows="productosFiltrados2"
+        :columns="columnasCatalogo2"
+        row-key="PRODUCT0"
+        :loading="loadingProductos"
+        :pagination="paginacionCatalogo"
+        class="catalogo-table"
+        :body-cell="() => {}"
+      >
+        <template #body="props">
+          <q-tr :props="props" class="catalogo-row" @click="seleccionarProducto2(props.row)">
+            
+            <!-- Código del producto -->
+            <q-td key="codigo">
+              <div class="text-weight-medium">{{ props.row.PRODUCT0 }}</div>
+            </q-td>
+
+            <!-- Descripción del producto y mensaje -->
+            <q-td key="producto">
+              <div class="producto-catalogo">
+                <div class="text-weight-bold text-uppercase" style="max-width: 600px; white-space: normal; word-break: break-word;">
+                  {{ props.row.DESCRIPCION_PROD }}
+                </div>
+              </div>
+            </q-td>
+
+            <!-- Marca -->
+            <q-td key="marca" class="q-pa-none">
+              <q-chip size="12px" color="yellow" text-color="dark" class="q-ma-none q-pa-xs">
+                {{ props.row.DESCRIPCION_MARCA }}
+              </q-chip>
+            </q-td>
+
+            <!--  Cantidad -->
+            <q-td key="cantidad">
+                <q-input v-model="props.row.CANTIDAD_PEDIDA"  dense min="1" outlined style="max-width: 60px" @click.stop @change="cantidadIngresada(props.row)"/>
+            </q-td>
+
+            <!-- Precio final -->
+            <q-td key="precio">
+
+              <div v-if="new Date() >= new Date(props.row.FECHA_VIGENCIA_I) && new Date() <= new Date(props.row.FECHA_VIGENCIA_F) " class="text-subtitle1 text-grey text-strike">
+                Q {{ props.row.PRECIO_SUGERIDO.toFixed(2) }}
+              </div>
+                      <!-- Tachar precio -->
+              <div v-else class="text-subtitle1 text-weight-bold text-primary">
+                Q {{ props.row.PRECIO_SUGERIDO.toFixed(2) }}
+              </div>
+
+            </q-td>
+
+            <!-- Precio Oferta -->
+            <q-td key="precioOferta">
+              <div v-if="new Date() >= new Date(props.row.FECHA_VIGENCIA_I) && new Date() <= new Date(props.row.FECHA_VIGENCIA_F) ">
+                <span class="text-positive text-subtitle1 text-weight-bold bg-green-1 q-px-md q-py-xs rounded-borders">
+                  Q {{ Number(props.row.PRECIO_PROMOCION).toFixed(2) }}
+                </span>
+
+                <!-- Fecha local -->
+               <div class="text-subtitle2" anchor="top middle" self="bottom middle">
+                 Vigente al {{ new Date(props.row.FECHA_VIGENCIA_F).toLocaleDateString('es-GT', { day: '2-digit', month: '2-digit', year: 'numeric' }) }}
+               </div>
+              </div>
+              <div v-else class="text-grey-5">–</div>
+            </q-td>
+        
+            <!-- Mostrar niveles de precio-->
+            <q-td key="niveles">
+              <div class="column items-start q-gutter-xs">
+                <q-chip v-for="(nivel, index) in props.row.niveles" :key="index" dense size="md" text-color="black-10" class="q-mb-xs" color="white" 
+                >
+                  {{ nivel }}
+                </q-chip>
+              </div>
+            </q-td>
+
+            
+          </q-tr>
+        </template>
+
+      </q-table>
+
+    </q-card-section>
+
+    </q-card>
+  </q-dialog>
+
+
 
   <!-- Modal Para Facturacion -->
   <q-dialog v-model="modalFacturacion" @show="enfocarEfectivo" persistent transition-show="fade" transition-hide="fade">
@@ -174,7 +292,7 @@
 
        <q-separator />
 
-                      <div class="text-h6 text-center text-gray-8 q-pb-xs q-pt-md" style="font-size: 22px">{{ `Pedido: # ${pedidoStore.numeroDePedido} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Serie: ${configuracionStore.serieSeleccionada}` }}</div>
+        <div class="text-h6 text-center text-gray-8 q-pb-xs q-pt-md" style="font-size: 22px">{{ `Pedido: # ${pedidoStore.numeroDePedido} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Serie: ${configuracionStore.serieSeleccionada}` }}</div>
 
           <!-- Mostrar info cliente-->
         <q-card-section>
@@ -305,47 +423,46 @@
   </q-dialog>
 
   <!-- Modal de cuponazo -->
-<q-dialog v-model="modalCuponazo" persistent transition-show="fade" transition-hide="fade">
-    <q-card class="q-dialog-plugin q-pa-md" style="min-width: 400px; max-width: 90vw; max-height: 90vh">
-      <q-card-section class="row items-center justify-between">
-        <div class="text-h6 text-primary">Cuponazo</div>
-        <q-btn icon="close" flat round dense v-close-popup />
-      </q-card-section>
+  <q-dialog v-model="modalCuponazo" persistent transition-show="fade" transition-hide="fade">
+      <q-card class="q-dialog-plugin q-pa-md" style="min-width: 400px; max-width: 90vw; max-height: 90vh">
+        <q-card-section class="row items-center justify-between">
+          <div class="text-h6 text-primary">Cuponazo</div>
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
 
-      <q-separator />
+        <q-separator />
 
-      <q-card-section>
-        <q-input v-model="cupon" label="Código del Cuponazo" outlined dense />
-        <q-input v-model="clave" label="Clave " type="password" outlined dense class="q-mt-md" />
-      </q-card-section>
+        <q-card-section>
+          <q-input v-model="cupon" label="Código del Cuponazo" outlined dense />
+          <q-input v-model="clave" label="Clave " type="password" outlined dense class="q-mt-md" />
+        </q-card-section>
 
-      <q-card-actions align="right">
-        <q-btn flat label="Cancelar" v-close-popup />
-        <q-btn label="Aplicar Cuponazo" class="boton-amarillo"   @click="aplicarCuponazo" />
-      </q-card-actions>
-    </q-card>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn label="Aplicar Cuponazo" class="boton-amarillo"   @click="aplicarCuponazo" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+  <!-- Modal de cantidad-->
+  <q-dialog v-model="modalCantidad" persistent transition-show="fade" transition-hide="fade" @hide="volverAFocusInput">
+      <q-card class="q-dialog-plugin q-pa-md" style="min-width: 400px; max-width: 90vw; max-height: 90vh">
+        <q-card-section class="row items-center justify-between">
+          <div class="text-h6 text-primary">Cantidad del Producto</div>
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section>
+          <q-input v-model.number="cantidad2" ref="focusCantidad" label="Cantidad" type="number" outlined dense min="1" @keyup.enter.prevent="actualizarCantidad()"/>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" v-close-popup />
+        </q-card-actions>
+      </q-card>
   </q-dialog>
-
-<!-- Modal de cantidad-->
- <q-dialog v-model="modalCantidad" persistent transition-show="fade" transition-hide="fade" @hide="volverAFocusInput">
-    <q-card class="q-dialog-plugin q-pa-md" style="min-width: 400px; max-width: 90vw; max-height: 90vh">
-      <q-card-section class="row items-center justify-between">
-        <div class="text-h6 text-primary">Cantidad del Producto</div>
-        <q-btn icon="close" flat round dense v-close-popup />
-      </q-card-section>
-
-      <q-separator />
-
-      <q-card-section>
-        <q-input v-model.number="cantidad2" ref="focusCantidad" label="Cantidad" type="number" outlined dense min="1" @keyup.enter.prevent="actualizarCantidad()"/>
-      </q-card-section>
-
-      <q-card-actions align="right">
-        <q-btn flat label="Cancelar" v-close-popup />
-      </q-card-actions>
-    </q-card>
- </q-dialog>
-
 
 
   </div>
@@ -368,8 +485,6 @@ import { useUserStore } from '@/stores/user'
 import { useConfiguracionStore } from '@/stores/serie'
 import { cleanAllStores } from '@/common/helper/cleanStore'
 import { useSync } from '@/modules/sync/composables/useSync'
-import { ObtenerProductosPrecioAction } from '../../Productos/action/productosAction'
-
 
 const props = defineProps({
   pedidoId: {
@@ -421,15 +536,58 @@ const focusCantidad = ref(null) // focus modal cantidad
 const { refetch: relistaDet2 } = ListaDet2(idPedidoEnc)
 const focusEfectivo = ref(null) // focus efectivo
 const focusTarjeta = ref(null)
-
+const modalProductos2 = ref(false)
 // para facturacion, no mostrar por ahora
 const { data: productosFactura, refetch: refetchProductosFactura, isLoading: cargandoProductosFactura } = ListaDet1(idPedidoEnc)
+
+
+const productosFiltrados2 = computed(() => {
+  if (!filtroProductos.value) return productosUnicos.value
+
+  const palabras = filtroProductos.value.toLowerCase().split(' ').filter(p => p.trim() !== '')
+
+  return productosUnicos.value.filter(p => {
+    const campos = `${p.DESCRIPCION_PROD || ''} ${p.DESCRIPCION_MARCA || ''} ${p.PRODUCT0 || ''}`.toLowerCase()
+    return palabras.every(palabra => campos.includes(palabra))
+  })
+})
+
+
+// mapear los productos para mostrar un registro en la tabla 
+const productosUnicos = computed(() => {
+  if (!todosProductos.value) return []
+
+  const mapa = new Map()
+
+  for (const prod of todosProductos.value) {
+    const clave = prod.PRODUCT0
+
+    const nivelTexto = `Q ${prod.PRECIO_FINAL.toFixed(2)} ( ${prod.CANTIDAD_INICIAL} a ${prod.CANTIDAD_FINAL} )`
+
+    if (!mapa.has(clave)) {
+      mapa.set(clave, {
+        ...prod,
+        niveles: [nivelTexto]
+      })
+    } else {
+      mapa.get(clave).niveles.push(nivelTexto)
+    }
+  }
+
+  return Array.from(mapa.values())
+})
+
+const cantidadIngresada = (producto) => {
+  if (!producto.CANTIDAD_PEDIDA || producto.CANTIDAD_PEDIDA <= 0) {
+    showErrorNotification("Cantidad", "Ingrese una cantidad válida")
+    return
+  }
+}
 
 // focus al Efectivo  
 const enfocarEfectivo = async () => {
   await nextTick()
   focusEfectivo.value?.focus()
-
 }
 
 //focus al modal cantidad
@@ -555,6 +713,7 @@ const limpiar = async () => {
     enfocarCodigo()
     
    // await expansion.value.show()
+   window.location.reload()
   }
 }
 
@@ -566,7 +725,11 @@ const abrirCuponazo = () => {
 //modal catalogo
 const abrirCatalogo = () => {
   modalProductos.value = true
+}
 
+// nuevo catalogo
+const abrirCatalogo2 = () => {
+  modalProductos2.value = true
 }
 
 const abrirModalCantidad = () => {
@@ -698,8 +861,8 @@ const confirmarFactura = async () => {
     // Ejecutar la facturación
     mutateCrearFacturaEnc2(datos, {
 
-    onSuccess: (respuesta) => {
-    showSuccessNotification('Factura', 'Factura creada con éxito')
+    onSuccess: async (respuesta) => {
+    await showSuccessNotification('Factura', 'Factura creada con éxito')
 
     // id de factura enc
     console.log(respuesta.ID_FACTURA_ENC)
@@ -778,6 +941,56 @@ const columnasCatalogo = [
     name: 'accion',
     label: 'Acción',
     align: 'left'
+  }
+]
+
+const columnasCatalogo2 = [
+  {
+    name: 'codigo',
+    label: 'Código',
+    align: 'left',
+    field: 'PRODUCT0',
+    sortable: true
+  },
+  {
+    name: 'producto',
+    label: 'Producto',
+    align: 'left',
+    field: 'PRODUCTO',
+    sortable: true
+  },
+  {
+    name: 'marca',
+    label: 'Marca',
+    align: 'left',
+    field: 'DESCRIPCION_MARCA',
+    sortable: true
+  },
+    {
+    name: 'cantidad',
+    label: 'Cantidad',
+    align: 'left',
+    field: 'CANTIDAD_PEDIDA',
+    sortable: true
+  },
+  {
+    name: 'precio',
+    label: 'Precio',
+    align: 'left',
+    field: 'PRECIO_SUGERIDO',
+    sortable: true
+  },
+  {
+    name: 'precioPromo',
+    label: 'Precio Oferta',
+    align: 'left',
+    field: 'PRECIO_PROMOCION'
+  },
+  {
+    name: 'niveles',
+    label: 'Niveles de precio',
+    align: 'left',
+    field: 'SECUENCIA_PRECIO'
   }
 ]
 
@@ -961,10 +1174,90 @@ const agregarProductoAlPedido = async (producto) => {
   }
 }
 
+
+// crea pedido det desde catalogo
+const agregarProductoAlPedido2 = async (producto) => {
+  try {
+    const cantidadFinal = producto.CANTIDAD_PEDIDA || 1
+
+    // Validación
+    if (!producto || !producto.PRODUCT0 || cantidadFinal <= 0) {
+      console.error('Producto inválido o cantidad no válida')
+      return
+    }
+
+    // Mostrar loading
+    loadingAgregar.value = true
+
+    // Obtener precio real desde backend
+    const precio = await precioReal(producto.PRODUCT0, cantidadFinal)
+    if (!precio || !precio.PRECIO_FINAL) {
+      throw new Error('No se pudo obtener el precio real del producto')
+    }
+
+    console.log('sise guarda en precio xd: ', precio)
+    // Armar detalle para guardar
+    const detalle2 = {
+      ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
+      PRODUCT0: producto.PRODUCT0,
+      CANTIDAD_PEDIDA: cantidadFinal,
+      PRECIO_UNIDAD_VENTA: precio.PRECIO_PROMOCION ?? precio.PRECIO_FINAL,
+      SUBTOTAL_VENTAS: cantidadFinal * (precio.PRECIO_PROMOCION ?? precio.PRECIO_FINAL),
+      DESCRIPCION_PROD_AUX: producto.DESCRIPCION_PROD,
+      ID_SUCURSAL: '1',
+      NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido
+    }
+
+    // Enviar a backend
+    mutateCrearPedidoDet(detalle2, {
+      onSuccess: async (data) => {
+        detallesPedido.value.push(data)
+        codigoProducto.value = ''
+        producto.CANTIDAD_PEDIDA = 1
+        relistaDet2()
+        await refetchObtenerPedidoID()
+        totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0)
+        enfocarCodigo()
+
+        $q.notify({
+          type: 'success',
+          message: `Producto ${detalle2.PRODUCT0} agregado con exito`, 
+          position: 'top',
+          color: 'green',
+          timeout: 2000,
+          group: false,  // se muestra de inmediato
+          progress: false
+
+        })
+
+        console.log('detalle2',detalle2)
+      },
+      onError: (error) => {
+        console.error('Error al guardar producto en BD:', error)
+        showErrorNotification('No hay pedido', 'Debe de crear un pedido primero')
+      },
+      onSettled: () => {
+        loadingAgregar.value = false
+      }
+    })
+
+  } catch (error) {
+    console.error('Error al agregar producto:', error)
+    loadingAgregar.value = false
+  }
+}
+
+
 // agregar producto al seleccionarlo
 const seleccionarProducto = (producto) => {
   agregarProductoAlPedido(producto)
   modalProductos.value = false
+}
+
+const seleccionarProducto2 = (producto) => {
+  agregarProductoAlPedido2(producto)
+  // por si lo quiere ocultar 
+  //modalProductos2.value = false
 }
 
 // mantener focus - not working so far
@@ -972,7 +1265,6 @@ watch(modalProductos, (val) => {
   if(!val){
     enfocarCodigo()
   }
-
 })
 
 defineExpose({
@@ -1083,10 +1375,11 @@ defineExpose({
 .catalogo-row:hover {
   background-color: rgba(102, 126, 234, 0.05);
   transform: translateY(-1px);
+
 }
 
 .producto-catalogo {
-  max-width: 250px;
+  max-width: 400px;
   font-weight: bold;
 }
 
