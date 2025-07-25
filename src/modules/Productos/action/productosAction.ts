@@ -14,7 +14,6 @@ export const obtenerProductosAction = async (): Promise<Productos[]> => {
     }
 }
 
-
 // por Id
 export const obtenerProductosIdAction = async (producto: string) : Promise<Productos[]> => {
     try {
@@ -26,18 +25,16 @@ export const obtenerProductosIdAction = async (producto: string) : Promise<Produ
             const message = getAxiosErrorMessage(error, "Hubo un error obteniendo los productos por Id")
             throw new Error(message)
         }
-
     }
 
     // Obtener Precio
 export const ObtenerProductosPrecioAction = async (producto: string, cantidad: number): Promise<Productos> => {
     try{
         const { data } = await posApi.get<Productos>(`/maestro-productos/precioProducto/${producto}/${cantidad}`)
-        console.log('data', data)
+        console.log('Action', data)
         return data
     } catch (error) {
-        console.error('Crear producto', error)
-        const message = getAxiosErrorMessage(error, "Hubo un error al crear el precio del producto")
-        throw new Error(message)
+        const message = getAxiosErrorMessage(error, "Hubo un error al obtener el precio del producto")
+        console.log(message)
     }
 }

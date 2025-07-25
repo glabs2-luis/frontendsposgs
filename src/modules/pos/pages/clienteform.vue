@@ -255,7 +255,6 @@ watch(idPedidoEnc, (nuevoId) => {
      total: totalReal.value
     })
    }
-  
 })
 
 // Anular pedido pendiente
@@ -293,10 +292,6 @@ const continuarPedido = async (pedido) => {
   // Actualizar el store con el ID del pedido pendiente
   pedidoStore.setPedidoEncabezado(pedido.ID_PEDIDO_ENC, pedido.NUMERO_DE_PEDIDO)
   
-  // set new store
-  console.log('ID_PEDIDO_ENC guardado en store:', pedidoStore.idPedidoEnc)
-console.log('Contenido de pedido seleccionado:', pedido)
-
     // set cliente
     clienteStore.setCliente({
     documento: pedido.NIT_A_FACTURAR,
@@ -352,13 +347,11 @@ const crearPedidoConF3 = (e: KeyboardEvent) => {
 // Cerrar expansion cuando se crea un pedido
 watchEffect(() => {
   const cerrar = pedidoStore.idPedidoEnc
-  console.log('toggle ahora:', cerrar)
 
   if (cerrar > 0){
     expansion.value?.hide()
   }
 })
-
 
 // Opción A: Solo enfoca cuando el valor queda vacío
 watch(() => clienteStore.documento, (nuevoValor, oldValor) => {
@@ -368,7 +361,6 @@ watch(() => clienteStore.documento, (nuevoValor, oldValor) => {
     enfocarCodigo()
   }
 })
-
 
 // focus al ref
 const enfocarCodigo = () => {
@@ -399,9 +391,7 @@ const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
   userStore.codigoVendedor
 )
 
-
 const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0)
-const mostrarTotalReal = computed(() => totalReal.value > 0)
 
 const abrirModalPedidosPendientes = () => {
   modalPendientes.value = true
@@ -454,8 +444,6 @@ const crearPedido = () => {
     CODIGO_DE_CLIENTE: 1021      // 
   }
 
-  console.log('Pedido a guardar:', JSON.stringify(pedidoEnc, null, 2));
-
     mutateCrearPedidoEnc(pedidoEnc, {
     onSuccess: async (data) => {
 
@@ -466,7 +454,6 @@ const crearPedido = () => {
 
       //store pedido
        pedidoStore.setPedidoEncabezado(data.ID_PEDIDO_ENC, data.NUMERO_DE_PEDIDO)
-      console.log('ID_PEDIDO_ENC guardado en store:', pedidoStore.idPedidoEnc)
       
       mostrarCardPedidoCreado.value = true;
       mostrarCardTotal.value = true;
@@ -482,8 +469,6 @@ const crearPedido = () => {
           progress: false
 
         })
-
-
 
       await nextTick() 
        productosTabRef.value?.enfocarCodigo()

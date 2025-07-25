@@ -26,7 +26,6 @@
 
       </div>
 
-
   <!-- Segunda fila: inputs + botones -->
   <div class="row q-col-gutter-sm items-end">
 
@@ -48,125 +47,14 @@
     <!-- Botones -->
     <div class="col-6 col-md-5 row q-gutter-sm">
       <q-btn @click="buscarProductoEscaneado" class="boton-amarillo" icon="add" label="Agregar" :loading="loadingAgregar" :disable="!codigoProducto"/>
-      
-      <q-btn @click="abrirCatalogo" color="secondary" icon="inventory_2" label="Catálogo" class="col" outline/>
-      <q-btn @click="abrirCatalogo2" color="secondary" icon="inventory_2" label="Catálogo2" class="col" outline/>
+      <q-btn @click="abrirCatalogo2" color="secondary" icon="inventory_2" label="Catálogo" class="col" outline/>
 
     </div>
 
   </div>
-
 </q-card>
-
-
-<!-- Modal de catálogo de productos -->
-<q-dialog v-model="modalProductos" maximized>
-  <q-card class="catalogo-modal">
-
-    <!-- Título y botón cerrar -->
-    <q-card-section class="row items-center q-pb-none">
-      <div class="text-h6">Catálogo de Productos</div>
-      <q-space />
-      <q-btn icon="close" flat round dense v-close-popup />
-    </q-card-section>
-
-    <!-- Buscador -->
-    <q-card-section>
-      <q-input v-model="filtroProductos" label="Buscar productos..." outlined dense class="q-mb-md"
-      >
-        <template #prepend>
-          <q-icon name="search" />
-        </template>
-        <template #append>
-          <q-btn v-if="filtroProductos" @click="limpiarFiltro" icon="clear" flat  round dense
-          />
-        </template>
-      </q-input>
-
-      <!-- Tabla de productos -->
-      <q-table
-        :rows="productosFil"
-        :columns="columnasCatalogo"
-        row-key="PRODUCTO"
-        :loading="loadingProductos"
-        :pagination="paginacionCatalogo"
-        class="catalogo-table"
-        :body-cell="() => {}"
-      >
-        <template #body="props">
-          <q-tr :props="props" class="catalogo-row" @click="seleccionarProducto(props.row)">
-            
-            <!-- Código del producto -->
-            <q-td key="codigo">
-              <div class="text-weight-medium">{{ props.row.PRODUCT0 }}</div>
-            </q-td>
-
-            <!-- Descripción del producto y mensaje -->
-            <q-td key="producto">
-              <div class="producto-catalogo">
-                <div class="text-weight-bold">{{ props.row.DESCRIPCION_PROD }}</div>
-              </div>
-            </q-td>
-
-            <!-- Marca -->
-            <q-td key="marca">
-              <q-chip size="sm" color="yellow" text-color="dark">
-                {{ props.row.DESCRIPCION_MARCA }}
-              </q-chip>
-            </q-td>
-
-            <!--  Cantidad -->
-            <q-td key="cantidad">
-                <q-input v-model.number="props.row.CANTIDAD_PEDIDA" type="number" dense min="1" outlined style="max-width: 80px" @click.stop />
-            </q-td>
-
-            <!-- Precio final -->
-            <q-td key="precio">
-              <div v-if="new Date() >= new Date(props.row.FECHA_VIGENCIA_I) && new Date() <= new Date(props.row.FECHA_VIGENCIA_F) " class="text-subtitle1 text-grey text-strike">
-                Q {{ props.row.PRECIO_SUGERIDO.toFixed(2) }}
-              </div>
-                      <!-- Tachar precio -->
-              <div v-else class="text-subtitle1 text-weight-bold text-primary">
-                Q {{ props.row.PRECIO_SUGERIDO.toFixed(2) }}
-              </div>
-            </q-td>
-
-            <!-- Precio Oferta -->
-            <q-td key="precioOferta">
-              <div v-if="new Date() >= new Date(props.row.FECHA_VIGENCIA_I) && new Date() <= new Date(props.row.FECHA_VIGENCIA_F) ">
-                <span class="text-positive text-subtitle1 text-weight-bold bg-green-1 q-px-md q-py-xs rounded-borders">
-                  Q {{ Number(props.row.PRECIO_PROMOCION).toFixed(2) }}
-                </span>
-
-                <!-- Fecha local -->
-               <div class="text-subtitle2" anchor="top middle" self="bottom middle">
-                 Vigente al {{ new Date(props.row.FECHA_VIGENCIA_F).toLocaleDateString('es-GT', { day: '2-digit', month: '2-digit', year: 'numeric' }) }}
-               </div>
-              </div>
-              <div v-else class="text-grey-5">–</div>
-            </q-td>
-        
-            <!-- Acción: botón agregar -->
-            <q-td key="accion"> <q-btn color="black" icon="add_shopping_cart" size="sm" round @click.stop="seleccionarProducto(props.row)"
-              >
-                <q-tooltip>Agregar al pedido</q-tooltip>
-              </q-btn>
-            </q-td>
-
-          </q-tr>
-        </template>
-
-      </q-table>
-
-    </q-card-section>
-
-    </q-card>
-  </q-dialog>
-
-<!-- --------------------------------------------------------------------------------------------->
  
 <!-- Modal de catálogo de productos -->
-
 <q-dialog v-model="modalProductos2" maximized>
   <q-card class="catalogo-modal">
 
@@ -231,7 +119,6 @@
 
             <!-- Precio final -->
             <q-td key="precio">
-
               <div v-if="new Date() >= new Date(props.row.FECHA_VIGENCIA_I) && new Date() <= new Date(props.row.FECHA_VIGENCIA_F) " class="text-subtitle1 text-grey text-strike">
                 Q {{ props.row.PRECIO_SUGERIDO.toFixed(2) }}
               </div>
@@ -239,7 +126,6 @@
               <div v-else class="text-subtitle1 text-weight-bold text-primary">
                 Q {{ props.row.PRECIO_SUGERIDO.toFixed(2) }}
               </div>
-
             </q-td>
 
             <!-- Precio Oferta -->
@@ -260,14 +146,13 @@
             <!-- Mostrar niveles de precio-->
             <q-td key="niveles">
               <div class="column items-start q-gutter-xs">
-                <q-chip v-for="(nivel, index) in props.row.niveles" :key="index" dense size="md" text-color="black-10" class="q-mb-xs" color="white" 
+                <q-chip v-for="(nivel, index) in props.row.niveles" :key="index" dense size="md" text-color="black-10" class="q-mb-xs" style="background-color: transparent; border: none;"
                 >
                   {{ nivel }}
                 </q-chip>
               </div>
             </q-td>
 
-            
           </q-tr>
         </template>
 
@@ -277,7 +162,6 @@
 
     </q-card>
   </q-dialog>
-
 
 
   <!-- Modal Para Facturacion -->
@@ -315,7 +199,6 @@
         </q-card-section>
       </q-card>
         
-
         <!-- total verde bonito -->
         <q-card-section class="q-pa-none q-pb-md">
 
@@ -327,23 +210,7 @@
           </div>
 
         </q-card-section>
-  
-                <!-- Pedido y Serie
-          <q-card-section class="q-pa-sm q-pb-sm">
-            <div class="text-h6 text-center" style="font-size: 22px">
-              Pedido: <strong># {{ pedidoStore.numeroDePedido }}</strong>
-            </div>
-          
-            <div class="text-subtitle2 text-center text-grey-8" style="font-size: 22px">
-              Serie:
-              <strong>
-                {{ configuracionStore.serieSeleccionada || 'No hay serie para facturar' }}
-              </strong>
-            </div>
-          </q-card-section>
--->
 
-          
                     <!-- Opcion de pago -->
             <q-card-section class="q-gutter-md">
               <div class="row q-col-gutter-md items-start">
@@ -388,7 +255,6 @@
               </div>
             </q-card-section>
 
-
             <q-card-section class="q-pa-sm">
             
             <div class="text-subtitle2 text-weight-bold text-grey-8 q-mb-sm">
@@ -397,21 +263,14 @@
 
             </q-card-section>
 
-
-        
         <!-- Cuponazos -->
-
         <q-card-section class="q-pa-sm">
 
           <q-btn class="q-mb-sm" color="primary" label="Agregar Cuponazo" icon="add" @click="abrirCuponazo" />
         
-
         </q-card-section>
 
-
-
-
-    </q-card-section>
+            </q-card-section>
 
       <!-- Acciones -->
     <q-card-actions align="right">
@@ -464,7 +323,6 @@
       </q-card>
   </q-dialog>
 
-
   </div>
 </template>
 
@@ -485,6 +343,8 @@ import { useUserStore } from '@/stores/user'
 import { useConfiguracionStore } from '@/stores/serie'
 import { cleanAllStores } from '@/common/helper/cleanStore'
 import { useSync } from '@/modules/sync/composables/useSync'
+import { usePdfFactura } from '@/modules/facturar_pdf/composables/usePdFactura'
+import { useClienteStore } from '@/stores/cliente'
 
 const props = defineProps({
   pedidoId: {
@@ -497,6 +357,9 @@ const props = defineProps({
   }
 })
 
+
+const clienteStore = useClienteStore()
+const { generarFacturaPDF } = usePdfFactura()
 const { mutateCrearSincronizacion } = useSync()
 const { mutateCrearPedidoDet, obtenerPedidosDetID, mutateActualizarPedidoDetId, mutateEliminarPedidoDetID, ListaDet1, ListaDet2, refetchListaDet2} = usePedidoDet()
 const configuracionStore = useConfiguracionStore()
@@ -516,7 +379,6 @@ const tipoPago = ref('EFECTIVO')
 const calcularCambio = ref(0)
 const cupon = ref('')
 const clave = ref('')
-const cantidadProductos = ref(0)
 const modalCantidad = ref(false)
 const modalProductos = ref(false)
 const filtroProductos = ref('')
@@ -540,7 +402,7 @@ const modalProductos2 = ref(false)
 // para facturacion, no mostrar por ahora
 const { data: productosFactura, refetch: refetchProductosFactura, isLoading: cargandoProductosFactura } = ListaDet1(idPedidoEnc)
 
-
+// filtro del catalogo
 const productosFiltrados2 = computed(() => {
   if (!filtroProductos.value) return productosUnicos.value
 
@@ -551,7 +413,6 @@ const productosFiltrados2 = computed(() => {
     return palabras.every(palabra => campos.includes(palabra))
   })
 })
-
 
 // mapear los productos para mostrar un registro en la tabla 
 const productosUnicos = computed(() => {
@@ -609,16 +470,14 @@ watch(modalFacturacion, (val) => {
 // cargar nuevos productos
 watch(idPedidoEnc, (nuevo) => {
   if (nuevo && nuevo > 0) {
-    console.log('nuevo detalle')
     refetchObtenerPedidoID()
   }
 })
 
 // actualizar cliente en facturacion
 watch(pedidoData, () => {
-  console.log('pedidoData actualizado:', pedidoData.value)
+ // console.log('pedidoData actualizado:', pedidoData.value)
 })
-
 
 // Despues del cantidad volver al focus del input
 const volverAFocusInput = () => {
@@ -626,7 +485,6 @@ const volverAFocusInput = () => {
     inputCodigo.value?.focus()
   }, 100)
 }
-
 
 // focus
 const inputCodigo = ref(null)
@@ -668,9 +526,7 @@ const actualizarCantidad = () => {
   }
 }
 
-
-
-
+// Filtro antiguo - not in use
 const productosFil = computed(() => {
   if (!filtroProductos.value) return todosProductos.value
 
@@ -720,11 +576,6 @@ const limpiar = async () => {
 // modal cuponazo
 const abrirCuponazo = () => {
   modalCuponazo.value = true
-}
-
-//modal catalogo
-const abrirCatalogo = () => {
-  modalProductos.value = true
 }
 
 // nuevo catalogo
@@ -820,8 +671,70 @@ watch(tipoPago, (nuevo) => {
   }
 })
 
+
+const productos = computed(() => {
+  const raw = productosFactura.value;
+  if (!raw) return [];
+
+  const valores = Object.values(raw);
+  return Array.isArray(valores) ? valores : [];
+});
+
+const items = computed(() =>
+  productos.value.map(p => ({
+    cantidad: p.CANTIDAD_PEDIDA,
+    descripcion: p.DESCRIPCION_PROD,
+    precio: `Q${parseFloat(p.PRECIO_UNIDAD_VENTA).toFixed(2)}`,
+    subtotal: `Q${(p.CANTIDAD_PEDIDA * parseFloat(p.PRECIO_UNIDAD_VENTA)).toFixed(2)}`
+  }))
+);
+
+const dataFactura = {
+  encabezado: {
+    serie: "Pendiente", // viene de infile segun hugo
+    numero: "pendiente", // lo da fel
+    uuid: "Pendiente", //por infile
+    numeroInterno: `${configuracionStore.serieSeleccionada} | X` // falta el numero de la factura
+  },
+  cliente: {
+    nombre: clienteStore.nombre,
+    nit: clienteStore.nit,
+    direccion: clienteStore.direccion
+  },
+  items: [
+    {
+      cantidad: 2,
+      descripcion: "Camisa Polo Azul",
+      precio: "Q100.00",
+      subtotal: "Q200.00"
+    },
+    {
+      cantidad: 1,
+      descripcion: "Pantalón Jeans",
+      precio: "Q150.00",
+      subtotal: "Q150.00"
+    }
+  ],
+  resumen: {
+    subtotal: totalStore.totalEncabezado,
+    descuento: "Q0.00",
+    totalPagar: totalStore.totalGeneral,
+    totalItems: 3
+  },
+  nombreVendedor: userStore.nombreVendedor,
+  qrCodeData: "https://midominio.com/factura/000123" // codigo pendiente
+}
+
+
 // modal factura
 const terminarVenta = async () => {
+
+
+
+
+console.log(productos.value)
+console.log(items.value)
+
   // si no existe pedido
 if(!pedidoStore.idPedidoEnc ){
   showErrorNotification('No existe un pedido','Debes de crear un pedido primero' )
@@ -829,7 +742,6 @@ if(!pedidoStore.idPedidoEnc ){
 }
   modalFacturacion.value = true
 }
-
 
 // Guarda factura enc y det
 const confirmarFactura = async () => {
@@ -840,7 +752,6 @@ const confirmarFactura = async () => {
     // esperar confirmacion de factura
     await nextTick()
     if(!confirmarFac) return
-
 
   try {
     const datos = {
@@ -856,16 +767,24 @@ const confirmarFactura = async () => {
       return
     }
 
-    console.log('Datos enviados al backend:', datos)
+    //Mostrar los datos a enviar
+    //console.log('Datos enviados al backend:', datos)
 
     // Ejecutar la facturación
     mutateCrearFacturaEnc2(datos, {
 
     onSuccess: async (respuesta) => {
+
+    console.log(totalStore.totalGeneral)
+    console.log(clienteStore.nit)
+    console.log(clienteStore.nombre)
+    console.log(clienteStore.ciudad)
+      
+    await generarFacturaPDF(dataFactura)
     await showSuccessNotification('Factura', 'Factura creada con éxito')
 
     // id de factura enc
-    console.log(respuesta.ID_FACTURA_ENC)
+    //console.log(respuesta.ID_FACTURA_ENC)
     
     // crear sincronización
     mutateCrearSincronizacion(respuesta.ID_FACTURA_ENC)
@@ -894,55 +813,6 @@ const confirmarFactura = async () => {
   montoEfectivo.value = (null)
 }
 
-// Columnas del catálogo
-const columnasCatalogo = [
-  {
-    name: 'codigo',
-    label: 'Código',
-    align: 'left',
-    field: 'PRODUCT0',
-    sortable: true
-  },
-  {
-    name: 'producto',
-    label: 'Producto',
-    align: 'left',
-    field: 'PRODUCTO',
-    sortable: true
-  },
-  {
-    name: 'marca',
-    label: 'Marca',
-    align: 'left',
-    field: 'DESCRIPCION_MARCA',
-    sortable: true
-  },
-    {
-    name: 'cantidad',
-    label: 'Cantidad',
-    align: 'left',
-    field: 'CANTIDAD_PEDIDA',
-    sortable: true
-  },
-  {
-    name: 'precio',
-    label: 'Precio',
-    align: 'left',
-    field: 'PRECIO_SUGERIDO',
-    sortable: true
-  },
-  {
-    name: 'precioPromo',
-    label: 'Precio Oferta',
-    align: 'left',
-    field: 'PRECIO_PROMOCION'
-  },
-  {
-    name: 'accion',
-    label: 'Acción',
-    align: 'left'
-  }
-]
 
 const columnasCatalogo2 = [
   {
@@ -1030,7 +900,7 @@ const buscarProductoEscaneado = async () => {
   // 1. buscar por código de barras
   try {
     resultado = await consultarCodigoM(codigoProducto.value, cantidad2.value) // cantidad fija como 1
-    console.log('Resultado de código de barras:', resultado)
+    //console.log('Resultado de código de barras:', resultado)
 
   } catch (error) {
     console.warn('Código no encontrado por código de barras:', error)
@@ -1039,12 +909,14 @@ const buscarProductoEscaneado = async () => {
   // 2. buscar por ID de producto
   if (!resultado || !resultado.producto ) {
 
-
     try {
      // const productoDirecto = await obtenerProductosId(codigoProducto.value, )
-      const productoDirecto = await precioReal(codigoProducto.value, 1)
+      const productoDirecto = await precioReal(codigoProducto.value, cantidad2.value)
 
-      if(productoDirecto.PRECIO_FINAL === 0){
+      // datos a consultar
+      console.log('mandando a consultar el precio: ', codigoProducto.value, cantidad2.value)
+
+      if(productoDirecto.PRECIO_FINAL === 0 || productoDirecto.PRECIO_FINAL === null){
        showErrorNotification('Producto sin precio', `El código ${codigoProducto.value} no tiene precio`)
         codigoProducto.value = ''
         loadingPorCodigo.value = false
@@ -1053,19 +925,23 @@ const buscarProductoEscaneado = async () => {
 
       const prod = Array.isArray(productoDirecto) ? productoDirecto[0] : productoDirecto
 
-      if (!prod || !prod.PRODUCT0) {
+      console.log('yo soy prod', prod)
+
+      if (!prod) {
         throw new Error('No encontrado')
       }
-    
+
       resultado = {
         producto: {
-          PRODUCT0: prod.PRODUCT0,
-          DESCRIPCION_PROD: prod.DESCRIPCION_PROD
+          PRODUCT0: codigoProducto.value,
         },
         precio: {
           PRECIO_FINAL: prod.PRECIO_FINAL,
         }
       }
+
+      console.log('resultado2: ', resultado)
+
     } catch (err) {
 
       showErrorNotification('Producto no encontrado', `El código ${codigoProducto.value} no existe`)
@@ -1074,18 +950,20 @@ const buscarProductoEscaneado = async () => {
       return
     }
   } 
-  
+
   // 3. Insertar producto al pedido
-  const detalle = {
+    const detalle = {
     ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
-    PRODUCT0: resultado.producto.PRODUCT0,
+    PRODUCT0: codigoProducto.value,
     CANTIDAD_PEDIDA: cantidad2.value || 1, // usar cantidad del modal o 1 por defecto
     PRECIO_UNIDAD_VENTA: Number(resultado.precio.PRECIO_FINAL.toFixed(4)),
     SUBTOTAL_VENTAS: Number((1 * resultado.precio.PRECIO_FINAL).toFixed(4)),
-    DESCRIPCION_PROD_AUX: resultado.producto.DESCRIPCION_PROD,
+    DESCRIPCION_PROD_AUX: resultado.producto.DESCRIPCION_PROD || '', // vacio
     ID_SUCURSAL: '1',
     NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido
   }
+
+  console.log('impriendo detalle', detalle )
 
   mutateCrearPedidoDet(detalle, {
     onSuccess: async (data) => {
@@ -1105,75 +983,6 @@ const buscarProductoEscaneado = async () => {
     }
   })
 }
-
-
-// escanear o ingresar codigo 
-const buscarProductoPorCodigo = async () => {
-  try {
-    if (!codigoProducto.value.trim()) return
-
-    const producto = await obtenerPorCodigo(codigoProducto.value.trim())
-    if (!producto) {
-      $q.notify({ type: 'warning', message: 'Producto no encontrado' })
-      return
-    }
-
-    agregarProductoAlPedido(producto)
-  } catch (error) {
-    console.error('Error al buscar producto por código', error)
-    showErrorNotification('Producto', 'El producto no existe')
-  }
-}
-
-// crea pedido det desde catalogo
-const agregarProductoAlPedido = async (producto) => {
-  try {
-    if (!producto || !producto.PRODUCT0 || cantidad.value <= 0) {
-      console.error('Producto inválido o cantidad no válida')
-      return
-    }
-
-    // mostrar en pantalla cargando
-    loadingAgregar.value = true
-
-    const detalle = {
-      ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
-      PRODUCT0: producto.PRODUCT0,
-      CANTIDAD_PEDIDA: cantidad.value,
-      PRECIO_UNIDAD_VENTA: producto.PRECIO_PROMOCION ?? producto.PRECIO_FINAL,
-      SUBTOTAL_VENTAS: cantidad.value * (producto.PRECIO_PROMOCION ?? producto.PRECIO_FINAL),
-      DESCRIPCION_PROD_AUX: producto.DESCRIPCION_PROD,
-      ID_SUCURSAL: '1',
-      NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido
-    }
-
-      mutateCrearPedidoDet(detalle, {
-      onSuccess: async (data) => {
-
-        //agrega el producto
-        detallesPedido.value.push(data)
-        codigoProducto.value = ''
-        cantidad.value = 1
-        relistaDet2()
-        await refetchObtenerPedidoID() 
-        totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0)
-        enfocarCodigo()
-
-      },
-      onError: (error) => {
-        console.error('Error al guardar producto en BD:', error)
-        showErrorNotification('No hay pedido', 'Debe de crear un pedido primero')
-      },
-      onSettled: () => {
-        loadingAgregar.value = false
-      }
-    })
-  } catch (error) {
-    console.error('Error al agregar producto:', error)
-    loadingAgregar.value = false
-  }
-}
-
 
 // crea pedido det desde catalogo
 const agregarProductoAlPedido2 = async (producto) => {
@@ -1195,7 +1004,8 @@ const agregarProductoAlPedido2 = async (producto) => {
       throw new Error('No se pudo obtener el precio real del producto')
     }
 
-    console.log('sise guarda en precio xd: ', precio)
+    //console.log('Si se guarda en precio xd: ', precio)
+
     // Armar detalle para guardar
     const detalle2 = {
       ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
@@ -1230,7 +1040,7 @@ const agregarProductoAlPedido2 = async (producto) => {
 
         })
 
-        console.log('detalle2',detalle2)
+        //console.log('detalle2',detalle2)
       },
       onError: (error) => {
         console.error('Error al guardar producto en BD:', error)
@@ -1247,13 +1057,7 @@ const agregarProductoAlPedido2 = async (producto) => {
   }
 }
 
-
-// agregar producto al seleccionarlo
-const seleccionarProducto = (producto) => {
-  agregarProductoAlPedido(producto)
-  modalProductos.value = false
-}
-
+// enviar producto desde catalogo
 const seleccionarProducto2 = (producto) => {
   agregarProductoAlPedido2(producto)
   // por si lo quiere ocultar 

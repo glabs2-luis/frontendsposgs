@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { obtenerCodigoBarrasAction } from '../action/codigoAction'
 import { showSuccessNotification, showErrorNotification } from '@/common/helper/notification'
 import { Codigo } from '../interfaces/codigoInterface';
+import { getAxiosErrorMessage } from '@/common/helper/geterrordb';
 
 export const useCodigo = () => {
     
@@ -23,8 +24,8 @@ export const useCodigo = () => {
       const data = await obtenerCodigoBarrasAction(codigo, cantidad)
       return data
     } catch (error) {
-      console.error('El producto no tiene codigo de barras', error)
-
+      const message = getAxiosErrorMessage(error, 'El producto no tiene codigo de barras')
+      console.log(message)
     }
   }
 

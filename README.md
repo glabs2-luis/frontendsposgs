@@ -22,4 +22,8 @@ npm run dev
 
 # Installed
 
-Pinia, router , quasar 
+Pinia, router , quasar, 
+
+npm install qrcode
+npm install pdfmake
+

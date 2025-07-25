@@ -48,15 +48,12 @@ export const usePedidoDet = () => {
 
     // obtener lista pedidos det
     const ListaDet1 = (idPedidoEnc: Ref<number | null>) => {
-    return useQuery({
+    return useQuery({ // este es el que falla
     queryKey: computed(() => ['pedido-det', idPedidoEnc.value]),
     queryFn: () => obtenerListaPedidosDet(idPedidoEnc.value),
     enabled: computed(() => !!idPedidoEnc.value && idPedidoEnc.value > 0),
- //  refetchInterval: 1000,
-  //  refetchOnWindowFocus: false,
-
-  })
-}
+      })
+    }
 
     const ListaDet2 = (idPedidoEnc: Ref<number | null>) => {
      return useQuery({
@@ -64,12 +61,11 @@ export const usePedidoDet = () => {
     queryFn: () => obtenerListaPedidosDet(idPedidoEnc.value),
     enabled: computed(() => !!idPedidoEnc.value && idPedidoEnc.value > 0),
     refetchOnWindowFocus: false,
-
-  })
-}
+      })
+    }
     
     const useListaProductosPedidoDet = (idPedidoEnc: number) => {
-    return useQuery({
+    return useQuery({ // this also fails
     queryKey: ['pedidoDet', idPedidoEnc],
     queryFn: () => obtenerListaPedidosDet(idPedidoEnc),
     enabled: !!idPedidoEnc,
@@ -85,7 +81,6 @@ export const usePedidoDet = () => {
         ListaDet1,
         useListaProductosPedidoDet,
         ListaDet2,
-        // refetchListaDet2
     }
 
 }

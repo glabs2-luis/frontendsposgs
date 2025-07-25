@@ -11,7 +11,6 @@ export const useProductos = () => {
     const { data: todosProductos, refetch: refetchTodosProductos } = useQuery ({
         queryKey: ['productos'],
         queryFn: () => obtenerProductosAction(),
-
     }) 
 
     // obtener  productos por Id
@@ -30,12 +29,11 @@ export const useProductos = () => {
     const precioReal = async (codigo: string, cantidad: number): Promise<Productos> => {
         try {
             const productoPrecio = await ObtenerProductosPrecioAction(codigo, cantidad)
-            console.log(productoPrecio)
+            console.log('composable: ', productoPrecio)
             return productoPrecio
         } catch (error) {
-            console.error('Error obteniendo precio del producto', error)
+            console.log('Error obteniendo precio del producto', error)
             showErrorNotification('Error', 'Error obteniendo precio del producto')
-            throw new Error('Error obteniendo precio del producto')
         }
     }
 

@@ -58,9 +58,8 @@ const mostrar = ref(props.modelValue)
 watch(() => props.modelValue, async val => {
   mostrar.value = val
   await nextTick()
-  focusNombre.value?.focus() // Enfocar el campo de nombre al abrir el modal
+  focusNombre.value?.focus() //  focus al campo de nombre al abrir el modal
 })
-
 
 watch(() => mostrar.value, val => {
   emit('update:modelValue', val)
@@ -73,7 +72,6 @@ watch([() => props.modelValue, () => props.cliente], ([isOpen, nuevoCliente]) =>
     cliente.value = { ...nuevoCliente }
   }
 })
-
 
 const clienteForm = computed(() => cliente.value)
 

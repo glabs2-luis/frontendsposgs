@@ -107,6 +107,7 @@
             >
               <q-tooltip>Reimprimir</q-tooltip>
             </q-btn>
+
             <q-btn 
               flat 
               dense 
@@ -119,6 +120,7 @@
               <q-tooltip>Ver detalle</q-tooltip>
             </q-btn>
           </q-card-actions>
+
         </q-card>
       </div>
     </div>
@@ -137,6 +139,7 @@
     <!-- Modal mejorado -->
     <q-dialog v-model="mostrarDetalle" persistent>
       <q-card style="min-width: 700px; max-width: 90vw; max-height: 85vh">
+        
         <!-- Header elegante -->
         <q-card-section class="modal-header q-pa-md">
           <div class="row items-center no-wrap">
@@ -145,21 +148,16 @@
                 <q-icon name="receipt_long" class="q-mr-sm text-amber-7" />
                 Detalle de Factura
               </div>
+
               <div class="text-caption text-grey-6">
                 Información completa de productos
               </div>
             </div>
             <div class="col-auto">
-              <q-btn 
-                flat 
-                dense 
-                round 
-                icon="close" 
-                color="grey-7" 
-                v-close-popup
-                class="close-btn"
+              <q-btn flat dense round icon="close" color="grey-7" v-close-popup class="close-btn"
               />
             </div>
+
           </div>
         </q-card-section>
 
@@ -210,16 +208,12 @@
 
         <!-- Footer -->
         <q-separator />
+
         <q-card-actions align="right" class="q-pa-md">
-          <q-btn 
-            flat 
-            label="Cerrar" 
-            color="grey-7" 
-            icon="close"
-            v-close-popup 
-            class="q-px-lg"
+          <q-btn flat label="Cerrar" color="grey-7" icon="close" v-close-popup class="q-px-lg"
           />
         </q-card-actions>
+
       </q-card>
     </q-dialog>
   </q-page>
@@ -236,7 +230,6 @@ const detalleFactura = ref<any[]>([])
 const idSeleccionado = ref<number | null>(null)
 const { obtenerFacturasEnc, obtenerDetalleFactura } = useFacturasEnc()
 const { data: facturasData, isLoading } = obtenerFacturasEnc()
-
 
 // filtrar facturas
 const facturasFiltradas = computed(() => {
@@ -291,7 +284,7 @@ const formatearFecha = (fechaIso:Date) => {
   transition: all 0.2s ease;
   border-radius: 8px;
   border: 2px solid #fff3c4;
-  height: 290px;
+  height: auto;
   margin: 2px 0 10px 0; 
   cursor: pointer;
 }

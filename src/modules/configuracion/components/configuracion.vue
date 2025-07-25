@@ -115,19 +115,28 @@
       <!-- Mas configuraciones -->
 
 
+      <q-page class="q-mt-lg">
+        <q-btn label="Imprimir" color="green" @click="probarFactura" />
+      </q-page>
+
   </q-page>
 </template>
 
 
 <script setup lang="ts">
+
 import { ref, watch, computed } from 'vue'
 import useSeries from '../../fel_establecimiento_series/composables/useSeries'
 import { useConfiguracionStore } from '@/stores/serie'
 import { showConfirmationDialog } from '@/common/helper/notification'
 
+import { DataFactura } from '@/modules/facturar_pdf/interfaces/pdfInterface'
+import { usePdfFactura } from '@/modules/facturar_pdf/composables/usePdFactura'
+const { generarFacturaPDF } = usePdfFactura()
 // Store
 const configuracionStore = useConfiguracionStore()
 const { seriesSucursal } = useSeries()
+
 
 // sync
 import { useSync } from '@/modules/sync/composables/useSync'
@@ -162,6 +171,55 @@ const mostrarConexion = () => {
   conexionMensaje.value = true
 }
 
+
+const probarFactura = () => {
+  const dataFactura: DataFactura = {
+    encabezado: {
+      serie: "A",
+      numero: "000123",
+      uuid: "123e4567-e89b-12d3-a456-426614174000",
+      numeroInterno: "FAC-00123"
+    },
+    cliente: {
+      nombre: "Juan Pérez",
+      nit: "1234567-8",
+      direccion: "5a Avenida 10-25 Zona 1, Ciudad de Guatemala"
+    },
+    items: [
+      {
+        cantidad: 2,
+        descripcion: "Camisa Polo Azul",
+        precio: "Q100.00",
+        subtotal: "Q200.00"
+      },
+      {
+        cantidad: 1,
+        descripcion: "Pantalón Jeans",
+        precio: "Q150.00",
+        subtotal: "Q150.00"
+      }
+    ],
+    resumen: {
+      subtotal: "Q350.00",
+      descuento: "Q0.00",
+      totalPagar: "Q350.00",
+      totalItems: 3
+    },
+    nombreVendedor: "Carlos Ramírez",
+    qrCodeData: "https://midominio.com/factura/000123"
+  };
+
+  generarFacturaPDF(dataFactura);
+};
+
+
+
+
+
+
+function ListaDet1(idPedidoEnc: any): { data: any; isLoading: any; refetch: any } {
+  throw new Error('Function not implemented.')
+}
 </script>
 
 

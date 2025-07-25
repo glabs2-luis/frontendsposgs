@@ -15,7 +15,7 @@ export const obtenerClientesAction = async (): Promise<Cliente[]> => {
     
  export const crearClientesAction = async (cliente: Partial<Cliente>): Promise<Cliente> => {
     try {
-        const { data } = await posApi.post<Cliente>(`/clientes`, cliente);
+        const { data } = await posApi.post<Cliente>(`/clientes`, cliente)
         return data
     } catch (error) {
         console.error('[crearClientesAction]', error)
