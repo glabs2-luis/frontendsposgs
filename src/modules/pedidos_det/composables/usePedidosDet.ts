@@ -1,9 +1,8 @@
 import { PedidosDet } from '../interfaces/pedidosDetInterface'
 import { computed, ref, Ref } from 'vue'
 import { useQuery } from "@tanstack/vue-query"
-import { useMutation, useQueryClient } from "@tanstack/vue-query";
-import { showConfirmationDialog } from "@/common/helper/notification";
-import { crearPedidoDetAction, actualizarDescripcionPedidoDetAction, eliminarPedidoDetId, obtenerPedidoDetIdAction, obtenerListaPedidosDet } from "../action/pedidosDetAction";
+import { useMutation, useQueryClient } from "@tanstack/vue-query"
+import { crearPedidoDetAction, actualizarDescripcionPedidoDetAction, eliminarPedidoDetId, obtenerPedidoDetIdAction, obtenerListaPedidosDet } from "../action/pedidosDetAction"
 
 export const usePedidoDet = () => {
 

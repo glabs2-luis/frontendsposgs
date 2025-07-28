@@ -32,6 +32,7 @@ export const obtenerDetalleFacturaPorIdAction = async (idFacturaEnc:number) => {
         return data.ENC.DET
      } catch(error){
         const message = getAxiosErrorMessage(error, 'Hubo un error obteniendo los detalles de la factura')
+        console.log(message)
         throw new Error(message)
         }
     }

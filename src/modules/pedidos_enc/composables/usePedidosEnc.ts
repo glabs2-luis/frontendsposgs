@@ -54,7 +54,6 @@ export const usePedidosEnc = () => {
     return { data, refetchObtenerPedidoID }
   }
 
-
   // NUEVO:
   const refetchPedidoPorId = async (id: number) => {
   await queryClient.invalidateQueries({ queryKey: ['pedido-enc-id', id] })

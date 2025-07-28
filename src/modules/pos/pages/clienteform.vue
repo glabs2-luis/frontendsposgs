@@ -309,7 +309,6 @@ const continuarPedido = async (pedido) => {
 
 }
 
-
 // signo menos
 onMounted(() => {
   window.addEventListener('keydown', usarMenos)
@@ -384,7 +383,6 @@ watchEffect(() => {
   }
 })
 
-
 // sucursal siempre: 1
 const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
   1,
@@ -428,8 +426,8 @@ const crearPedido = () => {
   const nit = clienteStore.documento?.trim()
 
   if (!nombre || !direccion || !nit) {
-    showErrorNotification('Datos incompletos', 'Debe seleccionar un cliente válido antes de crear el pedido');
-    return;
+    showErrorNotification('Datos incompletos', 'Debe seleccionar un cliente válido antes de crear el pedido')
+    return
   }
 
   const pedidoEnc = {
@@ -455,8 +453,8 @@ const crearPedido = () => {
       //store pedido
        pedidoStore.setPedidoEncabezado(data.ID_PEDIDO_ENC, data.NUMERO_DE_PEDIDO)
       
-      mostrarCardPedidoCreado.value = true;
-      mostrarCardTotal.value = true;
+      mostrarCardPedidoCreado.value = true
+      mostrarCardTotal.value = true
       
       // notificaccion de creado
           $q.notify({
@@ -483,7 +481,6 @@ const crearPedido = () => {
     productosTabRef.value?.enfocarCodigo()
 }
 
-
 // Funcion para Colocar CF
 const colocarCF = async () => {
   const cf = await refetchMostrarCF()
@@ -500,7 +497,6 @@ const colocarCF = async () => {
     expansion.value?.hide()
   }
 }
-
 
 // Nueva ****************************************
 const buscarClienteDPINIT2 = async () => {
@@ -525,17 +521,12 @@ const buscarClienteDPINIT2 = async () => {
 
     // prellenar
     
-    
     abrirModalCliente.value = true
     clienteTemp.value.NIT = doc // prellenar el NIT buscado
     clienteTemp.value.DIRECCION = 'Ciudad'
     clienteTemp.value.NIT = doc
   }
 }
-
-
-
-
 
 // actual ****************************************
 const buscarClienteDPINIT = async () => {

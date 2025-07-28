@@ -18,7 +18,6 @@ export const obtenerClientesAction = async (): Promise<Cliente[]> => {
         const { data } = await posApi.post<Cliente>(`/clientes`, cliente)
         return data
     } catch (error) {
-        console.error('[crearClientesAction]', error)
         const message = getAxiosErrorMessage(error, "Hubo un error al crear el cliente")
         throw new Error(message)
     }

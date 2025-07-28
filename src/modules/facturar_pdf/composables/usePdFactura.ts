@@ -160,9 +160,9 @@ const generarFacturaPDF = async (
     const lineStartX = (contentWidth - desiredLineLength) / 2;
     const lineEndX = lineStartX + desiredLineLength;
 
-    console.log(`Ancho total disponible para contenido: ${contentWidth}pt`);
-    console.log(`Ancho calculado para descripción: ${descriptionColCalculatedWidth}pt`);
-    console.log(`Caracteres aprox por línea en descripción: ${charsPerLineForDescription}`);
+    // console.log(`Ancho total disponible para contenido: ${contentWidth}pt`);
+    // console.log(`Ancho calculado para descripción: ${descriptionColCalculatedWidth}pt`);
+    // console.log(`Caracteres aprox por línea en descripción: ${charsPerLineForDescription}`);
 
     // Definicion de la tabla para los items
     const tableBody: any[] = [];

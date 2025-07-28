@@ -103,7 +103,7 @@
               icon="print" 
               color="grey-7" 
               class="action-btn flex-1"
-              @click.stop
+              @click="reimprimirFactura(factura.ID_FACTURA_ENC)"
             >
               <q-tooltip>Reimprimir</q-tooltip>
             </q-btn>
@@ -223,6 +223,9 @@
 
 import { ref, computed, onMounted } from 'vue'
 import useFacturasEnc from '../../facturas_enc/composables/useFacturasEnc'
+import { showErrorNotification } from '@/common/helper/notification'
+import { usePdfFactura } from '@/modules/facturar_pdf/composables/usePdFactura'
+import { Productos } from '../../Productos/interfaces/productosInterface';
 
 const filtro = ref('')
 const mostrarDetalle = ref(false)
@@ -230,6 +233,7 @@ const detalleFactura = ref<any[]>([])
 const idSeleccionado = ref<number | null>(null)
 const { obtenerFacturasEnc, obtenerDetalleFactura } = useFacturasEnc()
 const { data: facturasData, isLoading } = obtenerFacturasEnc()
+const { generarFacturaPDF } = usePdfFactura()
 
 // filtrar facturas
 const facturasFiltradas = computed(() => {
@@ -257,6 +261,68 @@ const formatearFecha = (fechaIso:Date) => {
     timeStyle: 'short'
   })
 }
+
+const reimprimirFactura = async (idFactura: number) => {
+
+  console.log()
+
+  try {
+    const factura = facturasData.value.find(f => f.ID_FACTURA_ENC === idFactura)
+    if (!factura) {
+      showErrorNotification('Factura no encontrada','No existe esta factura' )
+      return
+    }
+
+    const detalle = await obtenerDetalleFactura(idFactura)
+    if (!detalle || detalle.length === 0) {
+      return
+    }
+
+    // Armar los items para el PDF
+    const itemsFactura = detalle.map((item: any) => ({
+      cantidad: item.CANTIDAD_VENDIDA,
+      descripcion: item.producto.DESCRIPCION_PROD,
+      precio: `Q ${parseFloat(item.PRECIO_UNITARIO_VTA).toFixed(2)}`,
+      subtotal: `Q ${parseFloat(item.SUBTOTAL_GENERAL).toFixed(2)}`
+    }))
+
+    // Calcular total de items
+    const totalItems = itemsFactura.reduce((total, item) => total + Number(item.cantidad), 0)
+
+    // Armar el objeto dataFactura para el PDF
+    const dataFactura = {
+      encabezado: {
+        serie: 'Pendiente',
+        numero: 'Pendiente',
+        uuid: 'Pendiente',
+        numeroInterno: `${factura.SERIE} | ${factura.NUMERO_FACTURA}`
+      },
+      cliente: {
+        nombre: factura.NOMBRE_CLI_A_FACTUAR,
+        nit: factura.NIT_CLIEN_A_FACTURAR,
+        direccion: factura.DIRECCION_CLI_FACTUR
+      },
+      items: itemsFactura,
+      resumen: {
+        subtotal: `Q, ${factura.TOTAL_GENERAL.toFixed(2)}`,
+        descuento: "Q0.00",
+        totalPagar: `Q, ${factura.TOTAL_GENERAL.toFixed(2)}`,
+        totalItems: totalItems
+      },
+      nombreVendedor: factura.USUARIO_QUE_FACTURA || 'Desconocido',
+      qrCodeData: 'Pendiente'
+    }
+
+    // Generar PDF
+    await generarFacturaPDF(dataFactura)
+
+  } catch (error) {
+    console.error('Error reimprimiendo factura:', error)
+    showErrorNotification('Error al reimprimir factura', 'Error')
+  }
+}
+
+
 
 </script>
 

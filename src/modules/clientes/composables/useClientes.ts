@@ -32,7 +32,8 @@ export const useClientes = () => {
             return null
             }
              } catch (error) {
-            console.error('Error buscando cliente:', error)
+            const message = ('NIT no existente, se creara el cliente')
+            console.log(message)
             return null
         }
     }

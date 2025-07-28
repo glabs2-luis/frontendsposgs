@@ -671,14 +671,15 @@ watch(tipoPago, (nuevo) => {
   }
 })
 
-
+// ***********
+// antigua funcion para mapear los datos a factura
 const productos = computed(() => {
-  const raw = productosFactura.value;
-  if (!raw) return [];
+  const raw = productosFactura.value
+  if (!raw) return []
 
-  const valores = Object.values(raw);
-  return Array.isArray(valores) ? valores : [];
-});
+  const valores = Object.values(raw)
+  return Array.isArray(valores) ? valores : []
+})
 
 const items = computed(() =>
   productos.value.map(p => ({
@@ -687,7 +688,22 @@ const items = computed(() =>
     precio: `Q${parseFloat(p.PRECIO_UNIDAD_VENTA).toFixed(2)}`,
     subtotal: `Q${(p.CANTIDAD_PEDIDA * parseFloat(p.PRECIO_UNIDAD_VENTA)).toFixed(2)}`
   }))
-);
+)
+// *************
+
+// mepar los productos para enviarlos facturar
+const obtenerItemsFactura = () => {
+  const raw = Object.values(productosFactura.value || {})
+  return raw.map(p => ({
+    cantidad: p.CANTIDAD_PEDIDA,
+    descripcion: p.DESCRIPCION_PROD,
+    precio: `Q${parseFloat(p.PRECIO_UNIDAD_VENTA).toFixed(2)}`,
+    subtotal: `Q${(p.CANTIDAD_PEDIDA * parseFloat(p.PRECIO_UNIDAD_VENTA)).toFixed(2)}`
+  }))
+}
+
+const itemsFactura = obtenerItemsFactura()
+
 
 const dataFactura = {
   encabezado: {
@@ -698,28 +714,15 @@ const dataFactura = {
   },
   cliente: {
     nombre: clienteStore.nombre,
-    nit: clienteStore.nit,
+    nit: clienteStore.documento,
     direccion: clienteStore.direccion
   },
-  items: [
-    {
-      cantidad: 2,
-      descripcion: "Camisa Polo Azul",
-      precio: "Q100.00",
-      subtotal: "Q200.00"
-    },
-    {
-      cantidad: 1,
-      descripcion: "Pantalón Jeans",
-      precio: "Q150.00",
-      subtotal: "Q150.00"
-    }
-  ],
+  items: obtenerItemsFactura(),
   resumen: {
-    subtotal: totalStore.totalEncabezado,
+    subtotal: totalStore.totalGeneral,
     descuento: "Q0.00",
     totalPagar: totalStore.totalGeneral,
-    totalItems: 3
+    totalItems: itemsFactura.reduce((total, item) => total + Number(item.cantidad), 0) // calcular cantidad items
   },
   nombreVendedor: userStore.nombreVendedor,
   qrCodeData: "https://midominio.com/factura/000123" // codigo pendiente
@@ -729,11 +732,9 @@ const dataFactura = {
 // modal factura
 const terminarVenta = async () => {
 
-
-
-
-console.log(productos.value)
+await nextTick() // epserar los productos para verlos en factura
 console.log(items.value)
+console.log(dataFactura)
 
   // si no existe pedido
 if(!pedidoStore.idPedidoEnc ){
@@ -753,7 +754,7 @@ const confirmarFactura = async () => {
     await nextTick()
     if(!confirmarFac) return
 
-  try {
+    try {
     const datos = {
       ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
       USUARIO_QUE_FACTURA: userStore.nombreVendedor,
@@ -776,9 +777,9 @@ const confirmarFactura = async () => {
     onSuccess: async (respuesta) => {
 
     console.log(totalStore.totalGeneral)
-    console.log(clienteStore.nit)
+    console.log(clienteStore.documento)
     console.log(clienteStore.nombre)
-    console.log(clienteStore.ciudad)
+    console.log(clienteStore.direccion)
       
     await generarFacturaPDF(dataFactura)
     await showSuccessNotification('Factura', 'Factura creada con éxito')
