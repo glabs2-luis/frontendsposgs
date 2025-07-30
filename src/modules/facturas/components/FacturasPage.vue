@@ -35,17 +35,16 @@
     </q-card>
 
     <!-- Grid  -->
-    <div v-if="facturasFiltradas.length" class="row q-gutter-md">
+    <div v-if="mostrarUltimasFacturas.length" class="row q-gutter-md">
       <div 
-        v-for="factura in facturasFiltradas" 
+        v-for="factura in mostrarUltimasFacturas" 
         :key="factura.ID_FACTURA_ENC"
         class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-xs-12"
       >
         <q-card 
           flat 
           bordered 
-          class="factura-card"
-          @click="verDetalleFactura(factura.ID_FACTURA_ENC)"
+          class="factura-card" 
         >
           <!-- Header compacto -->
           <q-card-section class="card-header q-pa-sm">
@@ -225,7 +224,6 @@ import { ref, computed, onMounted } from 'vue'
 import useFacturasEnc from '../../facturas_enc/composables/useFacturasEnc'
 import { showErrorNotification } from '@/common/helper/notification'
 import { usePdfFactura } from '@/modules/facturar_pdf/composables/usePdFactura'
-import { Productos } from '../../Productos/interfaces/productosInterface';
 
 const filtro = ref('')
 const mostrarDetalle = ref(false)
@@ -234,6 +232,14 @@ const idSeleccionado = ref<number | null>(null)
 const { obtenerFacturasEnc, obtenerDetalleFactura } = useFacturasEnc()
 const { data: facturasData, isLoading } = obtenerFacturasEnc()
 const { generarFacturaPDF } = usePdfFactura()
+const { obtenerDatosFel } = useFacturasEnc()
+
+//Mostrar solo las ultimas 100 facturas
+const mostrarUltimasFacturas = computed (()=>{
+  return facturasFiltradas.value
+    .sort((a, b) => new Date(b.FECHA_DE_FACTURA).getTime() - new Date(a.FECHA_DE_FACTURA).getTime())
+    .slice(0, 100)
+})
 
 // filtrar facturas
 const facturasFiltradas = computed(() => {
@@ -264,14 +270,17 @@ const formatearFecha = (fechaIso:Date) => {
 
 const reimprimirFactura = async (idFactura: number) => {
 
-  console.log()
-
   try {
     const factura = facturasData.value.find(f => f.ID_FACTURA_ENC === idFactura)
     if (!factura) {
       showErrorNotification('Factura no encontrada','No existe esta factura' )
       return
     }
+
+    const datosFelCertificados = await obtenerDatosFel(factura.NUMERO_FACTURA)
+
+    console.log(datosFelCertificados)
+    console.log(factura.NUMERO_FACTURA)
 
     const detalle = await obtenerDetalleFactura(idFactura)
     if (!detalle || detalle.length === 0) {
@@ -289,13 +298,19 @@ const reimprimirFactura = async (idFactura: number) => {
     // Calcular total de items
     const totalItems = itemsFactura.reduce((total, item) => total + Number(item.cantidad), 0)
 
+    //fecha de emision
+    const fecha = new Date(datosFelCertificados?.FECHA_ACCION)
+    const fechaEmisionValida = !isNaN(fecha.getTime()) ? fecha.toLocaleString() : ''
+
+
     // Armar el objeto dataFactura para el PDF
     const dataFactura = {
       encabezado: {
-        serie: 'Pendiente',
-        numero: 'Pendiente',
-        uuid: 'Pendiente',
-        numeroInterno: `${factura.SERIE} | ${factura.NUMERO_FACTURA}`
+        serie: datosFelCertificados?.SERIE_FACTURA_FEL ?? '',
+        numero: datosFelCertificados?.NUMERO_FACTURA_FEL ?? '',
+        uuid: datosFelCertificados?.UUID ?? '',
+        numeroInterno: `${factura?.SERIE ?? ''} | ${factura?.NUMERO_FACTURA ?? ''}`,
+        fechaEmision: fechaEmisionValida
       },
       cliente: {
         nombre: factura.NOMBRE_CLI_A_FACTUAR,
@@ -304,9 +319,9 @@ const reimprimirFactura = async (idFactura: number) => {
       },
       items: itemsFactura,
       resumen: {
-        subtotal: `Q, ${factura.TOTAL_GENERAL.toFixed(2)}`,
+        subtotal: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
         descuento: "Q0.00",
-        totalPagar: `Q, ${factura.TOTAL_GENERAL.toFixed(2)}`,
+        totalPagar: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
         totalItems: totalItems
       },
       nombreVendedor: factura.USUARIO_QUE_FACTURA || 'Desconocido',
@@ -321,7 +336,6 @@ const reimprimirFactura = async (idFactura: number) => {
     showErrorNotification('Error al reimprimir factura', 'Error')
   }
 }
-
 
 
 </script>

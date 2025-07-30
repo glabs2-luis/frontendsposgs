@@ -110,7 +110,7 @@ const generarFacturaPDF = async (
     if (!data) {
         throw new Error("Los datos de la factura son nulos o indefinidos.");
     }
-    if (!data.encabezado || !data.items || !data.cliente || !data.resumen) {
+    if (!data.items || !data.cliente || !data.resumen) {
         throw new Error("Faltan datos esenciales de la factura (encabezado, items, cliente o resumen).");
     }
     if (!data.items.length) {
@@ -245,11 +245,11 @@ const generarFacturaPDF = async (
         { text: "DATOS DE LA FACTURA", style: "sectionTitle", alignment: "center" },
         { text: documentoTipo, style: "caption", alignment: "center" },
         { text: facturaTipo, style: "caption", alignment: "center" },
-        { text: `SERIE: ${data.encabezado.serie || 'N/A'}`, style: "caption", alignment: "center" },
-        { text: `NÚMERO: ${data.encabezado.numero || 'N/A'}`, style: "caption", alignment: "center" },
-        { text: `NÚMERO DE AUTORIZACIÓN: ${data.encabezado.uuid || 'N/A'}`, style: "caption", alignment: "center" },
-        { text: `FECHA EMISIÓN: ${fechaHoraEmision}`, style: "caption", alignment: "center" },
-        { text: `NÚMERO INTERNO: ${data.encabezado.numeroInterno || 'N/A'}`, style: "caption", alignment: "center" },
+        { text: `SERIE: ${data.encabezado.serie || ''}`, style: "caption", alignment: "center" },
+        { text: `NÚMERO: ${data.encabezado.numero || ''}`, style: "caption", alignment: "center" },
+        { text: `NÚMERO DE AUTORIZACIÓN: ${data.encabezado.uuid || ''}`, style: "caption", alignment: "center" },
+        { text: `FECHA EMISIÓN: ${data.encabezado.fechaEmision}`, style: "caption", alignment: "center" },
+        { text: `NÚMERO INTERNO: ${data.encabezado.numeroInterno || ''}`, style: "caption", alignment: "center" },
         { text: '\n', margin: [0, 0, 0, -6] },
 
         {
@@ -392,6 +392,23 @@ const generarFacturaPDF = async (
           ],
           margin: [0, 0, 0, 10],
         },
+
+          {
+          canvas: [
+            {
+              type: "line",
+              x1: lineStartX,
+              y1: 5,
+              x2: lineEndX,
+              y2: 5,
+              lineWidth: 1,
+            },
+          ], 
+           margin: [0, 0, 0, 3],
+           
+        },
+
+        { text: " ", margin: [0, 5] }, 
 
         { text: `TOTAL ITEMS: ${data.resumen.totalItems || 0}`, style: "smallText" },
         {

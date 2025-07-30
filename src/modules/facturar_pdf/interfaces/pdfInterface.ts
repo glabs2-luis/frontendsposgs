@@ -11,8 +11,8 @@ export interface EncabezadoFactura {
   serie: string;
   numero: string;
   uuid: string;
-  //fechaEmision: string; // new Date().toISOString()
   numeroInterno: string;
+  fechaEmision: string; 
 }
 
 export interface ClienteFactura {

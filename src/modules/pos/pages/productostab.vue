@@ -2,7 +2,7 @@
   <div class="pedido-detalle-container">
    <q-card flat bordered class="q-pa-md q-mb-xs bg-yellow-1 text-black rounded-borders shadow-2 " >
 
-    <!-- título + total -->
+    <!-- Detalle del pedido -->
     <div class="row items-center justify-between q-mb-md">
 
       <!-- Título -->
@@ -20,6 +20,7 @@
 
       <!-- Botones alineados a la derecha -->
       <div class="col-auto row items-center q-gutter-sm">
+        <q-toggle v-model="contingencia" label="Contigencia" />
         <q-btn label="" icon="restart_alt" class="" @click="limpiar" />
         <q-btn label="Terminar Venta (F4)" icon="point_of_sale" @click="terminarVenta" class="boton-amarillo" />
       </div>
@@ -170,7 +171,11 @@
       
       <!-- header-->
       <q-card-section class="row q-pa-xs items-center justify-between">
-        <div class="text-h6 text-primary">Facturación</div>
+
+        <div class="text-h6 text-primary">Facturación </div>
+
+        <div v-if="contingencia" class="text-red-6" style="font-size: 19px;">Factura en contingencia</div>
+
         <q-btn icon="close" flat round dense v-close-popup />
       </q-card-section > 
 
@@ -338,13 +343,14 @@ import usePedidosEnc from '../../pedidos_enc/composables/usePedidosEnc'
 import { useCodigo } from '@/modules/codigo_barras/composables/useCodigo'
 import { Notify } from 'quasar'
 import { useTotalStore } from '@/stores/total'
-import useFacturasEnc from '../../facturas_enc/composables/useFacturasEnc'
 import { useUserStore } from '@/stores/user'
 import { useConfiguracionStore } from '@/stores/serie'
 import { cleanAllStores } from '@/common/helper/cleanStore'
 import { useSync } from '@/modules/sync/composables/useSync'
 import { usePdfFactura } from '@/modules/facturar_pdf/composables/usePdFactura'
 import { useClienteStore } from '@/stores/cliente'
+import { useFacturasEnc } from '@/modules/facturas_enc/composables/useFacturasEnc'
+import { useCertification } from '@/modules/certification/composables/useCertification'
 
 const props = defineProps({
   pedidoId: {
@@ -357,7 +363,10 @@ const props = defineProps({
   }
 })
 
-
+const contingencia = ref(false)
+const { mutateCertificar } = useCertification()
+const { obtenerDetalleFactura, obtenerFacturasEnc, obtenerFacturaId3 } = useFacturasEnc()
+const { data: factura3 } = obtenerFacturaId3()
 const clienteStore = useClienteStore()
 const { generarFacturaPDF } = usePdfFactura()
 const { mutateCrearSincronizacion } = useSync()
@@ -671,70 +680,64 @@ watch(tipoPago, (nuevo) => {
   }
 })
 
-// ***********
-// antigua funcion para mapear los datos a factura
-const productos = computed(() => {
-  const raw = productosFactura.value
-  if (!raw) return []
 
-  const valores = Object.values(raw)
-  return Array.isArray(valores) ? valores : []
-})
+const imprimirFactura = async (id) => {
 
-const items = computed(() =>
-  productos.value.map(p => ({
-    cantidad: p.CANTIDAD_PEDIDA,
-    descripcion: p.DESCRIPCION_PROD,
-    precio: `Q${parseFloat(p.PRECIO_UNIDAD_VENTA).toFixed(2)}`,
-    subtotal: `Q${(p.CANTIDAD_PEDIDA * parseFloat(p.PRECIO_UNIDAD_VENTA)).toFixed(2)}`
-  }))
-)
-// *************
+const factura = await obtenerFacturaId3(id)
+console.log('datos', factura)
 
-// mepar los productos para enviarlos facturar
-const obtenerItemsFactura = () => {
-  const raw = Object.values(productosFactura.value || {})
-  return raw.map(p => ({
-    cantidad: p.CANTIDAD_PEDIDA,
-    descripcion: p.DESCRIPCION_PROD,
-    precio: `Q${parseFloat(p.PRECIO_UNIDAD_VENTA).toFixed(2)}`,
-    subtotal: `Q${(p.CANTIDAD_PEDIDA * parseFloat(p.PRECIO_UNIDAD_VENTA)).toFixed(2)}`
-  }))
+    const detalle = await obtenerDetalleFactura(id)
+    console.log(detalle)
+
+    if (!detalle || detalle.length === 0) return
+
+    try {
+
+    const itemsFactura = detalle.map((item) => ({
+      cantidad: item.CANTIDAD_VENDIDA,
+      descripcion: item.producto.DESCRIPCION_PROD,
+      precio: `Q ${parseFloat(item.PRECIO_UNITARIO_VTA).toFixed(2)}`,
+      subtotal: `Q ${parseFloat(item.SUBTOTAL_GENERAL).toFixed(2)}`
+    }))
+
+    const totalItems = itemsFactura.reduce((total, item) => total + Number(item.cantidad), 0)
+
+    const dataFactura = {
+      encabezado: {
+        serie: 'Pendiente',
+        numero: 'Pendiente',
+        uuid: 'Pendiente',
+        numeroInterno: `${factura.SERIE} | ${factura.NUMERO_FACTURA}`
+      },
+      cliente: {
+        nombre: factura.NOMBRE_CLI_A_FACTUAR,
+        nit: factura.NIT_CLIEN_A_FACTURAR,
+        direccion: factura.DIRECCION_CLI_FACTUR
+      },
+      items: itemsFactura,
+      resumen: {
+        subtotal: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
+        descuento: 'Q0.00',
+        totalPagar: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
+        totalItems
+      },
+      nombreVendedor: factura.USUARIO_QUE_FACTURA || 'Desconocido',
+      qrCodeData: 'Pendiente'
+    }
+
+    await generarFacturaPDF(dataFactura)
+
+    } catch (error) {
+    console.error('Error imprimiendo factura:', error)
+    showErrorNotification('Error al imprimir factura', 'Error')
+  }
+
 }
-
-const itemsFactura = obtenerItemsFactura()
-
-
-const dataFactura = {
-  encabezado: {
-    serie: "Pendiente", // viene de infile segun hugo
-    numero: "pendiente", // lo da fel
-    uuid: "Pendiente", //por infile
-    numeroInterno: `${configuracionStore.serieSeleccionada} | X` // falta el numero de la factura
-  },
-  cliente: {
-    nombre: clienteStore.nombre,
-    nit: clienteStore.documento,
-    direccion: clienteStore.direccion
-  },
-  items: obtenerItemsFactura(),
-  resumen: {
-    subtotal: totalStore.totalGeneral,
-    descuento: "Q0.00",
-    totalPagar: totalStore.totalGeneral,
-    totalItems: itemsFactura.reduce((total, item) => total + Number(item.cantidad), 0) // calcular cantidad items
-  },
-  nombreVendedor: userStore.nombreVendedor,
-  qrCodeData: "https://midominio.com/factura/000123" // codigo pendiente
-}
-
 
 // modal factura
 const terminarVenta = async () => {
 
 await nextTick() // epserar los productos para verlos en factura
-console.log(items.value)
-console.log(dataFactura)
 
   // si no existe pedido
 if(!pedidoStore.idPedidoEnc ){
@@ -768,36 +771,28 @@ const confirmarFactura = async () => {
       return
     }
 
-    //Mostrar los datos a enviar
-    //console.log('Datos enviados al backend:', datos)
-
     // Ejecutar la facturación
-    mutateCrearFacturaEnc2(datos, {
+    await mutateCrearFacturaEnc2(datos, {
 
     onSuccess: async (respuesta) => {
 
-    console.log(totalStore.totalGeneral)
-    console.log(clienteStore.documento)
-    console.log(clienteStore.nombre)
-    console.log(clienteStore.direccion)
-      
-    await generarFacturaPDF(dataFactura)
+    modalFacturacion.value = false
     await showSuccessNotification('Factura', 'Factura creada con éxito')
-
-    // id de factura enc
-    //console.log(respuesta.ID_FACTURA_ENC)
     
     // crear sincronización
-    mutateCrearSincronizacion(respuesta.ID_FACTURA_ENC)
+    await mutateCrearSincronizacion(respuesta.ID_FACTURA_ENC)
+
+      // mandar a imprimir
+    await imprimirFactura(respuesta.ID_FACTURA_ENC)
+
 
     // limpiar stores
     cleanAllStores()
 
     props.onNuevoPedido()
-    modalFacturacion.value = false
 
     //refrescar la pagina
-    window.location.reload()
+    //window.location.reload()
     },
 
       onError: (error) => {
@@ -813,7 +808,6 @@ const confirmarFactura = async () => {
   // borrar efectivo
   montoEfectivo.value = (null)
 }
-
 
 const columnasCatalogo2 = [
   {
@@ -900,8 +894,7 @@ const buscarProductoEscaneado = async () => {
 
   // 1. buscar por código de barras
   try {
-    resultado = await consultarCodigoM(codigoProducto.value, cantidad2.value) // cantidad fija como 1
-    //console.log('Resultado de código de barras:', resultado)
+    resultado = await consultarCodigoM(codigoProducto.value, cantidad2.value) 
 
   } catch (error) {
     console.warn('Código no encontrado por código de barras:', error)
@@ -911,7 +904,6 @@ const buscarProductoEscaneado = async () => {
   if (!resultado || !resultado.producto ) {
 
     try {
-     // const productoDirecto = await obtenerProductosId(codigoProducto.value, )
       const productoDirecto = await precioReal(codigoProducto.value, cantidad2.value)
 
       // datos a consultar

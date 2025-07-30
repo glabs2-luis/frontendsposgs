@@ -1,7 +1,8 @@
 import posApi from "@/api/apiPos"
 import { getAxiosErrorMessage } from "@/common/helper/geterrordb"
-import { FacturaEnc } from '../interfaces/facturaEncInterface';
-import { FacturaEnc2 } from '../interfaces/facturaEnc2Interface';
+import { FacturaEnc } from '../interfaces/facturaEncInterface'
+import { FacturaEnc2 } from '../interfaces/facturaEnc2Interface'
+import { DatosFel } from '../interfaces/datosFelInterface'
 
 // Obtener todas las Facturas enc
 export const obtenerFacturasEncAction = async () : Promise<FacturaEnc[]> => {
@@ -10,7 +11,7 @@ export const obtenerFacturasEncAction = async () : Promise<FacturaEnc[]> => {
         return data
     } catch (error){
         const message = getAxiosErrorMessage(error, 'Hubo un error al obtener las facturas enc')
-        throw new Error(message)
+        console.log(message)
     }
 }
 
@@ -21,7 +22,7 @@ export const obtenerFacturasEncIdAction = async (id:number) : Promise<FacturaEnc
         return data    
     } catch (error){
         const message = getAxiosErrorMessage(error, 'Hubo un error obteniendo facturas enc por Id')
-        throw new Error(message)
+        console.log(message)
     }
 }
 
@@ -33,10 +34,10 @@ export const obtenerDetalleFacturaPorIdAction = async (idFacturaEnc:number) => {
      } catch(error){
         const message = getAxiosErrorMessage(error, 'Hubo un error obteniendo los detalles de la factura')
         console.log(message)
-        throw new Error(message)
         }
     }
 
+    // Por alguna razone etsa xd
 export const crearFacturaEncAction = async () => {
     try {
         const { data } = await posApi.post<FacturaEnc[]>(`/facturas-enc/facturacion`)
@@ -44,16 +45,30 @@ export const crearFacturaEncAction = async () => {
         return data
     } catch(error){
         const message = getAxiosErrorMessage(error, 'Hubo un error creando la factura Enc')
-        throw new Error(message)
+        console.log(message)
     }
 }
 
+// crear factura
 export const crearFacturaEncAction2 = async (factura: FacturaEnc2): Promise<FacturaEnc2> => {
   try {
     const { data } = await posApi.post<FacturaEnc2>(`/facturas-enc/facturacion`, factura)
     return data
   } catch (error) {
     const message = getAxiosErrorMessage(error, 'Hubo un error creando la factura Enc')
-    throw new Error(message)
+    console.log(message)
   }
 }
+
+// oobtener Datos Fel
+export const obtenerDatosFelAction = async (numero: number) : Promise<DatosFel> => {
+    try {
+        const { data } = await posApi.get(`/facturas-enc/fel-datos/${numero}`)
+        return data
+    } catch(error){
+        const message = await getAxiosErrorMessage(error, ' Hubo un error obteniendo los Datos Fel')
+        console.log(message)
+    }
+}
+
+

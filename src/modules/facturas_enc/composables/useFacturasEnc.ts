@@ -1,8 +1,6 @@
 import { FacturaEnc } from "../interfaces/facturaEncInterface"
-import { obtenerFacturasEncAction, obtenerFacturasEncIdAction, obtenerDetalleFacturaPorIdAction, crearFacturaEncAction, crearFacturaEncAction2 } from '../action/facturasEncAction'
+import { obtenerFacturasEncAction, obtenerFacturasEncIdAction, obtenerDetalleFacturaPorIdAction, crearFacturaEncAction, crearFacturaEncAction2, obtenerDatosFelAction } from '../action/facturasEncAction'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
-import { showConfirmationDialog } from '@/common/helper/notification'
-import{ Ref } from 'vue'
 
 export const useFacturasEnc = () => {
 
@@ -15,6 +13,19 @@ const obtenerFacturasEnc = () => {
     })
 }
 
+const obtenerFacturaPorId =  async (id: number) => 
+  useQuery({
+    queryKey: ['facturas-enc', id],
+    queryFn: () => obtenerFacturasEncIdAction(id),
+    enabled: false
+  })
+
+    // obteniendo datos de la factura para imprimir
+  const obtenerFacturaId3 = async (id:number) => {
+    return await obtenerFacturasEncIdAction(id)
+  }
+
+
 const obtenerDetalleFactura2 = (idFacturaEnc: number) => {
     return useQuery({
         queryKey: ['facturas-enc-detalle', idFacturaEnc],
@@ -26,6 +37,11 @@ const obtenerDetalleFactura2 = (idFacturaEnc: number) => {
   // Función normal para obtener el detalle de una factura por ID (sin useQuery)
   const obtenerDetalleFactura = async (idFacturaEnc: number) => {
     return await obtenerDetalleFacturaPorIdAction(idFacturaEnc)
+  }
+
+  //obtener datos Fel
+  const obtenerDatosFel = async(numero: number) =>{
+    return await obtenerDatosFelAction(numero)
   }
 
   //crear factura
@@ -43,14 +59,15 @@ const obtenerDetalleFactura2 = (idFacturaEnc: number) => {
     }
   })
 
-
-
-return {
+    return {
     obtenerFacturasEnc,
     obtenerDetalleFactura,
     mutateCrearFacturaEnc,
-    mutateCrearFacturaEnc2
-}
+    mutateCrearFacturaEnc2,
+    obtenerFacturaPorId,
+    obtenerFacturaId3,
+    obtenerDatosFel
+    }
 
 }
 

@@ -108,7 +108,7 @@
             style="min-height: 60vh;"
           >
             <div class="column items-center justify-center text-center">
-              <q-icon name="inventory_2" size="64px" class="text-grey-5 q-mb-sm" />
+              <q-icon name="inventory_2" size="64px" class="text-grey-6 q-mb-sm" />
               <div class="text-h6 text-grey-7">No hay productos agregados</div>
               <div class="text-subtitle2 text-grey-5">
                 Escanea un código o busca productos en el catálogo
