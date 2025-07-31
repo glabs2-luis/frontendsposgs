@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="mostrar">
+  <q-dialog v-model="mostrar" @show="enfocarNombre">
     <q-card style="min-width: 500px; max-width: 90vw;">
       <q-card-section class="row items-center justify-between">
         <div class="titulo-modal"> {{  props.modo === 'crear' ? 'Crear Cliente ': 'Editar Cliente'}} </div>
@@ -11,7 +11,7 @@
       <q-card-section>
 
         <q-form @submit.prevent="Guardar">
-          <q-input v-model="clienteForm.NOMBRE" label="Nombre" dense outlined :rules="[val => !!val || 'Requerido']" />
+          <q-input ref="focusNombre" v-model="clienteForm.NOMBRE" label="Nombre" dense outlined :rules="[val => !!val || 'Requerido']" />
           <q-input v-model="clienteForm.DPI" label="DPI" dense outlined class="q-mb-md"/>
           <q-input v-model="clienteForm.NIT" label="NIT" dense outlined :rules="[val => !!val || 'Requerido']" />
           <q-input v-model="cliente.DIRECCION" label="Dirección" dense outlined  :rules="[val => !!val || 'Requerido']" />
@@ -32,7 +32,15 @@
 
 import { Cliente } from '@/modules/clientes/interfaces/clientesInterface'
 import { ref, watch, computed } from 'vue'
-import { showSuccessNotification } from '@/common/helper/notification';
+import { showSuccessNotification } from '@/common/helper/notification'
+import { nextTick } from 'vue'
+
+const focusNombre = ref()
+
+const enfocarNombre = async () => {
+  await nextTick()
+  focusNombre.value?.focus()
+}
 
 const props = defineProps<{
   modelValue: boolean
@@ -47,17 +55,22 @@ const emit = defineEmits<{
 
 // Modal interno 
 const mostrar = ref(props.modelValue)
-watch(() => props.modelValue, val => {
+watch(() => props.modelValue, async val => {
   mostrar.value = val
+  await nextTick()
+  focusNombre.value?.focus() //  focus al campo de nombre al abrir el modal
 })
+
 watch(() => mostrar.value, val => {
   emit('update:modelValue', val)
 })
 
 // local
 const cliente = ref<Cliente>({ ...props.cliente })
-watch(() => props.cliente, nuevo => {
-  cliente.value = { ...nuevo }
+watch([() => props.modelValue, () => props.cliente], ([isOpen, nuevoCliente]) => {
+  if (isOpen) {
+    cliente.value = { ...nuevoCliente }
+  }
 })
 
 const clienteForm = computed(() => cliente.value)
@@ -65,7 +78,6 @@ const clienteForm = computed(() => cliente.value)
 // Guardar cambios
 function Guardar() {
   emit('guardar', cliente.value)
-  showSuccessNotification('cliente','Cliente creado con satisfactoriamente')
   emit('update:modelValue', false)
 }
 

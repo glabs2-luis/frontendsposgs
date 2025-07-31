@@ -35,6 +35,12 @@
           <q-item-section>Configuracion</q-item-section>
         </q-item>
 
+        <q-item clickable v-ripple @click="router.push('/pendientes')">
+          <q-item-section avatar><q-icon name="schedule" /></q-item-section>
+          <q-item-section>Pendientes</q-item-section>
+        </q-item>
+
+
       </q-list>
     </q-drawer>
 
@@ -71,6 +77,13 @@
     <q-page-container>
       <router-view />
     </q-page-container>
+
+    <q-footer>
+      <div class="bg-yellow-8 text-black text-center q-pa-sm">
+      <strong> Made by Hugo Boss - 2025 </strong>
+      </div>
+    </q-footer>
+
   </q-layout>
 </template>
 
@@ -82,6 +95,7 @@ import Swal from 'sweetalert2'
 import { useUserStore } from '@/stores/user'
 import { useSucursales} from '@/modules/Sucursales/composables/useSucursales'
 import { useConfiguracionStore } from '@/stores/serie'
+import { cleanAllStores } from '@/common/helper/cleanStore'
 
 const { obtenerSucursal } = useSucursales()
 const { nombreVendedor, codigoVendedor } = useUserStore()
@@ -91,8 +105,6 @@ const menuAbierto = ref(false)
 const configuracionStore = useConfiguracionStore()
 
 const cerrarSesion = async () => {
-
-  localStorage.removeItem('token')
 
   Swal.fire({
   title: "Cerrar Sesión",
@@ -105,7 +117,9 @@ const cerrarSesion = async () => {
   confirmButtonText: "Si, Cerrar Sesion"
 }).then((result) => {
   if (result.isConfirmed) {
-      router.push('/login')
+    router.push('/login')
+    localStorage.removeItem('token')
+    cleanAllStores()
   }
 })
 

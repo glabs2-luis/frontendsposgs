@@ -32,6 +32,7 @@
 
               <q-card-section class="login-form">
                 <q-input
+                  ref="focusUsuario"
                   v-model="usuario"
                   label="Usuario"
                   outlined
@@ -41,6 +42,7 @@
                 />
                 
                 <q-input
+                  ref="focusContra" 
                   v-model="password"
                   label="Contraseña"
                   type="password"
@@ -49,6 +51,12 @@
                   class="input-campo"
                   color="primary"
                   @keydown.enter="realizarLogin"
+                />
+
+                <q-checkbox
+                  v-model="recordarUsuario"
+                  label="Recordar usuario"
+                  class="q-mb-md"
                 />
 
                 <q-btn
@@ -89,10 +97,14 @@ const router = useRouter()
 const usuario = ref('')
 const password = ref('')
 const bodega = ref<Bodega>()
+const recordarUsuario = ref(false)
 
 const mostrarBodega  = async () => {
   bodega.value = await ObtenerBodegasId2()
 }
+
+
+
 
 const realizarLogin = () => {
   loginMutation({
@@ -101,6 +113,14 @@ const realizarLogin = () => {
   }, {
     // Login exitoso
     onSuccess: (data) => {
+
+      // Rrecordar usuario
+      if (recordarUsuario.value) {
+      localStorage.setItem('usuarioRecordado', usuario.value)
+    } else {
+      localStorage.removeItem('usuarioRecordado')
+    }
+
       router.push('/ventas')
     },
     onError: (error: Error) => {
@@ -110,9 +130,15 @@ const realizarLogin = () => {
   })
 }
 
-onMounted(
-  () => mostrarBodega()
-)
+onMounted(() => {
+  mostrarBodega()
+
+  const usuarioGuardado = localStorage.getItem('usuarioRecordado')
+  if (usuarioGuardado) {
+    usuario.value = usuarioGuardado
+    recordarUsuario.value = true
+  }
+})
 
 </script>
 
@@ -272,7 +298,7 @@ onMounted(
   text-decoration: underline;
 }
 
-/* Responsive Design */
+/* Responsive  */
 @media (max-width: 768px) {
   .login-container {
     flex-direction: column;

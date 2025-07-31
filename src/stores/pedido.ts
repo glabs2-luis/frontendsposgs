@@ -18,6 +18,10 @@ export const usePedidoStore = defineStore('pedido', {
         this.cliente = clienteData
     },
 
+    // compatible con persist
+    resetStore() {
+      this.$reset()
+    },
 
     clearPedidoEncabezado() {
         this.idPedidoEnc = null

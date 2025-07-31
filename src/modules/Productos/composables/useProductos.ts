@@ -1,6 +1,6 @@
 import { Productos } from "../interfaces/productosInterface"
 import { useQuery, useQueryClient } from "@tanstack/vue-query"
-import { obtenerProductosAction, obtenerProductosIdAction } from '../action/productosAction';
+import { obtenerProductosAction, obtenerProductosIdAction, ObtenerProductosPrecioAction } from '../action/productosAction';
 import { showConfirmationDialog, showErrorNotification } from "@/common/helper/notification";
 
 export const useProductos = () => {
@@ -11,7 +11,6 @@ export const useProductos = () => {
     const { data: todosProductos, refetch: refetchTodosProductos } = useQuery ({
         queryKey: ['productos'],
         queryFn: () => obtenerProductosAction(),
-
     }) 
 
     // obtener  productos por Id
@@ -26,10 +25,23 @@ export const useProductos = () => {
         }
     }
 
+    // Obtener precio del producto
+    const precioReal = async (codigo: string, cantidad: number): Promise<Productos> => {
+        try {
+            const productoPrecio = await ObtenerProductosPrecioAction(codigo, cantidad)
+            console.log('composable: ', productoPrecio)
+            return productoPrecio
+        } catch (error) {
+            console.log('Error obteniendo precio del producto', error)
+            showErrorNotification('Error', 'Error obteniendo precio del producto')
+        }
+    }
+
     return {
         todosProductos,
         refetchTodosProductos,
-        obtenerProductosId
+        obtenerProductosId,
+        precioReal
     }
 
 }

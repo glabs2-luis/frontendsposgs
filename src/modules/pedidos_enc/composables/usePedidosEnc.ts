@@ -3,7 +3,7 @@ import {
   crearPedidoEncAction,
   obtenerPedidosPendientesAction,
   obtenerPedidoEncPorIdAction,
-  eliminarPedidoEncAction, obtenerPedidoEncPorIdAction2
+  eliminarPedidoEncAction, obtenerPedidoEncPorIdAction2, AnularPedidosPendientesAction
 } from '../action/pedidosEncAction'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
@@ -31,19 +31,28 @@ export const usePedidosEnc = () => {
     }
   })
 
+  // anular pedido pendiente
+  const { mutate: mutateAnularPedidoPendiente } = useMutation({
+    mutationFn: ({ id, usuario }: { id: number; usuario: string }) =>
+    AnularPedidosPendientesAction(id, usuario),
+
+    onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['pedidos-pendientes'] })
+  }
+})
+
   // Obtener pedido por ID
   const obtenerPedidoPorId = (id: Ref<number | null>) => {
     const { data, refetch: refetchObtenerPedidoID } =  useQuery({
       queryKey: ['pedido', id.value],
       queryFn: () => obtenerPedidoEncPorIdAction(id.value),
       enabled: !!id.value,
-      refetchInterval: 2000,
+      refetchInterval: 1000,
       refetchOnWindowFocus: false
     })
 
     return { data, refetchObtenerPedidoID }
   }
-
 
   // NUEVO:
   const refetchPedidoPorId = async (id: number) => {
@@ -88,7 +97,8 @@ export const usePedidosEnc = () => {
     obtenerPedidoPorId,
     eliminarPedido,
     obtenerPedido2,
-    refetchPedidoPorId
+    refetchPedidoPorId,
+    mutateAnularPedidoPendiente
   }
 }
 

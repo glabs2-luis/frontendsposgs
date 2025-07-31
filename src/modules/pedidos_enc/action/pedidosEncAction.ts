@@ -26,6 +26,20 @@ export const obtenerPedidosPendientesAction = async (ID_SUCURSAL: number, CODIGO
   }
 }
 
+// anular pedido pendiente
+export const AnularPedidosPendientesAction = async (id: number, usuario: string): Promise<PedidosEnc> => {
+  try {
+    const { data } = await posApi.post<PedidosEnc>(`/pedidos-enc/anular/${id}`, {USUARIO: usuario})
+    console.log("Pedido anulado:", data)
+    return data
+  } catch (error) {
+    console.error("Error al anular el pedido:", error)
+    const message = getAxiosErrorMessage(error, "Hubo un error al anular el pedido")
+    throw new Error(message)
+  }
+}
+
+
 //  Obtener pedido por ID
 export const obtenerPedidoEncPorIdAction = async (id: number): Promise<PedidosEnc> => {
   try {

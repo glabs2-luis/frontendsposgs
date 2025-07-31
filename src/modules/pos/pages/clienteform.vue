@@ -8,7 +8,8 @@
 
         <!-- ExpansionItem -->
         <div class="col">
-          <q-expansion-item ref="expansion" icon="person" label="Información del Cliente" expand-separator default-opened header-class="bg-yellow-1 text-black" >
+
+          <q-expansion-item ref="expansion" v-model="expansionCliente" icon="person" label="Información del Cliente" lazy-rules expand-separator header-class="bg-yellow-1 text-black" >
          
             <template #header>
               <q-item-section avatar>
@@ -18,23 +19,30 @@
               <q-item-section>
                 <q-item-label>Información del Cliente</q-item-label>
                 <q-item-label caption class="text-black text-weight-bold">
-                  {{ cliente.DOCUMENTO }} - {{ cliente.NOMBRE }} - {{ cliente.DIRECCION }}
+                  {{ clienteStore.documento }} - {{ clienteStore.nombre }} - {{ clienteStore.direccion }}
                 </q-item-label>
               </q-item-section>
             </template>
 
             <q-card flat bordered class="q-pa-xs bg-grey-1" style="border-radius: 6px;">
               <div class="q-pa-sm">
-                <q-form>
+
+                <q-form ref="formRef" lazy-validation>
                   <div class="row q-col-gutter-xs">
+
+                    <q-option-group class="q-mr-md" v-model="tipoDocumento"
+                    :options="[{ label: 'NIT', value: 'nit' },{ label: 'DPI', value: 'dpi' }]" type="radio" inline />
+
+                    <!-- Campo de búsqueda de cliente -->
                     <div class="col-4">
+
                       <!-- DPI-->
-                      <q-input ref="focus" v-model="cliente.DOCUMENTO" label="DPI/NIT" dense outlined :rules="[val => !!val || 'Requerido']"
-                        style="font-size: 13px;" @keydown.enter.prevent="buscarClienteDPINIT" @keydown="usarF2">
+                      <q-input ref="focus" v-model="clienteStore.documento" label="NIT/DPI" dense outlined lazy-rules :rules="[val => !!val || 'Requerido']"   hide-bottom-space
+                        style="font-size: 13px;" @keydown.enter.prevent="buscarClienteDPINIT2" @keydown="usarF2">
                       
                         <template v-slot:append>
                           <q-btn flat dense icon="search" color="primary"
-                            @click="buscarClienteDPINIT" :disable="!cliente.DOCUMENTO" size="xs" />
+                            @click="buscarClienteDPINIT" :disable="!clienteStore.documento" size="xs" />
                           
                         </template>
 
@@ -42,28 +50,25 @@
                     </div>
 
                     <div class="col-5">
-                      <q-input v-model="cliente.NOMBRE" label="Nombre" dense outlined :rules="[val => !!val || 'Requerido']" style="font-size: 13px;"
+                      <q-input v-model="clienteStore.nombre" label="Nombre" dense outlined lazy-rules :rules="[val => !!val || 'Requerido']" style="font-size: 13px;"
                       />
                     </div>
 
                     <div class="col-3">
-                      <q-input v-model="cliente.DIRECCION" label="Dirección" dense outlined :rules="[val => !!val || 'Requerido']" style="font-size: 13px;"
+                      <q-input v-model="clienteStore.direccion" label="Dirección" dense outlined lazy-rules :rules="[val => !!val || 'Requerido']" style="font-size: 13px;"
                       />
                     </div>
 
                     <div class="col-3">
-                      <q-input v-model="cliente.TELEFONO" label="Teléfono" dense outlined mask="####-####" style="font-size: 13px;"   />
+                      <q-input v-model="clienteStore.telefono" label="Teléfono" dense outlined mask="####-####" style="font-size: 13px;"   />
                     
                     </div>
 
                     <div class="col-6">
-                      <q-input v-model="cliente.EMAIL" label="Email" dense outlined type="email" style="font-size: 13px;" />
+                      <q-input v-model="clienteStore.email" label="Email" dense outlined type="email" style="font-size: 13px;" />
                       
                     </div>
 
-                    <div class="col-3 flex items-end">
-                      <q-btn flat dense icon="person" color="warning" label="CF (F2)" @click="colocarCF" size="md" class="full-width" style="height: 32px;" />
-                     </div>
 
                   </div>
                 </q-form>
@@ -75,18 +80,22 @@
 
         <!-- Ver Pedidos Pendientes -->
         <div class="col-auto q-ml-sm">
-            <q-card flat bordered class="q-pa-sm bg-white shadow-3">
-              <q-btn label="Pedidos Pendientes" icon="assignment" size="sm" color="deep-orange-5" class="text-caption" unelevated rounded @click="abrirModalPedidosPendientes"
+            <q-card flat bordered class="q-pa-sm bg-white shadow-3" >
+              <q-btn label="Pedidos Pendientes" icon="assignment" size="sm" color="deep-orange-5" class="text-caption" unelevated rounded  style="min-height: 38px" @click="abrirModalPedidosPendientes"
               />
             </q-card>
 
             <!-- Modal de Pedidos Pendientes -->
             <q-dialog v-model="modalPendientes">
               <q-card class="q-pa-md" style="min-width: 750px">
+
                 <q-card-section class="row items-center q-pb-none">
                   <q-icon name="assignment" color="deep-orange-6" />
                   <span class="q-ml-md text-subtitle1">Pedidos Pendientes</span>
-
+                
+                  <q-space />
+                
+                  <q-btn icon="close" flat dense round v-close-popup />
                 </q-card-section>
 
                 <q-card-section>
@@ -96,10 +105,12 @@
                   <q-markup-table flat bordered class="q-mt-sm tabla-elegante">
                     <thead>
                       <tr>
-                        <th class="text-left"># Pedido</th>
-                        <th class="text-left">Cliente</th>
-                        <th class="text-left">Nit</th>
-                        <th class="text-left">Direccion</th>
+                        <th class="text-left"><strong># Pedido</strong></th>
+                        <th class="text-left"><strong>Cliente</strong></th>
+                        <th class="text-left"><strong>Nit</strong></th>
+                        <th class="text-left"><strong>Total</strong></th>
+                        <th class="text-center"><strong>Anular</strong></th> 
+                        <th class="text-center"><strong>continuar</strong></th> 
                       </tr>
                     </thead>
                     <tbody>
@@ -107,7 +118,12 @@
                         <td>{{ pedido.NUMERO_DE_PEDIDO}}</td>
                         <td>{{ pedido.NOMBRE_A_FACTURAR }}</td>
                         <td>{{ pedido.NIT_A_FACTURAR }}</td>
-                        <td>{{ pedido.DIRECCION_FACTURAR}}</td>
+                        <td>Q. {{ pedido.TOTAL_GENERAL_PEDIDO.toFixed(2)}}</td>
+                        <td class="text-center">
+                        <q-btn icon="close" color="red-6" flat dense label="" @click="anularPedido(pedido)"></q-btn></td>
+                        <td class="text-center">
+                        <q-btn icon="input" color="green-8" flat dense label="" @click="continuarPedido(pedido)"></q-btn></td>
+                       
                       </tr>
                     </tbody>
                   </q-markup-table>
@@ -131,7 +147,7 @@
               <div v-if="mostrarNumPedido" class="row items-center q-gutter-xs">
                 <q-icon name="receipt_long" color="primary" size="sm" />
                 <div class="text-subtitle2 text-primary " style="font-size: 160%">
-                  Pedido #{{ numPedido  }}
+                  Pedido #{{ numPedido2  }}
                 </div>
               </div>
 
@@ -139,14 +155,14 @@
 
               <!-- Total de Venta -->
               <div class="row items-center q-gutter-xs total-card q-pa-xs">
-                <q-icon name="paid" size="sm" class="text-amber-9" />
+                <q-icon name="paid" size="sm" class="text-amber-10" />
 
-                  <div class="text-body1 text-amber-10 text-weight-bold " style="font-size: 160%" >
+                  <div class="text-body1 text-amber-10 text-weight-bold " style="font-size: 280%" >
                     Total: Q. {{ totalStore.totalGeneral.toFixed(2) }}
-                      <q-spinner v-if="isLoading" color="primary" size="40px" />
-
+  
                 </div>
               </div>
+              
               </div>
 
               </q-card>
@@ -159,23 +175,22 @@
                 :cliente="clienteTemp"
               modo="crear"
             @guardar="guardarClienteDesdeModal"/>
-
           </div>
       </div>
 
    </div>
 
-   <ProductosTab ref="productosTabRef" />
-   <TablaProductos ref="tablaProductosRef"/>
+   <ProductosTab ref="productosTabRef" :onNuevoPedido="nuevoPedido"/>
+   <TablaProductos ref="tablaProductosRef"/>  
 </template>
-
 
 <script setup lang="ts">
 
-import { ref, computed, onMounted, watchEffect, watch } from 'vue'
-import { QExpansionItem } from 'quasar'
+import { useQuasar } from 'quasar'
+import { ref, computed, onMounted, watchEffect, watch, onBeforeUnmount } from 'vue'
+import { QExpansionItem, Notify } from 'quasar'
 import useClientes from '../../clientes/composables/useClientes'
-import { showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
+import { showConfirmationDialog, showErrorNotification, showSuccessNotification, showConfirmationInsideModal } from '@/common/helper/notification'
 import ModalEditarCliente from '@/modals/modalEditarCliente.vue'
 import type { Cliente } from '@/modules/clientes/interfaces/clientesInterface'
 import usePedidosEnc from '@/modules/pedidos_enc/composables/usePedidosEnc'
@@ -183,10 +198,14 @@ import { useUserStore } from '../../../stores/user'
 import { nextTick } from 'vue'
 import ProductosTab from '@/modules/pos/pages/productosTab.vue'
 import { usePedidoStore } from '@/stores/pedido'
-import { PedidosEnc } from '../../pedidos_enc/interfaces/pedidoEncInterface'
 import TablaProductos from './tablaProductos.vue'
 import { useTotalStore } from '@/stores/total'
+import { useClienteStore } from '@/stores/cliente'
+import { cleanAllStores } from '@/common/helper/cleanStore'
 
+const $q = useQuasar()
+const tipoDocumento = ref<'nit' | 'dpi'>('nit')
+const clienteStore = useClienteStore()
 const totalStore = useTotalStore()
 const tablaProductosRef = ref()
 const pedidoStore = usePedidoStore()
@@ -195,23 +214,164 @@ const abrirModalCliente = ref(false)
 const mostrarCardPedidoCreado = ref(false)
 const mostrarCardTotal = ref(false)
 const expansion = ref<any>(null)
-const { obtenerClientePorDocumento,refetchMostrarCF, mutateCrearCliente } = useClientes()
-const { mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId } = usePedidosEnc()
-
-const total = ref(0)
-const numPedido = ref(0)
+const numPedido = ref(0) 
 const totalReal = ref(0)
-
-const mostrarModalFacturacion = ref (false)
 const productosTabRef = ref(null)
 const focus = ref(null)
 const modalPendientes = ref (false)
+const mostrarModalFacturacion = ref(false)
+const expansionCliente = ref(false)
+const formRef = ref()
+
+const { obtenerClientePorDocumento,refetchMostrarCF, mutateCrearCliente } = useClientes()
+const { mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId, mutateAnularPedidoPendiente } = usePedidosEnc()
 
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc)
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc)
+const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0) // pedido funcional
+const focus2 = ref<HTMLInputElement | null>(null)
 
 
+// abrir expansion item y focus a nit
+watch(() => clienteStore.documento, async (nuevo) => {
+    if (!nuevo || nuevo.trim() === '' || nuevo === '0') {
+      
+      await nextTick()  
+      expansion.value?.show()
+      
+      await formRef.value?.resetValidation()
 
+      await nextTick()
+        focus.value?.focus()
+      
+    }
+  }, { immediate: true } )
+
+
+// controla que exista un pedido
+watch(idPedidoEnc, (nuevoId) => {
+  if (nuevoId && nuevoId > 0) {
+   console.log('Pedido actualizado desde query:', {
+     total: totalReal.value
+    })
+   }
+})
+
+// Anular pedido pendiente
+const anularPedido = async (pedido) => {
+  const confirmado = await showConfirmationInsideModal(
+    'Anular Pedido',
+    `¿Está seguro que desea anular el pedido #${pedido.NUMERO_DE_PEDIDO}?`
+  )
+
+  if (!confirmado) return
+
+  mutateAnularPedidoPendiente({
+    id: pedido.ID_PEDIDO_ENC,
+    usuario: userStore.nombreVendedor
+  })
+}
+
+// continuar pedido pendiente
+const continuarPedido = async (pedido) => {
+
+  const confirmado = await showConfirmationInsideModal(
+    'Continuar Pedido',
+    `¿Está seguro que desea continuar con el pedido #${pedido.NUMERO_DE_PEDIDO}?`
+  )
+
+  if (!confirmado) return
+
+  cleanAllStores()
+  await nextTick()
+
+  await formRef.value?.resetValidation() 
+    // Enfocar productosTab para continuar
+   await productosTabRef.value?.enfocarCodigo()
+  
+  // Actualizar el store con el ID del pedido pendiente
+  pedidoStore.setPedidoEncabezado(pedido.ID_PEDIDO_ENC, pedido.NUMERO_DE_PEDIDO)
+  
+    // set cliente
+    clienteStore.setCliente({
+    documento: pedido.NIT_A_FACTURAR,
+    nombre: pedido.NOMBRE_A_FACTURAR,
+    direccion: pedido.DIRECCION_FACTURAR,
+    telefono: pedido.TELEFONO_CLIENTE || null,// no viene la info
+    email: pedido.EMAIL_CLIENTE || null // no viene la info
+  })
+
+  // Cerrar modal de pendientes
+  modalPendientes.value = false
+  
+  // Enfocar productosTab para continuar
+   await productosTabRef.value?.enfocarCodigo()
+
+}
+
+// signo menos
+onMounted(() => {
+  window.addEventListener('keydown', usarMenos)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', usarMenos)
+})
+
+// usar tecla - para abrir modal pendientes
+const usarMenos = (e) =>{
+  if (e.key === '-') {
+    e.preventDefault()
+    abrirModalPedidosPendientes()
+  }
+}
+
+// Crear Pedido con F3
+onMounted(() =>{
+  window.addEventListener('keydown', crearPedidoConF3)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', crearPedidoConF3)
+})
+
+const crearPedidoConF3 = (e: KeyboardEvent) => {
+  if (e.key === 'F3') {
+    e.preventDefault()
+    crearPedido()
+    expansion.value?.hide()
+  }
+}
+
+// Cerrar expansion cuando se crea un pedido
+watchEffect(() => {
+  const cerrar = pedidoStore.idPedidoEnc
+
+  if (cerrar > 0){
+    expansion.value?.hide()
+  }
+})
+
+// Opción A: Solo enfoca cuando el valor queda vacío
+watch(() => clienteStore.documento, (nuevoValor, oldValor) => {
+  if (!nuevoValor) {
+    expansionCliente.value = true
+    expansion.value?.show()
+    enfocarCodigo()
+  }
+})
+
+// focus al ref
+const enfocarCodigo = () => {
+  focus.value?.focus()
+}
+
+onMounted(() => {
+  enfocarCodigo()
+})
+
+
+// Actualizar numPedido y Total
 watchEffect(() => {
   if (pedidoEnc.value) {
     numPedido.value = pedidoEnc.value.NUMERO_DE_PEDIDO || 0
@@ -223,55 +383,17 @@ watchEffect(() => {
   }
 })
 
-
-watch(idPedidoEnc, (nuevoId) => {
-  if (nuevoId && nuevoId > 0) {
-   console.log('Pedido actualizado desde query:', {
-     total: totalReal.value
-    })
-
-   }
-  
-})
-
-
-watchEffect(() => {
-  console.log('pedidoEnc recibido:', pedidoEnc.value)
-})
-
-watchEffect(() => {
-  console.log('ID desde store:', idPedidoEnc.value)
-})
-
-
-
 // sucursal siempre: 1
 const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
   1,
   userStore.codigoVendedor
 )
 
-// focus para pedido a DPI
-onMounted(() => {
-  focus.value?.focus()
-})
-
-const mostrarNumPedido = computed(() => numPedido.value > 0)
-const mostrarTotalReal = computed(() => totalReal.value > 0)
-
-const mostrarSubtotal = computed(() => total.value > 0)
+const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0)
 
 const abrirModalPedidosPendientes = () => {
   modalPendientes.value = true
 }
-
-const cliente = ref({
-  DOCUMENTO: '',
-  NOMBRE: '',
-  DIRECCION: '',
-  TELEFONO: '',
-  EMAIL: ''
-})
 
 //Llenar modal desde esta pagina
 const clienteTemp = ref ({
@@ -282,14 +404,30 @@ const clienteTemp = ref ({
   CORREO_ELECTRONICO: ''
 })
 
+//Limpiar los datos del cliente
+const resetCliente = () => {
+  clienteTemp.value = {
+    NIT: '',
+    NOMBRE: '',
+    DIRECCION: '',
+    TELEFONO: '',
+    CORREO_ELECTRONICO: ''
+  }
+}
+
+const nuevoPedido = () => {
+  resetCliente()
+  }
+
+// crear pedido xd
 const crearPedido = () => {
-  const nombre = cliente.value.NOMBRE?.trim();
-  const direccion = cliente.value.DIRECCION?.trim();
-  const nit = cliente.value.DOCUMENTO?.trim();
+  const nombre = clienteStore.nombre?.trim()
+  const direccion = clienteStore.direccion?.trim()
+  const nit = clienteStore.documento?.trim()
 
   if (!nombre || !direccion || !nit) {
-    showErrorNotification('Datos incompletos', 'Debe seleccionar un cliente válido antes de crear el pedido');
-    return;
+    showErrorNotification('Datos incompletos', 'Debe seleccionar un cliente válido antes de crear el pedido')
+    return
   }
 
   const pedidoEnc = {
@@ -301,10 +439,8 @@ const crearPedido = () => {
     ID_SUCURSAL: 1,                // Sera unica
     USUARIO_INGRESO_PEDI: (userStore.nombreVendedor).substring(0,10) , 
     CODIGO_VENDEDOR: userStore.codigoVendedor ,          
-    CODIGO_DE_CLIENTE: 1020      // 
+    CODIGO_DE_CLIENTE: 1021      // 
   }
-
-  console.log('Pedido a guardar:', JSON.stringify(pedidoEnc, null, 2));
 
     mutateCrearPedidoEnc(pedidoEnc, {
     onSuccess: async (data) => {
@@ -316,15 +452,22 @@ const crearPedido = () => {
 
       //store pedido
        pedidoStore.setPedidoEncabezado(data.ID_PEDIDO_ENC, data.NUMERO_DE_PEDIDO)
-      console.log('ID_PEDIDO_ENC guardado en store:', pedidoStore.idPedidoEnc)
-
-
-
-      mostrarCardPedidoCreado.value = true;
-      mostrarCardTotal.value = true;
-
-      showSuccessNotification('Pedido creado', 'Pedido registrado correctamente');
       
+      mostrarCardPedidoCreado.value = true
+      mostrarCardTotal.value = true
+      
+      // notificaccion de creado
+          $q.notify({
+          type: 'success',
+          message: `Pedido creado`, 
+          position: 'top',
+          color: 'green',
+          timeout: 2000,
+          group: false,  // se muestra de inmediato
+          progress: false
+
+        })
+
       await nextTick() 
        productosTabRef.value?.enfocarCodigo()
 
@@ -336,30 +479,58 @@ const crearPedido = () => {
   
     //focus
     productosTabRef.value?.enfocarCodigo()
-   
 }
-
 
 // Funcion para Colocar CF
 const colocarCF = async () => {
   const cf = await refetchMostrarCF()
 
   if (cf.data) {
-    Object.assign(cliente.value, {
-      DOCUMENTO: cf.data.NIT || '',
-      NOMBRE: cf.data.NOMBRE || '',
-      DIRECCION: cf.data.DIRECCION || '',
-      TELEFONO: cf.data.TELEFONO || '',
-      EMAIL: cf.data.CORREO_ELECTRONICO || ''
-    })
-
-    expansion.value?.toggle()
+  clienteStore.setCliente({
+  documento: cf.data.NIT || '',
+  nombre: cf.data.NOMBRE || '',
+  direccion: cf.data.DIRECCION || '',
+  telefono: cf.data.TELEFONO || '',
+  email: cf.data.CORREO_ELECTRONICO || ''
+})
     crearPedido()
+    expansion.value?.hide()
   }
 }
 
+// Nueva ****************************************
+const buscarClienteDPINIT2 = async () => {
+      const doc = clienteStore.documento.trim()
+    if(!doc) return 
+    const tipo = tipoDocumento.value
+
+    const clienteEncontrado2 = await obtenerClientePorDocumento(doc, tipo)
+
+     if (clienteEncontrado2) {
+    clienteStore.setCliente({
+      documento: clienteEncontrado2.NIT || '',
+      nombre: clienteEncontrado2.NOMBRE || '',
+      direccion: clienteEncontrado2.DIRECCION || '',
+      telefono: clienteEncontrado2.TELEFONO || '',
+      email: clienteEncontrado2.CORREO_ELECTRONICO || ''
+    })
+
+    //expansion.value?.toggle()
+    //crearPedido()
+  } else {
+
+    // prellenar
+    
+    abrirModalCliente.value = true
+    clienteTemp.value.NIT = doc // prellenar el NIT buscado
+    clienteTemp.value.DIRECCION = 'Ciudad'
+    clienteTemp.value.NIT = doc
+  }
+}
+
+// actual ****************************************
 const buscarClienteDPINIT = async () => {
-    const doc = cliente.value.DOCUMENTO.trim()
+    const doc = clienteStore.documento.trim()
     if(!doc) return 
 
     const tipo: 'dpi' | 'nit' = doc.length > 9 ? 'dpi' : 'nit'
@@ -367,31 +538,31 @@ const buscarClienteDPINIT = async () => {
     // Buscar cliente
     const clienteEncontrado = await obtenerClientePorDocumento(doc, tipo)
 
-    if (clienteEncontrado) {
-      Object.assign(cliente.value, {
-        DOCUMENTO: clienteEncontrado.NIT || '',
-        NOMBRE: clienteEncontrado.NOMBRE || '',
-        DIRECCION: clienteEncontrado.DIRECCION || '',
-        TELEFONO: clienteEncontrado.TELEFONO || '',
-        EMAIL: clienteEncontrado.CORREO_ELECTRONICO || '',
-      })
+     if (clienteEncontrado) {
+       clienteStore.setCliente({
+         documento: clienteEncontrado.NIT || '',
+         nombre: clienteEncontrado.NOMBRE || '',
+         direccion: clienteEncontrado.DIRECCION || '',
+         telefono: clienteEncontrado.TELEFONO || '',
+         email: clienteEncontrado.CORREO_ELECTRONICO || ''
+       })
 
       expansion.value?.toggle()
       crearPedido()
 
     } else {
-    clienteTemp.value.NIT = doc // prellenar el NIT buscado
-   abrirModalCliente.value = true
+      
+      abrirModalCliente.value = true
+      clienteTemp.value.NIT = doc // prellenar el NIT buscado
   }
-
 }
 
+// Pues usar F2 que mas la funcion lo dice
 const usarF2 = (e: KeyboardEvent) => {
   if (e.key === 'F2') {
     e.preventDefault()
     colocarCF()
   }
-
 }
 
 const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
@@ -409,13 +580,13 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 
   mutateCrearCliente(payload, {
     onSuccess: (creado: any) => {
-      cliente.value = {
-        DOCUMENTO: creado.DPI || creado.NIT || '',
-        NOMBRE: creado.NOMBRE,
-        DIRECCION: creado.DIRECCION,
-        TELEFONO: creado.TELEFONO || '',
-        EMAIL: creado.CORREO_ELECTRONICO || ''
-      }
+      clienteStore.setCliente({
+        documento: creado.DPI || creado.NIT || '',
+        nombre: creado.NOMBRE,
+        direccion: creado.DIRECCION,
+        telefono: creado.TELEFONO || '',
+        email: creado.CORREO_ELECTRONICO || ''
+      })
 
       abrirModalCliente.value = false
       expansion.value?.toggle()
@@ -429,18 +600,17 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
   })
 }
 
-
 </script>
 
 
 <style scoped>
 
 .total-card {
-  background-color: #fff9db;
-  border: 1px solid #ffecb3;
-  border-radius: 8px;
+  background-color: #fcf5d6;
+  border: 1px solid #fae4a2;
+  border-radius: 6px;
   min-width: 130px;
-  max-height: 40px;
+  max-height: 50px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -491,7 +661,5 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 .tabla-elegante tbody tr:last-child td {
   border-bottom: none;
 }
-
-
 
 </style>

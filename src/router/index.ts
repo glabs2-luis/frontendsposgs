@@ -7,6 +7,7 @@ import { notasRoutes } from '@/modules/notas_credito/router'
 import { reportesRoutes } from '@/modules/reportes/router'
 import { useUserStore } from '@/stores/user'
 import { settingsRoutes } from '@/modules/configuracion/router'
+import { pendientesRoutes } from '@/modules/pendientes/router'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,7 +19,8 @@ const router = createRouter({
     facturasRoutes,
     notasRoutes,
     reportesRoutes,
-    settingsRoutes
+    settingsRoutes,
+    pendientesRoutes
   ]
 })
 
