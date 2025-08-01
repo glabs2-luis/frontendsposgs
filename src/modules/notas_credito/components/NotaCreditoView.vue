@@ -17,7 +17,7 @@
           <q-step name="1" title="Buscar Factura" icon="search" :done="step > '1'">
             <div class="q-gutter-md q-mb-md">
               <q-form @submit="buscarFactura">
-                <q-input v-model="serie" label="Serie de Factura" outlined placeholder="Ej: A001" :rules="[val => !!val || 'La serie es obligatoria']" />
+                <q-input v-model="serie" label="Serie de Factura" outlined placeholder="Ej: A001" :rules="[val => !!val || 'La serie es obligatoria']" ref="serieInputRef" />
                 <q-input v-model="numeroFactura" type="number" label="Número de Factura" outlined clearable icon="receipt" :rules="[val => !!val || 'El numero de factura es obligatorio']" />
                 <q-btn label="Buscar Factura" color="primary" unelevated icon="search" type="submit" class="q-mt-md" :disable="!serie || !numeroFactura" />
               </q-form>
@@ -37,20 +37,20 @@
                     </div>
                   </q-card-section>
                 </q-card>
-
                 <div class="text-h6 text-primary q-mt-md q-mb-sm">
                   <q-icon name="add_shopping_cart" class="q-mr-sm" />
                   Agregar Productos a la Nota de Crédito
                 </div>
                 <div class="row q-col-gutter-md q-mb-md items-end">
+
                   <div class="col-xs-12 col-sm-6 col-md-5">
                     <q-input
                       v-model="codigoInputManual"
                       label="Código de barras / manual"
                       outlined
-                      clearable
                       icon="barcode_scanner"
-                      @keyup.enter="agregarProducto"
+                      @keyup="manejarEntradaCodigo"
+                      ref="codigoInputRef"
                     />
                   </div>
                   <div class="col-xs-12 col-sm-3 col-md-3">
@@ -77,7 +77,6 @@
                     />
                   </div>
                 </div>
-
                 <div v-if="productosSeleccionados.length > 0" class="relative-position">
                   <q-table
                     :rows="productosSeleccionados"
@@ -111,7 +110,6 @@
                         />
                       </q-td>
                     </template>
-
                     <template v-slot:body-cell-acciones="props">
                       <q-td :props="props">
                         <q-btn
@@ -136,13 +134,11 @@
                     </template>
                   </q-table>
                 </div>
-
                 <div v-else class="q-pa-lg text-center text-grey-6 bg-grey-2 rounded-borders">
                   <q-icon name="info" size="lg" class="q-mb-sm" />
                   <p class="text-subtitle1 text-weight-medium">Aún no has agregado productos a la nota de crédito.</p>
                 </div>
               </div>
-
               <div class="col-xs-12 col-md-3">
                 <q-card class="bg-blue-grey-1 q-pa-md shadow-2">
                   <q-banner v-if="numeroDevolucionNC" rounded class="bg-secondary text-white q-mb-md text-weight-medium shadow-2">
@@ -151,7 +147,6 @@
                     </template>
                     Devolucion No. {{ numeroDevolucionNC }}
                   </q-banner>
-
                   <q-list dense>
                     <q-item>
                       <q-item-section>
@@ -174,7 +169,6 @@
                 </q-card>
               </div>
             </div>
-
             <q-stepper-navigation>
               <div class="row justify-between q-mt-md">
                 <q-btn flat label="Anterior" @click="step = '1'" color="primary" />
@@ -182,9 +176,6 @@
               </div>
             </q-stepper-navigation>
           </q-step>
-
-
-
           <q-step name="3" title="Confirmar y Emitir" icon="check_circle" :done="step > '3'">
             <q-banner v-if="numeroDevolucionNC" rounded class="bg-blue-1 text-blue-9 q-mb-md text-weight-medium shadow-2">
               <template v-slot:avatar>
@@ -238,8 +229,6 @@
                     </q-card>
                   </div>
                 </div>
-
-
                 <q-input
                   v-model="observaciones"
                   label="Observaciones de la Nota de Crédito"
@@ -248,10 +237,7 @@
                   rows="3"
                   placeholder="Ingrese cualquier observación relevante."
                 />
-
-
               </div>
-
               <div class="col-md-6 col-xs-12">
                 <q-card bordered class="q-mb-md shadow-4">
                   <q-card-section class="bg-grey-2 text-primary text-subtitle1 text-weight-bold q-py-sm">
@@ -295,9 +281,8 @@
   </q-dialog>
 </template>
 
-
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { useQuasar, QTableColumn } from 'quasar';
 import {
   buscarFactura as buscarFacturaAPI,
@@ -359,6 +344,10 @@ const cantidadInput = ref<number>(1);
 const observaciones = ref('');
 const numeroDevolucionNC = ref<number | null>(null);
 const isEditing = ref(false);
+const timerId = ref<ReturnType<typeof setTimeout> | null>(null);
+const lastKeyPressTime = ref(0);
+const codigoInputRef = ref(null);
+const serieInputRef = ref(null);
 
 const pagination = ref({
   sortBy: 'desc',
@@ -496,7 +485,34 @@ watch([visible, () => props.notaParaEditar], ([isVisible, notaEdit]) => {
   } else if (!isVisible) {
     resetForm();
   }
+
+  if (isVisible) {
+    setTimeout(() => {
+      if (step.value === '1') {
+        serieInputRef.value?.focus();
+      }
+    }, 150);
+  }
+
 }, { immediate: true });
+
+watch(step, (newStep) => {
+  nextTick(() => {
+    if (newStep === '2') {
+      codigoInputRef.value?.focus();
+    }
+  });
+});
+
+// watch(visible, (isVisible) => {
+//   if (isVisible) {
+//     setTimeout(() => {
+//       if (step.value === '1') {
+//         serieInputRef.value?.focus();
+//       }
+//     }, 150);
+//   }
+// });
 
 // --- Lógica del Paso 1: Buscar Factura
 async function buscarFactura() {
@@ -604,9 +620,16 @@ function getMaxCantidad(): number {
   return 1;
 }
 
-async function agregarProducto() {
+async function agregarProducto(event?: KeyboardEvent) {
   const codigo = codigoInputManual.value.trim();
   const cantidad = cantidadInput.value;
+
+  if (!codigo || cantidad <= 0 || isNaN(cantidad)) {
+    if (!event || event.key !== 'Enter') {
+      notify('warning', 'Por favor, ingresa un código de producto y una cantidad válida (mayor a 0).', 3000);
+    }
+    return;
+  }
 
   if (!codigo || cantidad <= 0 || isNaN(cantidad)) {
     notify('warning', 'Por favor, ingresa un código de producto y una cantidad válida (mayor a 0).', 3000);
@@ -692,6 +715,29 @@ async function agregarProducto() {
     notify('negative', `Error inesperado al agregar/actualizar el producto: ${error.message || 'Error desconocido'}`, 5000);
   } finally {
     hideLoading();
+  }
+}
+
+function manejarEntradaCodigo(event: KeyboardEvent) {
+  if (timerId.value) {
+    clearTimeout(timerId.value);
+  }
+
+  const currentTime = Date.now();
+  const timeDifference = currentTime - lastKeyPressTime.value;
+
+  lastKeyPressTime.value = currentTime;
+
+  if (event.key === 'Enter') {
+    if (timeDifference < 50) { // Umbral de 50ms para un lector de barras
+      console.log('Código de barras detectado y enviado automáticamente.');
+      agregarProducto(event);
+      return;
+    }
+  }
+
+  if (event.key === 'Enter') {
+    agregarProducto(event);
   }
 }
 
@@ -870,6 +916,9 @@ async function emitirNota() {
 }
 
 function closeDialog() {
+  serieInputRef.value?.blur();
+  codigoInputRef.value?.blur();
+
   resetForm();
   emit('update:modelValue', false);
 }

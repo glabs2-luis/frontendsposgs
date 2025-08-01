@@ -203,8 +203,18 @@ function onNotaEditada(notaEditada: DevolucionEnc) {
 }
 
 function editNota(nota: DevolucionEnc) {
-  notaSeleccionadaParaEditar.value = nota;
-  notaCreditoVisible.value = true;
+  if (nota.ESTADO_DE_DEVOLUCION.toLowerCase() !== 'f') {
+    notaSeleccionadaParaEditar.value = nota;
+    notaCreditoVisible.value = true;
+  } else {
+      $q.notify({
+      type: 'negative',
+      message: 'No se puede editar una nota de crédito con estado finalizada.',
+      position: 'top',
+      timeout: 3000
+    });
+    return;
+  }
 }
 
 function confirmDelete(nota: DevolucionEnc) {
