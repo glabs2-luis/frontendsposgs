@@ -117,6 +117,7 @@ export interface DevolucionEnc {
   USUARIO_QUE_INGRESO?: string;
   FECHA_DE_APROBACION?: Date;
   CODIGO_DE_CLIENTE?: number;
+  NOMBRE?: string;
   CODIGO_VENDEDOR?: number;
 }
 

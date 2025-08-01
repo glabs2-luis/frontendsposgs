@@ -83,6 +83,16 @@ export const obtenerDevolucionesEnc = async (): Promise<DevolucionEnc[]> => {
   }
 }
 
+export const obtenerDevoluciones = async () => {
+  try {
+    const response = await axios.get(`${baseUrl}/devoluciones-enc/devoluciones`)
+
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener listado de devoluciones: ', error);
+  }
+}
+
 // Obtener devolucion enc por numero de devolucion
 export const obtenerDevolucionesEncPorNumero = async (numeroDevolucion: number): Promise<DevolucionEnc> => {
   try {

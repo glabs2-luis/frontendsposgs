@@ -1,299 +1,291 @@
 <template>
-  <q-dialog v-model="visible" persistent full-width>
-    <q-card style="max-width: 1000px; width: 100%;">
-      <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6 text-primary">
+  <q-dialog v-model="visible" persistent>
+    <q-card style="max-width: 1200px; width: 100%;">
+      <q-card-section class="bg-primary text-white row items-center q-py-sm">
+        <div class="text-h6 text-weight-bold">
           Nueva Nota de Crédito
-          <span v-if="numeroDevolucionNC" class="text-subtitle1 text-grey-7 q-ml-sm">
+          <span v-if="numeroDevolucionNC" class="text-subtitle1 text-grey-3 q-ml-sm">
             (No. NC: {{ numeroDevolucionNC }})
           </span>
         </div>
         <q-space />
-        <q-btn icon="close" flat round dense @click="closeDialog" />
+        <q-btn icon="close" flat round dense @click="closeDialog" color="white" />
       </q-card-section>
 
-      <q-separator />
-
       <q-card-section class="q-pa-md">
-        <q-stepper v-model="step" flat animated navigation>
+        <q-stepper v-model="step" flat animated navigation color="primary">
           <q-step name="1" title="Buscar Factura" icon="search" :done="step > '1'">
             <div class="q-gutter-md q-mb-md">
-              <q-input v-model="serie" label="Serie de Factura" outlined placeholder="Ej: A001" :rules="[val => !!val || 'La serie es obligatoria']" />
-              <q-input v-model="numeroFactura" type="number" label="Número de Factura" outlined clearable icon="receipt" @keyup.enter="buscarFactura" :rules="[val => !!val || 'El numero de factura es obligatorio']" />
-              <q-btn label="Buscar Factura" color="primary" unelevated icon="search" @click="buscarFactura" class="q-mt-md" :disable="!serie || !numeroFactura" />
+              <q-form @submit="buscarFactura">
+                <q-input v-model="serie" label="Serie de Factura" outlined placeholder="Ej: A001" :rules="[val => !!val || 'La serie es obligatoria']" />
+                <q-input v-model="numeroFactura" type="number" label="Número de Factura" outlined clearable icon="receipt" :rules="[val => !!val || 'El numero de factura es obligatorio']" />
+                <q-btn label="Buscar Factura" color="primary" unelevated icon="search" type="submit" class="q-mt-md" :disable="!serie || !numeroFactura" />
+              </q-form>
             </div>
           </q-step>
 
           <q-step name="2" title="Seleccionar Productos" icon="inventory_2" :done="step > '2'">
-            <q-banner v-if="numeroDevolucionNC" inline-actions rounded class="bg-blue-grey-1 text-blue-grey-9 q-mb-md">
-              <template v-slot:avatar>
-                <q-icon name="confirmation_number" />
-              </template>
-              Estás trabajando en la **Nota de Crédito No. {{ numeroDevolucionNC }}**.
-            </q-banner>
+            <div class="row q-col-gutter-lg">
+              <div class="col-xs-12 col-md-9">
+                <q-card bordered class="q-mb-md shadow-2">
+                  <q-card-section class="bg-grey-2 text-primary text-subtitle1 text-weight-bold q-py-sm">
+                    <div class="row items-center no-wrap">
+                      <q-icon name="info" class="q-mr-sm" size="sm" />
+                      <div>Factura Original: <span class="text-weight-regular">{{ serie }} - {{ numeroFactura }}</span></div>
+                      <q-space />
+                      <div>Cliente: <span class="text-weight-regular">{{ factura?.FACTURA.NOMBRE_CLI_A_FACTUAR }}</span></div>
+                    </div>
+                  </q-card-section>
+                </q-card>
 
-            <q-card bordered class="q-mb-md shadow-2">
-              <q-card-section class="bg-blue-grey-1 text-blue-grey-9 text-subtitle1 text-weight-bold">
-                <div class="row items-center no-wrap">
-                  <q-icon name="info" class="q-mr-sm" size="sm" />
-                  <div>Detalles de la Factura Original</div>
+                <div class="text-h6 text-primary q-mt-md q-mb-sm">
+                  <q-icon name="add_shopping_cart" class="q-mr-sm" />
+                  Agregar Productos a la Nota de Crédito
                 </div>
-              </q-card-section>
-              <q-separator />
-              <q-card-section>
-                <div class="row q-col-gutter-x-md q-col-gutter-y-sm" v-if="factura?.FACTURA">
-                  <div class="col-xs-12 col-sm-6 col-md-4">
-                    <q-item dense class="q-px-none">
-                      <q-item-section>
-                        <q-item-label caption>Cliente</q-item-label>
-                        <q-item-label class="text-weight-bold">{{ factura.FACTURA.NOMBRE_CLI_A_FACTUAR }}</q-item-label>
-                      </q-item-section>
-                    </q-item>
-                  </div>
-                  <div class="col-xs-12 col-sm-6 col-md-4">
-                    <q-item dense class="q-px-none">
-                      <q-item-section>
-                        <q-item-label caption>NIT</q-item-label>
-                        <q-item-label class="text-weight-bold">{{ factura.FACTURA.NIT_CLIEN_A_FACTURAR }}</q-item-label>
-                      </q-item-section>
-                    </q-item>
-                  </div>
-                  <div class="col-xs-12 col-sm-6 col-md-4">
-                    <q-item dense class="q-px-none">
-                      <q-item-section>
-                        <q-item-label caption>Fecha Factura</q-item-label>
-                        <q-item-label class="text-weight-bold">{{ formatDate(factura.FACTURA.FECHA_DE_FACTURA) }}</q-item-label>
-                      </q-item-section>
-                    </q-item>
-                  </div>
-                  <div class="col-xs-12 col-sm-6 col-md-4">
-                    <q-item dense class="q-px-none">
-                      <q-item-section>
-                        <q-item-label caption>No. Factura</q-item-label>
-                        <q-item-label class="text-weight-bold">{{ serie }} - {{ numeroFactura }}</q-item-label>
-                      </q-item-section>
-                    </q-item>
-                  </div>
-                  <div class="col-xs-12 col-sm-6 col-md-4">
-                    <q-item dense class="q-px-none">
-                      <q-item-section>
-                        <q-item-label caption>Total Factura</q-item-label>
-                        <q-item-label class="text-weight-bold text-positive">Q {{ factura.FACTURA.TOTAL_GENERAL?.toFixed(2) }}</q-item-label>
-                      </q-item-section>
-                    </q-item>
-                  </div>
-                </div>
-              </q-card-section>
-            </q-card>
-
-            <q-separator spaced />
-            <div class="text-subtitle1 q-mb-md">Agregar Productos a la Nota de Crédito</div>
-            <div class="row q-col-gutter-md q-mb-md items-center">
-              <div class="col-xs-12 col-sm-6 col-md-5">
-                <q-input
-                  v-model="codigoInputManual"
-                  label="Código de barras / manual"
-                  outlined
-                  clearable
-                  icon="barcode_scanner"
-                  @keyup.enter="agregarProducto"
-                />
-              </div>
-              <div class="col-xs-12 col-sm-3 col-md-3">
-                <q-input
-                  v-model.number="cantidadInput"
-                  type="number"
-                  label="Cantidad"
-                  outlined
-                  min="1"
-                  :max="getMaxCantidad()"
-                  :disable="!codigoInputManual"
-                  @keyup.enter="agregarProducto"
-                />
-              </div>
-              <div class="col-xs-12 col-sm-3 col-md-4 flex flex-center">
-                <q-btn
-                  label="Añadir Producto"
-                  color="primary"
-                  unelevated
-                  icon="add_circle"
-                  @click="agregarProducto"
-                  class="full-width"
-                  :disable="!codigoInputManual || cantidadInput <= 0"
-                />
-              </div>
-            </div>
-
-            <div v-if="productosSeleccionados.length > 0">
-              <q-table
-                :rows="productosSeleccionados"
-                :columns="columns"
-                row-key="id"
-                dense
-                flat
-                bordered
-                class="q-mb-md"
-                v-model:pagination="pagination" :rows-per-page-options="[5, 10, 15, 20, 25, 50, 0]" >
-                <template v-slot:body-cell-cantidadNC="props">
-                  <q-td :props="props">
+                <div class="row q-col-gutter-md q-mb-md items-end">
+                  <div class="col-xs-12 col-sm-6 col-md-5">
                     <q-input
-                      v-if="props.row.editando"
-                      v-model.number="props.row.cantidadNC"
+                      v-model="codigoInputManual"
+                      label="Código de barras / manual"
+                      outlined
+                      clearable
+                      icon="barcode_scanner"
+                      @keyup.enter="agregarProducto"
+                    />
+                  </div>
+                  <div class="col-xs-12 col-sm-3 col-md-3">
+                    <q-input
+                      v-model.number="cantidadInput"
                       type="number"
-                      dense
+                      label="Cantidad"
                       outlined
                       min="1"
-                      :max="props.row.cantidad"
-                      @blur="validarYGuardarCantidad(props.row)"
-                      @keyup.enter="validarYGuardarCantidad(props.row)"
-                      autofocus
-                      :rules="[val => val > 0 || 'Inválida', val => val <= props.row.cantidad || `Max: ${props.row.cantidad}`]"
+                      :max="getMaxCantidad()"
+                      :disable="!codigoInputManual"
+                      @keyup.enter="agregarProducto"
                     />
-                    <span v-else>{{ props.row.cantidadNC }}</span>
-                  </q-td>
-                </template>
-
-                <template v-slot:body-cell-acciones="props">
-                  <q-td :props="props">
+                  </div>
+                  <div class="col-xs-12 col-sm-3 col-md-4">
                     <q-btn
-                      size="sm"
-                      icon="edit"
-                      color="warning"
-                      flat
-                      round
-                      dense
-                      @click="() => { props.row.editando = !props.row.editando; if (props.row.editando) props.row.tempOriginalCantidadNC = props.row.cantidadNC; }"
-                      title="Editar cantidad"
-                      class="q-mr-xs"
+                      label="Añadir Producto"
+                      color="primary"
+                      push
+                      icon="add_circle"
+                      @click="agregarProducto"
+                      class="full-width container-btn-add"
+                      :disable="!codigoInputManual || cantidadInput <= 0"
                     />
-                    <q-btn
-                      size="sm"
-                      icon="delete"
-                      color="negative"
-                      flat
-                      round
-                      dense
-                      @click="eliminarProducto(props.row.id)"
-                      title="Eliminar producto"
-                    />
-                  </q-td>
-                </template>
+                  </div>
+                </div>
 
-                <template v-slot:bottom-row>
-                  <q-tr>
-                    <q-td colspan="5" class="text-right text-subtitle1 text-weight-bold">
-                      Total Nota de Crédito:
-                    </q-td>
-                    <q-td class="text-right text-subtitle1 text-weight-bold text-negative">
-                      Q {{ totalNC.toFixed(2) }}
-                    </q-td>
-                    <q-td></q-td> </q-tr>
-                </template>
-              </q-table>
-            </div>
-            <div v-else class="q-pa-md text-center text-grey-6">
-              <q-icon name="info" size="xl" class="q-mb-sm" />
-              <p>Aún no has agregado productos a la nota de crédito.</p>
+                <div v-if="productosSeleccionados.length > 0" class="relative-position">
+                  <q-table
+                    :rows="productosSeleccionados"
+                    :columns="columns"
+                    row-key="id"
+                    dense
+                    flat
+                    bordered
+                    class="q-mb-md shadow-8 rounded-borders"
+                    v-model:pagination="pagination"
+                    :rows-per-page-options="[5, 10, 15, 20, 25, 50, 0]"
+                  >
+                    <template v-slot:body-cell-cantidadNC="props">
+                      <q-td :props="props">
+                        <q-chip v-if="!props.row.editando" size="md">
+                          {{ props.row.cantidadNC }}
+                        </q-chip>
+                        <q-input
+                          v-else
+                          v-model.number="props.row.cantidadNC"
+                          type="number"
+                          dense
+                          outlined
+                          min="1"
+                          :max="props.row.cantidad"
+                          @blur="validarYGuardarCantidad(props.row)"
+                          @keyup.enter="validarYGuardarCantidad(props.row)"
+                          autofocus
+                          color="warning"
+                          :rules="[val => val > 0 || 'Inválida', val => val <= props.row.cantidad || `Max: ${props.row.cantidad}`]"
+                        />
+                      </q-td>
+                    </template>
+
+                    <template v-slot:body-cell-acciones="props">
+                      <q-td :props="props">
+                        <q-btn
+                          :icon="props.row.editando ? 'save' : 'edit'"
+                          :color="props.row.editando ? 'positive' : 'warning'"
+                          flat
+                          round
+                          dense
+                          @click="() => { props.row.editando = !props.row.editando; if (props.row.editando) props.row.tempOriginalCantidadNC = props.row.cantidadNC; }"
+                          :title="props.row.editando ? 'Guardar' : 'Editar cantidad'"
+                        />
+                        <q-btn
+                          icon="delete"
+                          color="negative"
+                          flat
+                          round
+                          dense
+                          @click="eliminarProducto(props.row.id)"
+                          title="Eliminar producto"
+                        />
+                      </q-td>
+                    </template>
+                  </q-table>
+                </div>
+
+                <div v-else class="q-pa-lg text-center text-grey-6 bg-grey-2 rounded-borders">
+                  <q-icon name="info" size="lg" class="q-mb-sm" />
+                  <p class="text-subtitle1 text-weight-medium">Aún no has agregado productos a la nota de crédito.</p>
+                </div>
+              </div>
+
+              <div class="col-xs-12 col-md-3">
+                <q-card class="bg-blue-grey-1 q-pa-md shadow-2">
+                  <q-banner v-if="numeroDevolucionNC" rounded class="bg-secondary text-white q-mb-md text-weight-medium shadow-2">
+                    <template v-slot:avatar>
+                      <q-icon name="confirmation_number" color="white" />
+                    </template>
+                    Devolucion No. {{ numeroDevolucionNC }}
+                  </q-banner>
+
+                  <q-list dense>
+                    <q-item>
+                      <q-item-section>
+                        <q-item-label caption>Total Factura Original</q-item-label>
+                        <q-item-label class="text-weight-bold text-positive text-h6">
+                          Q {{ factura?.FACTURA.TOTAL_GENERAL?.toFixed(2) || '0.00' }}
+                        </q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-separator />
+                    <q-item class="q-mt-md">
+                      <q-item-section>
+                        <q-item-label caption>Total Nota de Crédito</q-item-label>
+                        <q-item-label class="text-weight-bold text-negative text-h4">
+                          Q {{ totalNC.toFixed(2) }}
+                        </q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-card>
+              </div>
             </div>
 
             <q-stepper-navigation>
               <div class="row justify-between q-mt-md">
-                <q-btn flat label="Anterior" @click="step = '1'" />
-                <q-btn label="Siguiente" color="primary" icon-right="arrow_forward" :disable="productosSeleccionados.length === 0 || totalNC === 0" @click="step = '3'" />
+                <q-btn flat label="Anterior" @click="step = '1'" color="primary" />
+                <q-btn label="Siguiente" color="primary" push icon-right="arrow_forward" :disable="productosSeleccionados.length === 0 || totalNC === 0" @click="step = '3'" />
               </div>
             </q-stepper-navigation>
           </q-step>
 
+
+
           <q-step name="3" title="Confirmar y Emitir" icon="check_circle" :done="step > '3'">
-            <q-banner v-if="numeroDevolucionNC" inline-actions rounded class="bg-blue-grey-1 text-blue-grey-9 q-mb-md">
+            <q-banner v-if="numeroDevolucionNC" rounded class="bg-blue-1 text-blue-9 q-mb-md text-weight-medium shadow-2">
               <template v-slot:avatar>
-                <q-icon name="confirmation_number" />
+                <q-icon name="assignment_turned_in" color="blue-9" />
               </template>
-              Estás a punto de finalizar la **Nota de Crédito No. {{ numeroDevolucionNC }}**.
+              Revisión final: **Nota de Crédito No. {{ numeroDevolucionNC }}**. Por favor, verifica los detalles antes de emitir.
             </q-banner>
 
-            <q-card bordered class="q-mb-md shadow-2">
-              <q-card-section class="bg-blue-grey-1 text-blue-grey-9 text-subtitle1 text-weight-bold">
-                <div class="row items-center no-wrap">
-                  <q-icon name="assignment_turned_in" class="q-mr-sm" size="sm" />
-                  <div>Resumen Final de la Nota de Crédito</div>
-                </div>
-              </q-card-section>
-              <q-separator />
-              <q-card-section>
-                <div class="row q-col-gutter-x-md q-col-gutter-y-sm">
-                  <div class="col-xs-12 col-sm-6">
-                    <q-item dense class="q-px-none">
+            <div class="row q-col-gutter-md">
+              <div class="col-md-6 col-xs-12">
+                <q-card bordered class="q-mb-md shadow-4">
+                  <q-card-section class="bg-grey-2 text-primary text-subtitle1 text-weight-bold q-py-sm">
+                    <div class="row items-center no-wrap">
+                      <q-icon name="receipt" class="q-mr-sm" size="sm" />
+                      <div>Factura Original</div>
+                    </div>
+                  </q-card-section>
+                  <q-separator />
+                  <q-card-section class="q-pa-md">
+                    <q-item dense>
                       <q-item-section>
                         <q-item-label caption>Cliente</q-item-label>
                         <q-item-label class="text-weight-bold">{{ factura?.FACTURA.NOMBRE_CLI_A_FACTUAR }}</q-item-label>
                       </q-item-section>
                     </q-item>
-                  </div>
-                  <div class="col-xs-12 col-sm-6">
-                    <q-item dense class="q-px-none">
+                    <q-separator inset />
+                    <q-item dense>
                       <q-item-section>
-                        <q-item-label caption>Factura Original</q-item-label>
+                        <q-item-label caption>Número de Factura</q-item-label>
                         <q-item-label class="text-weight-bold">{{ serie }} - {{ numeroFactura }}</q-item-label>
                       </q-item-section>
                     </q-item>
+                  </q-card-section>
+                </q-card>
+
+                <div class="row q-col-gutter-md q-mb-md">
+                  <div class="col-sm-6 col-xs-12">
+                    <q-card flat bordered class="bg-positive-1 text-positive shadow-2">
+                      <q-card-section class="q-pa-md">
+                        <div class="text-overline">Total Factura Original</div>
+                        <div class="text-h6 text-weight-bold">Q {{ factura?.FACTURA.TOTAL_GENERAL?.toFixed(2) }}</div>
+                      </q-card-section>
+                    </q-card>
                   </div>
-                  <div class="col-xs-12">
-                    <q-separator class="q-my-sm" />
-                  </div>
-                  <div class="col-xs-12 col-sm-6">
-                    <q-item dense class="q-px-none">
-                      <q-item-section>
-                        <q-item-label caption>Total Factura Original</q-item-label>
-                        <q-item-label class="text-weight-bold text-positive text-h6">Q {{ factura?.FACTURA.TOTAL_GENERAL?.toFixed(2) }}</q-item-label>
-                      </q-item-section>
-                    </q-item>
-                  </div>
-                  <div class="col-xs-12 col-sm-6">
-                    <q-item dense class="q-px-none">
-                      <q-item-section>
-                        <q-item-label caption>Total Nota de Crédito a Emitir</q-item-label>
-                        <q-item-label class="text-weight-bold text-negative text-h6">Q {{ totalNC.toFixed(2) }}</q-item-label>
-                      </q-item-section>
-                    </q-item>
+                  <div class="col-sm-6 col-xs-12">
+                    <q-card flat bordered class="bg-negative-1 text-negative shadow-2">
+                      <q-card-section class="q-pa-md">
+                        <div class="text-overline">Total Nota de Crédito</div>
+                        <div class="text-h6 text-weight-bold">Q {{ totalNC.toFixed(2) }}</div>
+                      </q-card-section>
+                    </q-card>
                   </div>
                 </div>
-              </q-card-section>
-            </q-card>
 
-            <q-input
-              v-model="observaciones"
-              label="Observaciones de la Nota de Crédito"
-              outlined
-              type="textarea"
-              rows="3"
-              class="q-mb-md"
-              placeholder="Ingrese cualquier observación relevante para esta nota de crédito."
-            />
 
-            <q-list bordered separator class="q-mb-md">
-              <q-item-label header class="bg-grey-2 text-grey-8 text-weight-bold">Productos a Devolver</q-item-label>
-              <q-item v-for="prod in productosSeleccionados" :key="prod.id">
-                <q-item-section>
-                  <q-item-label class="text-weight-medium">{{ prod.producto }}</q-item-label>
-                  <q-item-label caption>Código: {{ prod.codigo }}</q-item-label>
-                </q-item-section>
-                <q-item-section side>
-                  <q-item-label class="text-subtitle2">{{ prod.cantidadNC }} x Q {{ prod.precio.toFixed(2) }}</q-item-label>
-                  <q-item-label class="text-weight-bold">Q {{ (prod.cantidadNC * prod.precio).toFixed(2) }}</q-item-label>
-                </q-item-section>
-              </q-item>
-              <q-item v-if="productosSeleccionados.length === 0">
-                <q-item-section class="text-center text-grey-6">
-                  <q-item-label>No hay productos seleccionados para la nota de crédito.</q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-list>
+                <q-input
+                  v-model="observaciones"
+                  label="Observaciones de la Nota de Crédito"
+                  outlined
+                  type="textarea"
+                  rows="3"
+                  placeholder="Ingrese cualquier observación relevante."
+                />
 
+
+              </div>
+
+              <div class="col-md-6 col-xs-12">
+                <q-card bordered class="q-mb-md shadow-4">
+                  <q-card-section class="bg-grey-2 text-primary text-subtitle1 text-weight-bold q-py-sm">
+                    <div class="row items-center no-wrap">
+                      <q-icon name="shopping_cart" class="q-mr-sm" size="sm" />
+                      <div>Productos a Devolver</div>
+                    </div>
+                  </q-card-section>
+                  <q-separator />
+                  <q-card-section class="q-pa-md">
+                    <q-list v-if="productosSeleccionados.length > 0" dense>
+                      <q-item v-for="prod in productosSeleccionados" :key="prod.id">
+                        <q-item-section>
+                          <q-item-label class="text-weight-medium">{{ prod.producto }}</q-item-label>
+                          <q-item-label caption>Código: {{ prod.codigo }}</q-item-label>
+                        </q-item-section>
+                        <q-item-section side class="text-right">
+                          <q-item-label>{{ prod.cantidadNC }} x Q {{ prod.precio.toFixed(2) }}</q-item-label>
+                          <q-item-label class="text-weight-bold text-negative">Q {{ (prod.cantidadNC * prod.precio).toFixed(2) }}</q-item-label>
+                        </q-item-section>
+                      </q-item>
+                    </q-list>
+                    <div v-else class="text-center text-grey-6 q-py-md">
+                      <q-icon name="info" size="lg" class="q-mb-sm" />
+                      <p class="text-subtitle1">No hay productos seleccionados.</p>
+                    </div>
+                  </q-card-section>
+                </q-card>
+              </div>
+            </div>
             <q-stepper-navigation>
               <div class="row justify-between q-mt-md">
-                <q-btn flat label="Anterior" @click="step = '2'" />
-                <q-btn label="Emitir Nota de Crédito" color="positive" icon-right="check_circle" @click="emitirNota" :disable="productosSeleccionados.length === 0 || totalNC === 0" />
+                <q-btn flat label="Anterior" @click="step = '2' " color="primary" />
+                <q-btn label="Emitir Nota de Crédito" color="positive" push icon-right="check_circle" :disable="productosSeleccionados.length === 0 || totalNC === 0" @click="emitirNota" />
               </div>
             </q-stepper-navigation>
           </q-step>
@@ -302,6 +294,7 @@
     </q-card>
   </q-dialog>
 </template>
+
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
@@ -885,5 +878,9 @@ function closeDialog() {
 <style scoped>
 .q-stepper {
   box-shadow: none;
+}
+
+.container-btn-add {
+  height: 53.016px;
 }
 </style>

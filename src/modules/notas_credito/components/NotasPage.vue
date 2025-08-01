@@ -1,103 +1,104 @@
 <template>
-  <q-page padding class="column q-gutter-md">
+  <q-page padding>
     <ClaveModal v-model="claveModalVisible" @aceptar="onClaveIngresada" />
     <NotaCreditoView
       v-model="notaCreditoVisible"
       @nota-creada="onNotaCreada"
-      @nota-editada="onNotaEditada" :vendedor="vendedorActual"
-      :nota-para-editar="notaSeleccionadaParaEditar" />
+      @nota-editada="onNotaEditada"
+      :vendedor="vendedorActual"
+      :nota-para-editar="notaSeleccionadaParaEditar"
+    />
 
     <template v-if="accesoPermitido">
-      <div class="row items-center q-pb-md">
-        <div class="text-h5 text-primary q-mr-md">Gestión de Notas de Crédito</div>
-        <q-space />
-        <q-btn color="primary" icon="add" label="Nueva Nota de Crédito" @click="nuevaNota" class="q-mr-sm" />
-        <!-- <q-btn
-          color="secondary"
-          icon="print"
-          label="Imprimir Todas"
-          @click="printAllNotas"
-          :disable="!filteredNotas.length"
-        >
-          <q-tooltip>Imprimir todas las notas de crédito visibles</q-tooltip>
-        </q-btn> -->
-      </div>
+      <div class="q-pa-md q-mx-auto" style="max-width: 1200px">
+        <div class="row items-center q-mb-md">
+          <div class="text-h4 text-primary q-mr-md">Gestión de Notas de Crédito</div>
+          <q-space />
+          <q-btn color="primary" icon="add" label="Nueva Nota" @click="nuevaNota" />
+        </div>
 
-      <q-card flat bordered class="notes-card">
-        <q-card-section class="q-pa-md">
-          <div class="row q-col-gutter-md items-center">
-            <div class="col-12 col-md-8">
-              <q-input
-                outlined
-                dense
-                v-model="searchTerm"
-                placeholder="Buscar por Número, Cliente, Factura o Estado..."
-                clearable
-                @update:model-value="filterNotes"
-              >
-                <template v-slot:prepend>
-                  <q-icon name="search" />
-                </template>
-              </q-input>
-            </div>
-            <div class="col-12 col-md-4 q-gutter-x-sm text-right">
-              <q-btn flat dense icon="refresh" @click="loadNotasDeCredito" round color="grey-7" size="md">
-                <q-tooltip>Recargar Notas</q-tooltip>
-              </q-btn>
+        <q-card flat bordered class="q-pa-sm">
+          <q-card-section>
+            <div class="row q-col-gutter-sm items-center">
+              <div class="col-xs-12 col-sm-6 col-md-4">
+                <q-input
+                  outlined
+                  dense
+                  v-model="searchTerm"
+                  placeholder="Buscar..."
+                  clearable
+                  @update:model-value="filterNotes"
+                >
+                  <template v-slot:prepend>
+                    <q-icon name="search" />
+                  </template>
+                </q-input>
               </div>
-          </div>
-        </q-card-section>
 
-        <q-separator />
+              <q-space />
 
-        <q-table
-          :rows="filteredNotas"
-          :columns="columns"
-          row-key="NUMERO_DEVOLUCION"
-          flat
-          dense
-          :loading="loading"
-          no-data-label="No se encontraron notas de crédito."
-          class="notes-table"
-          :pagination="{ rowsPerPage: 10 }"
-        >
-          <template v-slot:loading>
-            <q-inner-loading showing color="primary" />
-          </template>
-          <template v-slot:no-data="{ icon, message, filter }">
-            <div class="full-width row flex-center text-accent q-gutter-sm q-py-lg">
-              <q-icon size="2em" :name="icon" />
-              <span>
-                {{ message }}
-              </span>
-              <span v-if="filter">
-                para: "{{ filter }}"
-              </span>
+              <div class="col-auto">
+                <q-btn
+                  flat
+                  dense
+                  icon="refresh"
+                  @click="loadNotasDeCredito"
+                  round
+                  color="grey-7"
+                >
+                  <q-tooltip>Recargar Notas</q-tooltip>
+                </q-btn>
+              </div>
             </div>
-          </template>
+          </q-card-section>
 
-          <template v-slot:body-cell-actions="props">
-            <q-td :props="props">
-              <q-btn icon="edit" size="sm" flat round color="primary" @click="editNota(props.row)">
-                <q-tooltip>Editar Nota</q-tooltip>
-              </q-btn>
-              <q-btn icon="delete" size="sm" flat round color="negative" @click="confirmDelete(props.row)">
-                <q-tooltip>Eliminar Nota</q-tooltip>
-              </q-btn>
-              <q-btn icon="print" size="sm" flat round color="secondary" @click="printNota(props.row)">
-                <q-tooltip>Imprimir Nota</q-tooltip>
-              </q-btn>
-            </q-td>
-          </template>
-        </q-table>
-      </q-card>
+          <q-card-section class="q-pa-none">
+            <q-table
+              :rows="filteredNotas"
+              :columns="columns"
+              row-key="NUMERO_DEVOLUCION"
+              flat
+              dense
+              :loading="loading"
+              no-data-label="No se encontraron notas de crédito."
+              class="notes-table"
+              :pagination="{ rowsPerPage: 10 }"
+            >
+              <template v-slot:loading>
+                <q-inner-loading showing color="primary" />
+              </template>
+              
+              <template v-slot:no-data="{ icon, message }">
+                <div class="full-width row flex-center text-accent q-gutter-sm q-py-lg">
+                  <q-icon size="2em" :name="icon" />
+                  <span>{{ message }}</span>
+                </div>
+              </template>
+
+              <template v-slot:body-cell-actions="props">
+                <q-td :props="props">
+                  <q-btn icon="edit" size="sm" flat round color="primary" @click="editNota(props.row)">
+                    <q-tooltip>Editar Nota</q-tooltip>
+                  </q-btn>
+                  <q-btn icon="delete" size="sm" flat round color="negative" @click="confirmDelete(props.row)">
+                    <q-tooltip>Eliminar Nota</q-tooltip>
+                  </q-btn>
+                  <q-btn icon="print" size="sm" flat round color="secondary" @click="printNota(props.row)">
+                    <q-tooltip>Imprimir Nota</q-tooltip>
+                  </q-btn>
+                </q-td>
+              </template>
+            </q-table>
+          </q-card-section>
+        </q-card>
+      </div>
     </template>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue';
-import { obtenerDevolucionesEnc } from '../action/useNotaCreditoActions';
+import { ref, watch, onMounted } from 'vue';
+import { obtenerDevoluciones } from '../action/useNotaCreditoActions';
 import ClaveModal from '@/modules/notas_credito/components/ClaveModal.vue';
 import NotaCreditoView from '@/modules/notas_credito/components/NotaCreditoView.vue';
 import type { QTableColumn } from 'quasar';
@@ -119,9 +120,9 @@ const filteredNotas = ref<DevolucionEnc[]>([]);
 const searchTerm = ref('');
 
 const columns: QTableColumn<DevolucionEnc>[] = [
-  { name: 'NUMERO_DEVOLUCION', label: 'No. Devolución', field: 'NUMERO_DEVOLUCION', align: 'left', sortable: true },
+  { name: 'NUMERO_DEVOLUCION', label: 'NUMERO', field: 'NUMERO_DEVOLUCION', align: 'left', sortable: true },
   { name: 'SERIE', label: 'Serie', field: 'SERIE', align: 'left', sortable: true },
-  { name: 'NUMERO_FACTURA', label: 'No. Factura', field: 'NUMERO_FACTURA', align: 'left', sortable: true },
+  { name: 'NUMERO_FACTURA', label: 'FACTURA', field: 'NUMERO_FACTURA', align: 'left', sortable: true },
   {
     name: 'FECHA_DEVOLUCION',
     label: 'Fecha Devolución',
@@ -131,7 +132,7 @@ const columns: QTableColumn<DevolucionEnc>[] = [
     format: (val: string | Date) => val ? new Date(val).toLocaleDateString('es-GT') : 'Sin Fecha'
   },
   { name: 'ESTADO_DE_DEVOLUCION', label: 'Estado', field: 'ESTADO_DE_DEVOLUCION', align: 'left', sortable: true },
-  { name: 'CODIGO_DE_CLIENTE', label: 'Cód. Cliente', field: 'CODIGO_DE_CLIENTE', align: 'left', sortable: true },
+  { name: 'NOMBRE', label: 'NOMBRE CLIENTE', field: 'NOMBRE', align: 'left', sortable: true },
   {
     name: 'TOTAL_DEVOLUCION',
     label: 'Total',
@@ -143,11 +144,10 @@ const columns: QTableColumn<DevolucionEnc>[] = [
   { name: 'actions', label: 'Acciones', align: 'center', field: row => row.NUMERO_DEVOLUCION },
 ];
 
-
 async function loadNotasDeCredito() {
   loading.value = true;
   try {
-    const data = await obtenerDevolucionesEnc();
+    const data = await obtenerDevoluciones();
     allNotas.value = data;
     filterNotes();
   } catch (error) {
@@ -192,10 +192,6 @@ function nuevaNota() {
 function onNotaCreada(nuevaNota: DevolucionEnc) {
   allNotas.value.unshift(nuevaNota);
   filterNotes();
-  // $q.notify({
-  //   type: 'positive',
-  //   message: `Nota de Crédito ${nuevaNota.NUMERO_DEVOLUCION} creada exitosamente.`
-  // });
 }
 
 function onNotaEditada(notaEditada: DevolucionEnc) {
@@ -204,10 +200,6 @@ function onNotaEditada(notaEditada: DevolucionEnc) {
     allNotas.value[index] = notaEditada;
   }
   filterNotes();
-  // $q.notify({
-  //   type: 'positive',
-  //   message: `Nota de Crédito ${notaEditada.NUMERO_DEVOLUCION} actualizada exitosamente.`
-  // });
 }
 
 function editNota(nota: DevolucionEnc) {
