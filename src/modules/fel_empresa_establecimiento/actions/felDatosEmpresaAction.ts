@@ -1,6 +1,5 @@
 import { Establecimiento } from '../interfaces/establecimientoInterfaces'
 import { Empresa } from '../interfaces/empresaInterface'
-import apiPos from '@/api/apiPos'
 import { getAxiosErrorMessage } from '@/common/helper/geterrordb'
 import posApi from '@/api/apiPos'
 
@@ -13,6 +12,7 @@ export const obtenerDatosEmpresaAction = async (id: number) : Promise<Empresa> =
     }catch(error){
         const message = await getAxiosErrorMessage(error, 'Hubo un error obteniendo los datos de la empresa')
         console.log(message)
+        throw new Error(message)
     }
 }
 
@@ -25,6 +25,7 @@ export const obtenerDatosEstablecimientoAction = async (id: number) : Promise<Es
     }catch(error){
         const message = await getAxiosErrorMessage(error, 'Hubo un error obteniendo los datos del establecimiento')
         console.log(message)
+        throw new Error(message)
     }
 }
 

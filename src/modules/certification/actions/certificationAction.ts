@@ -10,5 +10,6 @@ export const crearCertificationAction = async (  datos: { sucursal: string; seri
     } catch (error){
         const message = await getAxiosErrorMessage(error, 'Hubo un error creando la certification')
         console.log(message)
+        throw new Error(message)
     }
 }
