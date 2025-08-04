@@ -511,7 +511,7 @@ watch(idPedidoEnc, (nuevo) => {
 
 // actualizar cliente en facturacion
 watch(pedidoData, () => {
- // console.log('pedidoData actualizado:', pedidoData.value)
+  refetchObtenerPedidoID()
 })
 
 // Despues del cantidad volver al focus del input

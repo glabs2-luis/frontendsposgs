@@ -19,6 +19,7 @@ const isGeneratingPdf: Ref<boolean> = ref(false);
 const pdfMessage: Ref<string> = ref("");
 const pdfSuccess: Ref<boolean> = ref(false);
 
+
 // Funcion para truncar el texto a un número máximo de líneas
 const truncateTextByLines = (
   text: string,
