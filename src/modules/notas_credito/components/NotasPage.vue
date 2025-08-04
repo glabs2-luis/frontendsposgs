@@ -98,15 +98,18 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
-import { obtenerDevoluciones } from '../action/useNotaCreditoActions';
+import { obtenerDevoluciones, obtenerDevolucionesEncDetalle, obtenerVendedor } from '../action/useNotaCreditoActions';
 import ClaveModal from '@/modules/notas_credito/components/ClaveModal.vue';
 import NotaCreditoView from '@/modules/notas_credito/components/NotaCreditoView.vue';
 import type { QTableColumn } from 'quasar';
-import type { Vendedor, DevolucionEnc } from '@/modules/notas_credito/interfaces/NotaCredito';
+import type { Vendedor, DevolucionEnc, ApiFacturaResponse } from '@/modules/notas_credito/interfaces/NotaCredito';
+import type { DataFactura } from '@/modules/facturar_pdf/interfaces/pdfInterface'
 import { useQuasar } from 'quasar';
 import { eliminarDevolucion } from '../action/useNotaCreditoActions';
+import { usePdfFactura } from '@/modules/facturar_pdf/composables/usePdFactura';
 
 const $q = useQuasar();
+const { generarFacturaPDF }  = usePdfFactura()
 
 const claveModalVisible = ref(true);
 const accesoPermitido = ref(false);
@@ -271,12 +274,97 @@ async function deleteNota(nota: DevolucionEnc) {
   }
 }
 
-function printNota(nota: DevolucionEnc) {
-  console.log('Imprimir nota:', nota);
-  $q.notify({
-    type: 'info',
-    message: `Generando impresión para la Nota ${nota.NUMERO_DEVOLUCION}.`
+const prepararDataNotaDeCredito = async (nota: DevolucionEnc): Promise<DataFactura> => {
+  const formatCurrency = (value: number) => `Q.${value.toFixed(2)}`;
+
+  const apiResponse = await obtenerDevolucionesEncDetalle(nota.NUMERO_DEVOLUCION);
+  const vendedor = await obtenerVendedor(parseInt(apiResponse.DEVOLUCION_ENC.USUARIO_QUE_INGRESO))
+
+  const enc = apiResponse.DEVOLUCION_ENC;
+
+  const items = enc.DEVOLUCION_DET.map((item: any) => {
+    return {
+      cantidad: item.CANTIDAD_DEVUELTA,
+      descripcion: item.NOMBRE_PRODUCTO,
+      precio: formatCurrency(item.PRECIO_DEVOLUCION),
+      subtotal: formatCurrency(item.SUB_TOTAL + item.MONTO_IVA),
+    };
   });
+
+  const totalItems = items.reduce((acc, item) => acc + item.cantidad, 0);
+  const subtotal = items.reduce((acc, item) => acc + parseFloat(item.subtotal.replace("Q.", "")), 0);
+  const totalPagar = subtotal + (enc.MONTO_IVA || 0);
+
+  const dataFactura: DataFactura = {
+    empresa: {
+      nombreComercial: "LIBRERIA Y PAPELERIA SAN BARTOLOME",
+      razonSocial: "GS, SOCIEDAD ANONIMA",
+      direccionEmpresa: "29 AVENIDA 7A-16 ZONA 7",
+      nitEmpresa: "62410679",
+      telefonoEmpresa: "77936000",
+    },
+
+    encabezado: {
+      serie: enc.SERIE,
+      numero: String(enc.NUMERO_DEVOLUCION),
+      uuid: "11112222-1234-AAAA-BBBB",
+      numeroInterno: `${"NCRE"} | ${enc.NUMERO_DEVOLUCION}`,
+      tipoDocumento: "NOTA DE CREDITO",
+      fechaEmision: new Date().toISOString(),
+    },
+
+    cliente: {
+      nombre: "CLIENTE DE PRUEBA",
+      nit: String(enc.CODIGO_DE_CLIENTE ?? "CF"),
+      direccion: "CIUDAD",
+    },
+
+    items,
+
+    resumen: {
+      subtotal: formatCurrency(subtotal),
+      descuento: "Q.0.00",
+      totalPagar: formatCurrency(enc.TOTAL_DEVOLUCION),
+      totalItems,
+    },
+    nombreVendedor: vendedor.NOMBRE_VENDEDOR,
+    qrCodeData: "https://www.google.com/",
+  };
+
+  return dataFactura;
+};
+
+async function printNota(nota: DevolucionEnc) {
+  try {
+    $q.loading.show({
+      message: 'Imprimiendo nota de credito',
+      boxClass: 'bg-grey-2 text-grey-9',
+      spinnerColor: 'primary'
+    });
+    const datosNotasDeCredito = await prepararDataNotaDeCredito(nota);
+
+    const success = await generarFacturaPDF(datosNotasDeCredito);
+
+    if (success) {
+      console.log("Nota de credito generado con exito.")
+    } else {
+      console.log("Fallo al genera nota de credito.")
+    }
+
+    $q.loading.hide();
+  } catch (error) {
+    console.log('Error al imprimir nota: ', error);
+    $q.notify({
+      type: 'negative',
+      message: `Error al imprimir la nota de credito con numero: ${nota.NUMERO_DEVOLUCION}.`
+    });
+  }
+
+  // console.log('Imprimir nota:', nota);
+  // $q.notify({
+  //   type: 'info',
+  //   message: `Generando impresión para la Nota ${nota.NUMERO_DEVOLUCION}.`
+  // });
   // window.open(`/print/nota/${nota.NUMERO_DEVOLUCION}`, '_blank');
 }
 

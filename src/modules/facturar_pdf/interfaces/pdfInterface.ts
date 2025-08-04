@@ -1,4 +1,5 @@
 export interface DataFactura {
+  empresa: DatosEmpresa;
   encabezado: EncabezadoFactura;
   cliente: ClienteFactura;
   items: ItemFactura[];
@@ -7,12 +8,21 @@ export interface DataFactura {
   qrCodeData: string;
 }
 
+export interface DatosEmpresa {
+  nombreComercial: string;
+  razonSocial: string;
+  direccionEmpresa: string;
+  nitEmpresa: string;
+  telefonoEmpresa: string;
+}
+
 export interface EncabezadoFactura {
-  serie: string;
+  serie?: string;
   numero: string;
-  uuid: string;
+  uuid?: string;
   numeroInterno: string;
-  fechaEmision: string; 
+  fechaEmision?: string;
+  tipoDocumento: string;
 }
 
 export interface ClienteFactura {

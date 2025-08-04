@@ -119,6 +119,7 @@ export interface DevolucionEnc {
   CODIGO_DE_CLIENTE?: number;
   NOMBRE?: string;
   CODIGO_VENDEDOR?: number;
+  DEVOLUCION_DET?: DevolucionDet[];
 }
 
 export interface DevolucionDet {
@@ -128,10 +129,15 @@ export interface DevolucionDet {
   NUMERO_FACTURA: number;
   NUMERO_DEVOLUCION: number;
   PRODUCT0: string;
+  NOMBRE_PRODUCTO?: string;
   CODIGO_DE_BODEGA: number;
   CANTIDAD_DEVUELTA: number;
   PRECIO_DEVOLUCION: number;
   COSTO_PROMEDIO?: number;
   MONTO_IVA?: number;
   SUB_TOTAL?: number;
+}
+
+export interface ApiNotaCreditoResponse  {
+  DEVOLUCION_ENC: DevolucionEnc
 }

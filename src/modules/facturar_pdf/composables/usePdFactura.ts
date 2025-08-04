@@ -90,15 +90,8 @@ const generarFacturaPDF = async (
   pdfSuccess.value = false;
 
   try {
-    // Encabezado de factura - Variables estáticas (se mantienen igual)
-    const nombreComercialLinea1 = "LIBRERIA Y PAPELERIA";
-    const nombreComercialLinea2 = "SAN BARTOLOME";
-    const razonSocial = "GS, SOCIEDAD ANONIMA";
-    const direccionEmpresa = "29 AVENIDA 7A-16 ZONA 7";
-    const nitEmpresa = "62410679";
-    const telefonoEmpresa = "77936000";
+    // Variables estáticas
     const documentoTipo = "DOCUMENTO TRIBUTARIO ELECTRONICO";
-    const facturaTipo = "FACTURA ELECTRONICA";
     const certificadorNombre = "INFILE, S.A.";
     const certificadorNit = "12521337";
     const leyenda1 = "SUJETO A PAGOS TRIMESTRALES ISR";
@@ -219,12 +212,12 @@ const generarFacturaPDF = async (
 
       content: [
         // --- SECCIÓN: DATOS DE LA EMPRESA ---
-        { text: nombreComercialLinea1, style: "header", alignment: "center" },
-        { text: nombreComercialLinea2, style: "header", alignment: "center" },
-        { text: razonSocial, style: "subheader", alignment: "center" },
-        { text: direccionEmpresa, style: "caption", alignment: "center" },
-        { text: `NIT: ${nitEmpresa}`, style: "caption", alignment: "center" },
-        { text: `TELÉFONO: ${telefonoEmpresa}`, style: "caption", alignment: "center" },
+        { text: data.empresa.nombreComercial, style: "header", alignment: "center" },
+        // { text: nombreComercialLinea2, style: "header", alignment: "center" },
+        { text: data.empresa.razonSocial, style: "subheader", alignment: "center" },
+        { text: data.empresa.direccionEmpresa, style: "caption", alignment: "center" },
+        { text: `NIT: ${data.empresa.nitEmpresa}`, style: "caption", alignment: "center" },
+        { text: `TELÉFONO: ${data.empresa.telefonoEmpresa}`, style: "caption", alignment: "center" },
         { text: '\n', margin: [0, 0, 0, -6] },
 
         {
@@ -242,13 +235,25 @@ const generarFacturaPDF = async (
         },
 
         // --- SECCIÓN: DATOS DE LA FACTURA ---
-        { text: "DATOS DE LA FACTURA", style: "sectionTitle", alignment: "center" },
+        { text: `DATOS DE LA ${data.encabezado.tipoDocumento}`, style: "sectionTitle", alignment: "center" },
         { text: documentoTipo, style: "caption", alignment: "center" },
-        { text: facturaTipo, style: "caption", alignment: "center" },
-        { text: `SERIE: ${data.encabezado.serie || ''}`, style: "caption", alignment: "center" },
-        { text: `NÚMERO: ${data.encabezado.numero || ''}`, style: "caption", alignment: "center" },
-        { text: `NÚMERO DE AUTORIZACIÓN: ${data.encabezado.uuid || ''}`, style: "caption", alignment: "center" },
-        { text: `FECHA EMISIÓN: ${data.encabezado.fechaEmision}`, style: "caption", alignment: "center" },
+        { text: data.encabezado.tipoDocumento, style: "caption", alignment: "center" },
+
+        ...(data.encabezado.tipoDocumento.toUpperCase() === "FACTURA EN CONTINGENCIA" ?
+            // Si el tipo de documento es "Documento en contingencia", solo muestra el número.
+            [
+                { text: `NÚMERO: ${data.encabezado.numero || ''}`, style: "caption", alignment: "center" }
+            ] 
+            : 
+            // De lo contrario, muestra serie, número y número de autorización.
+            [
+                { text: `SERIE: ${data.encabezado.serie || ''}`, style: "caption", alignment: "center" },
+                { text: `NÚMERO: ${data.encabezado.numero || ''}`, style: "caption", alignment: "center" },
+                { text: `NÚMERO DE AUTORIZACIÓN: ${data.encabezado.uuid || ''}`, style: "caption", alignment: "center" },
+                { text: `FECHA EMISIÓN: ${data.encabezado.fechaEmision}`, style: "caption", alignment: "center" }
+            ]
+        ),
+
         { text: `NÚMERO INTERNO: ${data.encabezado.numeroInterno || ''}`, style: "caption", alignment: "center" },
         { text: '\n', margin: [0, 0, 0, -6] },
 
@@ -487,31 +492,34 @@ const generarFacturaPDF = async (
     };
 
   // --- DESCARGAR E IMPRIMIR PDF ---
-const pdfDocGenerator = pdfMake.createPdf(docDefinition)
-pdfDocGenerator.print()
+  const pdfDocGenerator = pdfMake.createPdf(docDefinition);
 
-pdfSuccess.value = true
-pdfMessage.value = "Factura PDF generada y enviada a impresión automáticamente."
+  pdfDocGenerator.getBlob((blob) => {
+    const url = URL.createObjectURL(blob);
 
-  // pdfDocGenerator.getBlob((blob) => {
-  //     const fileName = `${data.encabezado.uuid}.pdf`;
-  //     const url = URL.createObjectURL(blob);
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = url;
 
-  //     const link = document.createElement('a');
-  //     link.href = url;
-  //     link.download = fileName;
-  //     document.body.appendChild(link);
-  //     link.click();
+    iframe.onload = () => {
+      try {
+        iframe.contentWindow!.print();
 
-  //     document.body.removeChild(link);
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+          URL.revokeObjectURL(url);
+        }, 1000);
 
-  //     setTimeout(() => {
-  //         const printWindow = window.open(url, '_blank');
-  //     }, 500);
+      } catch (error) {
+        console.error("Error al intentar imprimir: ", error);
+      }
+    };
 
-  //     pdfSuccess.value = true;
-  //     pdfMessage.value = "Factura PDF generada exitosamente.";
-  // });
+    document.body.appendChild(iframe);
+
+    pdfSuccess.value = true;
+    pdfMessage.value = "Factura PDF generada y enviada a impresión automáticamente.";
+  });
 
   return true;
     
@@ -533,38 +541,3 @@ export function usePdfFactura() {
     generarFacturaPDF,
   };
 }
-
-// Datos de ejemplo de la factura, tipados con InvoiceData
-// const exampleInvoiceData: Ref<DataFactura> = ref({
-//     encabezado: {
-//       serie: "ASDF584",
-//       numero: "5582545",
-//       uuid: "F584FS5D-545A-25D8E-8877-5D8C5D2E5D",
-//       numeroInterno: "M16C | 4785",
-//     },
-//     cliente: {
-//       nombre: "Claudia Gonzales Herrera",
-//       nit: "458526",
-//       direccion: "24 AVENIDA 9-87 ZONA 2",
-//     },
-//     items: [
-//       { cantidad: 1, descripcion: "Licencia Software Pro de contabilidad", precio: 'Q.1,500.00', subtotal: 'Q.1,500.00' },
-//       { cantidad: 2, descripcion: "Servicio de Soporte fskd;lf ks;dlfjlskdjflkds87987f98 s8dfsfksdjf87987 Técnico Remoto (Hora)", precio: 'Q.50.00', subtotal: 'Q.100.00' },
-//       { cantidad: 10, descripcion: "Papel Bond Tamaño Carta (Resma de 500 hojas)", precio: 'Q.25.00', subtotal: 'Q.250.00' },
-//       { cantidad: 1, descripcion: "Impresora Multifuncional LaserJet Pro con Escaner", precio: 'Q.1,200.00', subtotal: 'Q.1,200.00' },
-//       { cantidad: 5, descripcion: "Cartucho de Tinta Negra HP 664XL Original", precio: 'Q.15.00', subtotal: 'Q.75.00' },
-//       { cantidad: 3, descripcion: "Mouse Óptico Inalámbrico Ergonómico USB", precio: 'Q.10.00', subtotal: 'Q.30.00' },
-//       { cantidad: 1, descripcion: "Teclado Ergonómico USB de membrana suave", precio: 'Q.45.00', subtotal: 'Q.45.00' },
-//       { cantidad: 2, descripcion: "Disco Duro Externo USB 3.0 de 1TB", precio: 'Q.75.00', subtotal: 'Q.150.00' },
-//       { cantidad: 1, descripcion: "Monitor LED Full HD 24 pulgadas", precio: 'Q.200.00', subtotal: 'Q.200.00' },
-//       { cantidad: 1, descripcion: "Cámara Web Full HD con micrófono integrado", precio: 'Q.30.00', subtotal: 'Q.30.00' },
-//     ],
-//     resumen: {
-//       subtotal: 'Q.3,680.00', // Debes calcular estos totales antes de enviar
-//       descuento: 'Q.0.00',
-//       totalPagar: 'Q.3,680.00',
-//       totalItems: 27, // Suma de cantidades de ítems
-//     },
-//     nombreVendedor: "Ana Maria Lopez",
-//     qrCodeData: "https://fel.portal.sat.gob.gt/consulta/F584FS5D-545A-25D8E-8877-5D8C5D2E5D" // URL de ejemplo para el QR
-// });

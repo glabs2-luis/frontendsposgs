@@ -1,4 +1,4 @@
-import type { Vendedor, ApiFacturaResponse, DevolucionEnc, DevolucionDet } from '@/modules/notas_credito/interfaces/NotaCredito';
+import type { Vendedor, ApiFacturaResponse, DevolucionEnc, DevolucionDet, ApiNotaCreditoResponse } from '@/modules/notas_credito/interfaces/NotaCredito';
 import axios from 'axios';
 
 const baseUrl = 'http://localhost:3001/api';
@@ -105,6 +105,17 @@ export const obtenerDevolucionesEncPorNumero = async (numeroDevolucion: number):
 }
 
 // Obtener devoluciones det por numero de devolucion
+export const obtenerDevolucionesEncDetalle = async (numeroDevolucion: number): Promise<ApiNotaCreditoResponse> => {
+  try {
+    const response = await axios.get(`${baseUrl}/devoluciones-enc/detalle/${numeroDevolucion}`)
+
+    return response.data;
+  } catch (error) {
+    console.log("Error al obtener devoluciones det: ", error)
+  }
+}
+
+// Obtener devoluciones det por numero de devolucion
 export const obtenerDevolucionesDet = async (numeroDevolucion: number): Promise<DevolucionDet[]> => {
   try {
     const response = await axios.get(`${baseUrl}/devoluciones-det/detalle/${numeroDevolucion}`)
@@ -196,5 +207,16 @@ export const eliminarDevolucion = async (numeroDevolucion: number) => {
     } else {
       throw new Error('Error al configurar la solicitud de eliminación: ' + error.message);
     }    
+  }
+}
+
+// Obtener datos de vendedor
+export const obtenerVendedor = async (codigoVendedor: number): Promise<Vendedor> => {
+  try {
+    const response = await axios.get(`${baseUrl}/vendedor/${codigoVendedor}`)
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener vendedor: ", error);
+    throw new Error("Error al obtener vendedor: " + error.message);
   }
 }
