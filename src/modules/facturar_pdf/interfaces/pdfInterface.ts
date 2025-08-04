@@ -1,5 +1,5 @@
 export interface DataFactura {
-  empresa: DatosEmpresa;
+  empresa?: DatosEmpresa;
   encabezado: EncabezadoFactura;
   cliente: ClienteFactura;
   items: ItemFactura[];
@@ -9,11 +9,11 @@ export interface DataFactura {
 }
 
 export interface DatosEmpresa {
-  nombreComercial: string;
-  razonSocial: string;
-  direccionEmpresa: string;
-  nitEmpresa: string;
-  telefonoEmpresa: string;
+  nombreComercial?: string;
+  razonSocial?: string;
+  direccionEmpresa?: string;
+  nitEmpresa?: string;
+  telefonoEmpresa?: string;
 }
 
 export interface EncabezadoFactura {

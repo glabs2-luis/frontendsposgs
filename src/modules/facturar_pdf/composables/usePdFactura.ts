@@ -9,6 +9,7 @@ import type {
   PdfMakeTableLayoutNode,
 } from "../interfaces/pdfInterface.ts";
 import QRCode from "qrcode";
+import { useDatosFel } from "@/modules/fel_empresa_establecimiento/composables/useFelDatos.js";
 
 // Cargar fuentes
 (pdfMake as any).vfs = pdfFonts.vfs;
@@ -49,7 +50,16 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
   pdfSuccess.value = false;
 
   try {
-    // Variables estáticas
+    // Datos de la empresa
+
+    const datosEmpresa = await useDatosFel().obtenerDatosEmpresa(1);
+    const datosEstablecimiento = await useDatosFel().obtenerDatosEstablecimiento(1);
+
+    const nombreComercial = datosEmpresa.NOMBRE_COMERCIAL;
+    const razonSocial = datosEmpresa.NOMBRE_EMISOR;
+    const direccionEmpresa = datosEmpresa.DIRECCION_EMISOR;
+    const nitEmpresa = datosEmpresa.NIT_EMISOR;
+    const telefonoEmpresa = datosEmpresa.TELEFONO;
     const documentoTipo = "DOCUMENTO TRIBUTARIO ELECTRONICO";
     const certificadorNombre = "INFILE, S.A.";
     const certificadorNit = "12521337";
@@ -182,27 +192,27 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
       content: [
         // --- SECCIÓN: DATOS DE LA EMPRESA ---
         {
-          text: data.empresa.nombreComercial,
+          text: nombreComercial,
           style: "header",
           alignment: "center",
         },
         {
-          text: data.empresa.razonSocial,
+          text: razonSocial,
           style: "subheader",
           alignment: "center",
         },
         {
-          text: data.empresa.direccionEmpresa,
+          text: direccionEmpresa,
           style: "caption",
           alignment: "center",
         },
         {
-          text: `NIT: ${data.empresa.nitEmpresa}`,
+          text: `NIT: ${nitEmpresa}`,
           style: "caption",
           alignment: "center",
         },
         {
-          text: `TELÉFONO: ${data.empresa.telefonoEmpresa}`,
+          text: `TELÉFONO: ${telefonoEmpresa}`,
           style: "caption",
           alignment: "center",
         },
@@ -262,7 +272,12 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
                 alignment: "center",
               },
               {
-                text: `FECHA EMISIÓN: ${data.encabezado.fechaEmision}`,
+                text: `FECHA EMISIÓN:`,
+                style: "caption",
+                alignment: "center",
+              },
+                            {
+                text: `${data.encabezado.fechaEmision}`,
                 style: "caption",
                 alignment: "center",
               },
@@ -451,6 +466,11 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
         },
         {
           text: `LE ATENDIO: ${data.nombreVendedor || "Vendedor Desconocido"}`,
+          style: "smallText",
+        },
+
+        {
+          text: `FECHA IMPRESION: ${new Date().toISOString()}`,
           style: "smallText",
           margin: [0, 0, 0, 10],
         },

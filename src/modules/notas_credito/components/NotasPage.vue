@@ -409,14 +409,6 @@ const prepararDataNotaDeCredito = async (nota: DevolucionEnc): Promise<DataFactu
   const totalPagar = subtotal + (enc.MONTO_IVA || 0);
 
   const dataFactura: DataFactura = {
-    empresa: {
-      nombreComercial: "LIBRERIA Y PAPELERIA SAN BARTOLOME",
-      razonSocial: "GS, SOCIEDAD ANONIMA",
-      direccionEmpresa: "29 AVENIDA 7A-16 ZONA 7",
-      nitEmpresa: "62410679",
-      telefonoEmpresa: "77936000",
-    },
-
     encabezado: {
       serie: enc.SERIE,
       numero: String(enc.NUMERO_DEVOLUCION),
