@@ -224,6 +224,9 @@ import { ref, computed, onMounted } from 'vue'
 import useFacturasEnc from '../../facturas_enc/composables/useFacturasEnc'
 import { showErrorNotification } from '@/common/helper/notification'
 import { usePdfFactura } from '@/modules/facturar_pdf/composables/usePdFactura'
+import { useDatosFel } from '../../fel_empresa_establecimiento/composables/useFelDatos'
+import { DatosEmpresa } from '../../facturar_pdf/interfaces/pdfInterface';
+import { Establecimiento } from '../../fel_empresa_establecimiento/interfaces/establecimientoInterfaces';
 
 const filtro = ref('')
 const mostrarDetalle = ref(false)
@@ -233,6 +236,7 @@ const { obtenerFacturasEnc, obtenerDetalleFactura } = useFacturasEnc()
 const { data: facturasData, isLoading } = obtenerFacturasEnc()
 const { generarFacturaPDF } = usePdfFactura()
 const { obtenerDatosFel } = useFacturasEnc()
+const { obtenerDatosEmpresa, obtenerDatosEstablecimiento} = useDatosFel()
 
 //Mostrar solo las ultimas 100 facturas
 const mostrarUltimasFacturas = computed (()=>{
@@ -279,8 +283,14 @@ const reimprimirFactura = async (idFactura: number) => {
 
     const datosFelCertificados = await obtenerDatosFel(factura.NUMERO_FACTURA)
 
-    console.log(datosFelCertificados)
-    console.log(factura.NUMERO_FACTURA)
+    const datosEmpresa1 = await obtenerDatosEmpresa(1)
+    const datosEstablecimiento1 = await obtenerDatosEstablecimiento(1)
+
+    console.log('datos factura', factura)
+    // console.log(datosFelCertificados)
+    // console.log(factura.NUMERO_FACTURA)
+    // console.log(datosEmpresa1)
+    // console.log(datosEstablecimiento1)
 
     const detalle = await obtenerDetalleFactura(idFactura)
     if (!detalle || detalle.length === 0) {
@@ -305,12 +315,21 @@ const reimprimirFactura = async (idFactura: number) => {
 
     // Armar el objeto dataFactura para el PDF
     const dataFactura = {
+
+      empresa: {
+        nombreComercial: datosEmpresa1.NOMBRE_COMERCIAL,
+        razonSocial: datosEmpresa1.NOMBRE_EMISOR,
+        direccionEmpresa: datosEstablecimiento1.DIRECCION_ESTABLECIMIENTO,
+        nitEmpresa: datosEmpresa1.NIT_EMISOR,
+        telefonoEmpresa: datosEstablecimiento1.TELEFONO_ESTABLECIMIENTO
+      },
       encabezado: {
         serie: datosFelCertificados?.SERIE_FACTURA_FEL ?? '',
         numero: datosFelCertificados?.NUMERO_FACTURA_FEL ?? '',
         uuid: datosFelCertificados?.UUID ?? '',
         numeroInterno: `${factura?.SERIE ?? ''} | ${factura?.NUMERO_FACTURA ?? ''}`,
-        fechaEmision: fechaEmisionValida
+        fechaEmision: fechaEmisionValida,
+        tipoDocumento: 'FACTURA ELECTRONICA'
       },
       cliente: {
         nombre: factura.NOMBRE_CLI_A_FACTUAR,
@@ -320,7 +339,7 @@ const reimprimirFactura = async (idFactura: number) => {
       items: itemsFactura,
       resumen: {
         subtotal: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
-        descuento: "Q0.00",
+        descuento: `Q ${factura.MONTO_DESCUENTO_FACT.toFixed(2)}`,
         totalPagar: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
         totalItems: totalItems
       },
