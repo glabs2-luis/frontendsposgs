@@ -75,16 +75,80 @@
                 </div>
               </template>
 
+              <template v-slot:body-cell-ESTADO_DE_DEVOLUCION="props">
+                <q-td :props="props">
+                  <q-badge
+                    :color="props.value.toLowerCase() === 'f' ? 'positive' : 'warning'"
+                    :label="props.value.toLowerCase() === 'f' ? 'Finalizada' : 'Pendiente'"
+                  />
+                </q-td>
+              </template>
+
               <template v-slot:body-cell-actions="props">
                 <q-td :props="props">
-                  <q-btn icon="edit" size="sm" flat round color="primary" @click="editNota(props.row)">
-                    <q-tooltip>Editar Nota</q-tooltip>
-                  </q-btn>
-                  <q-btn icon="delete" size="sm" flat round color="negative" @click="confirmDelete(props.row)">
-                    <q-tooltip>Eliminar Nota</q-tooltip>
-                  </q-btn>
-                  <q-btn icon="print" size="sm" flat round color="secondary" @click="printNota(props.row)">
-                    <q-tooltip>Imprimir Nota</q-tooltip>
+                  <q-btn flat round icon="more_vert">
+                    <q-menu auto-close>
+                      <q-list dense style="min-width: 150px">
+                        <q-item
+                          clickable
+                          v-ripple
+                          @click="editNota(props.row)"
+                          :disable="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() === 'f'"
+                        >
+                          <q-item-section avatar>
+                            <q-icon color="primary" name="edit" />
+                          </q-item-section>
+                          <q-item-section>Editar</q-item-section>
+                          <q-tooltip v-if="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() === 'f'">
+                            No se puede editar una nota finalizada
+                          </q-tooltip>
+                        </q-item>
+
+                        <q-item
+                          clickable
+                          v-ripple
+                          @click="confirmDelete(props.row)"
+                          :disable="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() === 'f'"
+                        >
+                          <q-item-section avatar>
+                            <q-icon color="negative" name="delete" />
+                          </q-item-section>
+                          <q-item-section>Eliminar</q-item-section>
+                          <q-tooltip v-if="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() === 'f'">
+                            No se puede eliminar una nota finalizada
+                          </q-tooltip>
+                        </q-item>
+
+                        <q-separator />
+
+                        <q-item
+                          clickable
+                          v-ripple
+                          @click="printNota(props.row)"
+                          :disable="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() !== 'f'"
+                        >
+                          <q-item-section avatar>
+                            <q-icon color="secondary" name="print" />
+                          </q-item-section>
+                          <q-item-section>Imprimir</q-item-section>
+                          <q-tooltip v-if="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() !== 'f'">
+                            Solo se puede imprimir una nota finalizada
+                          </q-tooltip>
+                        </q-item>
+
+                        <q-item
+                          clickable
+                          v-ripple
+                          v-if="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() !== 'f'"
+                          @click="certificarNota(props.row)"
+                        >
+                          <q-item-section avatar>
+                            <q-icon color="green" name="verified_user" />
+                          </q-item-section>
+                          <q-item-section>Certificar</q-item-section>
+                        </q-item>
+                      </q-list>
+                    </q-menu>
                   </q-btn>
                 </q-td>
               </template>
@@ -107,9 +171,11 @@ import type { DataFactura } from '@/modules/facturar_pdf/interfaces/pdfInterface
 import { useQuasar } from 'quasar';
 import { eliminarDevolucion } from '../action/useNotaCreditoActions';
 import { usePdfFactura } from '@/modules/facturar_pdf/composables/usePdFactura';
+// Importa tu acción para certificar, si la tienes
+// import { certificarDevolucion } from '../action/useNotaCreditoActions';
 
 const $q = useQuasar();
-const { generarFacturaPDF }  = usePdfFactura()
+const { generarFacturaPDF } = usePdfFactura();
 
 const claveModalVisible = ref(true);
 const accesoPermitido = ref(false);
@@ -210,7 +276,7 @@ function editNota(nota: DevolucionEnc) {
     notaSeleccionadaParaEditar.value = nota;
     notaCreditoVisible.value = true;
   } else {
-      $q.notify({
+    $q.notify({
       type: 'negative',
       message: 'No se puede editar una nota de crédito con estado finalizada.',
       position: 'top',
@@ -274,8 +340,55 @@ async function deleteNota(nota: DevolucionEnc) {
   }
 }
 
+// Función para certificar la nota de crédito
+async function certificarNota(nota: DevolucionEnc) {
+  $q.dialog({
+    title: 'Confirmar Certificación',
+    message: `¿Estás seguro de que deseas certificar la Nota de Crédito ${nota.NUMERO_DEVOLUCION}? Esto la dejará como finalizada.`,
+    cancel: true,
+    persistent: true,
+    color: 'green'
+  }).onOk(async () => {
+    try {
+      $q.loading.show({
+        message: `Certificando Nota de Crédito ${nota.NUMERO_DEVOLUCION}...`,
+        boxClass: 'bg-grey-2 text-grey-9',
+        spinnerColor: 'positive'
+      });
+      
+      // Funcion que manda a certificar NC
+
+      // Recargar de nuevo NC desde base de datos
+      
+      const notaIndex = allNotas.value.findIndex(n => n.NUMERO_DEVOLUCION === nota.NUMERO_DEVOLUCION);
+      if (notaIndex !== -1) {
+        allNotas.value[notaIndex].ESTADO_DE_DEVOLUCION = 'F';
+      }
+      
+      filterNotes();
+
+      $q.notify({
+        type: 'positive',
+        message: `Nota de Crédito ${nota.NUMERO_DEVOLUCION} certificada exitosamente.`,
+        position: 'top',
+        timeout: 3000
+      });
+    } catch (error) {
+      console.error('Error al certificar la nota de crédito:', error);
+      $q.notify({
+        type: 'negative',
+        message: 'Error al certificar la nota. Por favor, inténtalo de nuevo.',
+        position: 'top',
+        timeout: 5000
+      });
+    } finally {
+      $q.loading.hide();
+    }
+  });
+}
+
 const prepararDataNotaDeCredito = async (nota: DevolucionEnc): Promise<DataFactura> => {
-  const formatCurrency = (value: number) => `Q.${value.toFixed(2)}`;
+  const formatCurrency = (value: number) => `Q.${value.toFixed(4)}`;
 
   const apiResponse = await obtenerDevolucionesEncDetalle(nota.NUMERO_DEVOLUCION);
   const vendedor = await obtenerVendedor(parseInt(apiResponse.DEVOLUCION_ENC.USUARIO_QUE_INGRESO))
@@ -335,6 +448,16 @@ const prepararDataNotaDeCredito = async (nota: DevolucionEnc): Promise<DataFactu
 };
 
 async function printNota(nota: DevolucionEnc) {
+  if (nota.ESTADO_DE_DEVOLUCION.toUpperCase() !== 'F') {
+    $q.notify({
+      type: 'negative',
+      message: 'No se puede imprimir una nota de credito sin finaliza.',
+      position: 'top',
+      timeout: 3000
+    });
+    return;
+  }
+
   try {
     $q.loading.show({
       message: 'Imprimiendo nota de credito',
@@ -359,29 +482,6 @@ async function printNota(nota: DevolucionEnc) {
       message: `Error al imprimir la nota de credito con numero: ${nota.NUMERO_DEVOLUCION}.`
     });
   }
-
-  // console.log('Imprimir nota:', nota);
-  // $q.notify({
-  //   type: 'info',
-  //   message: `Generando impresión para la Nota ${nota.NUMERO_DEVOLUCION}.`
-  // });
-  // window.open(`/print/nota/${nota.NUMERO_DEVOLUCION}`, '_blank');
-}
-
-function printAllNotas() {
-  console.log('Imprimir todas las notas visibles:', filteredNotas.value);
-  if (filteredNotas.value.length === 0) {
-    $q.notify({
-      type: 'warning',
-      message: 'No hay notas para imprimir.'
-    });
-    return;
-  }
-  $q.notify({
-    type: 'info',
-    message: `Generando impresión de ${filteredNotas.value.length} notas de crédito.`
-  });
-  // window.open('/print/all-notas', '_blank');
 }
 
 watch(notaCreditoVisible, (newValue, oldValue) => {

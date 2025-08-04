@@ -1,15 +1,14 @@
-import { ref, type Ref } from "vue"
+import { ref, type Ref } from "vue";
 
-import pdfMake from "pdfmake/build/pdfmake"
-import * as pdfFonts from "pdfmake/build/vfs_fonts"
+import pdfMake from "pdfmake/build/pdfmake";
+import * as pdfFonts from "pdfmake/build/vfs_fonts";
 
 import type {
   DataFactura,
   ItemFactura,
   PdfMakeTableLayoutNode,
-} from "../interfaces/pdfInterface.ts"
-import QRCode from "qrcode"
-
+} from "../interfaces/pdfInterface.ts";
+import QRCode from "qrcode";
 
 // Cargar fuentes
 (pdfMake as any).vfs = pdfFonts.vfs;
@@ -23,68 +22,27 @@ const pdfSuccess: Ref<boolean> = ref(false);
 const truncateTextByLines = (
   text: string,
   maxLines: number,
-  charsPerLineApprox: number = 30,
-  lineHeightPoints: number = 10
+  charsPerLine: number = 20
 ): string => {
-  if (!text || maxLines <= 0) return "";
+  if (!text || text.length <= maxLines * charsPerLine) {
+    return text;
+  }
 
-  const words = text.split(" ");
-  let currentLine = "";
-  let lineCount = 0;
-  let truncatedText = "";
+  const maxLength = maxLines * charsPerLine;
   const ellipsis = "...";
 
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i];
-    const nextWord = i + 1 < words.length ? " " + words[i + 1] : "";
+  let truncatedText = text.substring(0, maxLength);
 
-    if (
-      (currentLine + word).length > charsPerLineApprox &&
-      currentLine.length > 0
-    ) {
-      lineCount++;
-      if (lineCount >= maxLines) {
-        const remainingSpace = charsPerLineApprox - currentLine.length;
-        if (remainingSpace >= ellipsis.length) {
-          truncatedText += currentLine + ellipsis;
-        } else {
-          truncatedText +=
-            currentLine.substring(0, currentLine.length - ellipsis.length) +
-            ellipsis;
-        }
-        return truncatedText.trim();
-      }
-      truncatedText += currentLine + "\n";
-      currentLine = word;
-    } else {
-      currentLine += (currentLine.length > 0 ? " " : "") + word;
-    }
+  const lastSpaceIndex = truncatedText.lastIndexOf(" ");
+  if (lastSpaceIndex !== -1) {
+    truncatedText = truncatedText.substring(0, lastSpaceIndex);
   }
 
-  lineCount++;
-  if (lineCount > maxLines) {
-    if (truncatedText.length === 0) {
-      return (
-        text.substring(0, charsPerLineApprox * maxLines - ellipsis.length) +
-        ellipsis
-      );
-    } else {
-      return (
-        truncatedText.trim() +
-        "\n" +
-        currentLine.substring(0, charsPerLineApprox - ellipsis.length) +
-        ellipsis
-      );
-    }
-  }
-
-  return (truncatedText + currentLine).trim();
+  return truncatedText.trim() + ellipsis;
 };
 
 // Función para Generar Factura en PDF
-const generarFacturaPDF = async (
-  data: DataFactura
-): Promise<boolean> => {
+const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
   isGeneratingPdf.value = true;
   pdfMessage.value = "Generando PDF...";
   pdfSuccess.value = false;
@@ -99,20 +57,25 @@ const generarFacturaPDF = async (
     const leyenda3 = "ES UN PLACER SERVIRLE";
     const leyenda4 = "ESPERAMOS QUE VUELVA";
 
-    // Validaciones iniciales de los datos
     if (!data) {
-        throw new Error("Los datos de la factura son nulos o indefinidos.");
+      throw new Error("Los datos de la factura son nulos o indefinidos.");
     }
     if (!data.items || !data.cliente || !data.resumen) {
-        throw new Error("Faltan datos esenciales de la factura (encabezado, items, cliente o resumen).");
+      throw new Error(
+        "Faltan datos esenciales de la factura (encabezado, items, cliente o resumen)."
+      );
     }
     if (!data.items.length) {
-        console.warn("La factura no contiene ítems. Se generará un PDF sin detalle de productos.");
+      console.warn(
+        "La factura no contiene ítems. Se generará un PDF sin detalle de productos."
+      );
     }
     if (!data.qrCodeData) {
-        console.warn("No se proporcionaron datos para el código QR. El QR podría estar vacío o mostrar un fallback.");
+      console.warn(
+        "No se proporcionaron datos para el código QR. El QR podría estar vacío o mostrar un fallback."
+      );
     }
-    
+
     const fechaEmisionDate = new Date();
     const fechaHoraEmision = !isNaN(fechaEmisionDate.getTime())
       ? fechaEmisionDate
@@ -129,35 +92,23 @@ const generarFacturaPDF = async (
           .replace(",", " ")
       : "Fecha Desconocida";
 
-    // Configuración de pagina
     const paperWidthInInches = 3.14;
     const paperWidthInPoints = paperWidthInInches * 72;
-    const marginHorizontal = 18;
-    const marginVertical = 4;
+    const marginHorizontal = 8;
+    const marginVertical = 10;
+    const rightMargin = 17;
     const contentWidth = paperWidthInPoints - 2 * marginHorizontal;
 
-    // Anchos de la columna de la tabla
     const qtyColWidth = 20;
     const priceColWidth = 40;
     const totalColWidth = 40;
-    const descriptionColCalculatedWidth = contentWidth - qtyColWidth - priceColWidth - totalColWidth - 8;
     const FONT_SIZE_FOR_DESCRIPTION = 7;
-    const APPROX_POINTS_PER_CHAR = 3.8;
-    // Ancho total - anchos fijos - (padding_izq * 4 celdas + padding_der * 4 celdas)
-    // El 4 * 2 (8) es un estimado para el padding horizontal total que quita espacio
-    const charsPerLineForDescription = Math.floor(descriptionColCalculatedWidth / APPROX_POINTS_PER_CHAR);
 
-    // --- CONFIGURACIÓN PARA LÍNEAS CENTRADAS Y MÁS CORTAS ---
-    const desiredLinePercentage = 0.8; // % del ancho del contenido
+    const desiredLinePercentage = 0.8;
     const desiredLineLength = contentWidth * desiredLinePercentage;
     const lineStartX = (contentWidth - desiredLineLength) / 2;
     const lineEndX = lineStartX + desiredLineLength;
 
-    // console.log(`Ancho total disponible para contenido: ${contentWidth}pt`);
-    // console.log(`Ancho calculado para descripción: ${descriptionColCalculatedWidth}pt`);
-    // console.log(`Caracteres aprox por línea en descripción: ${charsPerLineForDescription}`);
-
-    // Definicion de la tabla para los items
     const tableBody: any[] = [];
     tableBody.push([
       { text: "CANT", style: "tableHeader", alignment: "center" },
@@ -166,39 +117,56 @@ const generarFacturaPDF = async (
       { text: "SUBTOTAL", style: "tableHeader", alignment: "center" },
     ]);
 
-    // Llenado de items
     data.items.forEach((item: ItemFactura) => {
-        const truncatedDescription = truncateTextByLines(
-            item.descripcion || 'Sin descripción',
-            3,
-            charsPerLineForDescription
-        );
-        tableBody.push([
-            { text: (item.cantidad || 0).toString(), alignment: "center", style: "tableCell" },
-            { text: truncatedDescription, fontSize: FONT_SIZE_FOR_DESCRIPTION, style: "tableCell" },
-            { text: item.precio || 'Q.0.00', alignment: "right", style: "tableCell" },
-            { text: item.subtotal || 'Q.0.00', alignment: "right", style: "tableCell" },
-        ]);
+      const truncatedDescription = truncateTextByLines(
+        item.descripcion || "Sin descripción",
+        3
+      );
+      tableBody.push([
+        {
+          text: (item.cantidad || 0).toString(),
+          alignment: "center",
+          style: "tableCell",
+        },
+        {
+          text: truncatedDescription,
+          fontSize: FONT_SIZE_FOR_DESCRIPTION,
+          style: "tableCell",
+        },
+        {
+          text: item.precio || "Q.0.00",
+          alignment: "right",
+          style: "tableCell",
+        },
+        {
+          text: item.subtotal || "Q.0.00",
+          alignment: "right",
+          style: "tableCell",
+        },
+      ]);
     });
 
-    // Genera el Código QR
     let qrDataUrl = "";
     try {
-        if (data.qrCodeData) {
-            qrDataUrl = await QRCode.toDataURL(data.qrCodeData, {
-                errorCorrectionLevel: "H",
-                type: "image/png",
-                margin: 1,
-                scale: 4,
-            });
-        } else {
-            console.warn("`data.qrCodeData` está vacío. Usando QR de fallback.");
-            qrDataUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
-        }
+      if (data.qrCodeData) {
+        qrDataUrl = await QRCode.toDataURL(data.qrCodeData, {
+          errorCorrectionLevel: "H",
+          type: "image/png",
+          margin: 1,
+          scale: 4,
+        });
+      } else {
+        console.warn("`data.qrCodeData` está vacío. Usando QR de fallback.");
+        qrDataUrl =
+          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+      }
     } catch (err: any) {
-        console.error("Error al generar el QR:", err);
-        pdfMessage.value = `Error al generar el PDF (QR): ${err.message || 'Error desconocido'}`;
-        qrDataUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+      console.error("Error al generar el QR:", err);
+      pdfMessage.value = `Error al generar el PDF (QR): ${
+        err.message || "Error desconocido"
+      }`;
+      qrDataUrl =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
     }
 
     const docDefinition: any = {
@@ -206,19 +174,38 @@ const generarFacturaPDF = async (
       pageMargins: [
         marginHorizontal,
         marginVertical,
-        marginHorizontal,
+        rightMargin,
         marginVertical,
       ],
 
       content: [
         // --- SECCIÓN: DATOS DE LA EMPRESA ---
-        { text: data.empresa.nombreComercial, style: "header", alignment: "center" },
-        // { text: nombreComercialLinea2, style: "header", alignment: "center" },
-        { text: data.empresa.razonSocial, style: "subheader", alignment: "center" },
-        { text: data.empresa.direccionEmpresa, style: "caption", alignment: "center" },
-        { text: `NIT: ${data.empresa.nitEmpresa}`, style: "caption", alignment: "center" },
-        { text: `TELÉFONO: ${data.empresa.telefonoEmpresa}`, style: "caption", alignment: "center" },
-        { text: '\n', margin: [0, 0, 0, -6] },
+        {
+          text: data.empresa.nombreComercial,
+          style: "header",
+          alignment: "center",
+        },
+        {
+          text: data.empresa.razonSocial,
+          style: "subheader",
+          alignment: "center",
+        },
+        {
+          text: data.empresa.direccionEmpresa,
+          style: "caption",
+          alignment: "center",
+        },
+        {
+          text: `NIT: ${data.empresa.nitEmpresa}`,
+          style: "caption",
+          alignment: "center",
+        },
+        {
+          text: `TELÉFONO: ${data.empresa.telefonoEmpresa}`,
+          style: "caption",
+          alignment: "center",
+        },
+        { text: "\n", margin: [0, 0, 0, -6] },
 
         {
           canvas: [
@@ -231,31 +218,61 @@ const generarFacturaPDF = async (
               lineWidth: 1,
             },
           ],
-          margin: [0, 0, 0, 5]
-        },
+          margin: [0, 0, 0, 5],
+        }, // --- SECCIÓN: DATOS DE LA FACTURA ---
 
-        // --- SECCIÓN: DATOS DE LA FACTURA ---
-        { text: `DATOS DE LA ${data.encabezado.tipoDocumento}`, style: "sectionTitle", alignment: "center" },
+        {
+          text: `DATOS DE LA ${data.encabezado.tipoDocumento}`,
+          style: "sectionTitle",
+          alignment: "center",
+        },
         { text: documentoTipo, style: "caption", alignment: "center" },
-        { text: data.encabezado.tipoDocumento, style: "caption", alignment: "center" },
+        {
+          text: data.encabezado.tipoDocumento,
+          style: "caption",
+          alignment: "center",
+        },
 
-        ...(data.encabezado.tipoDocumento.toUpperCase() === "FACTURA EN CONTINGENCIA" ?
-            // Si el tipo de documento es "Documento en contingencia", solo muestra el número.
+        ...(data.encabezado.tipoDocumento.toUpperCase() ===
+        "FACTURA EN CONTINGENCIA"
+          ? // Si el tipo de documento es "Documento en contingencia", solo muestra el número.
             [
-                { text: `NÚMERO: ${data.encabezado.numero || ''}`, style: "caption", alignment: "center" }
-            ] 
-            : 
-            // De lo contrario, muestra serie, número y número de autorización.
-            [
-                { text: `SERIE: ${data.encabezado.serie || ''}`, style: "caption", alignment: "center" },
-                { text: `NÚMERO: ${data.encabezado.numero || ''}`, style: "caption", alignment: "center" },
-                { text: `NÚMERO DE AUTORIZACIÓN: ${data.encabezado.uuid || ''}`, style: "caption", alignment: "center" },
-                { text: `FECHA EMISIÓN: ${data.encabezado.fechaEmision}`, style: "caption", alignment: "center" }
+              {
+                text: `NÚMERO: ${data.encabezado.numero || ""}`,
+                style: "caption",
+                alignment: "center",
+              },
             ]
-        ),
+          : // De lo contrario, muestra serie, número y número de autorización.
+            [
+              {
+                text: `SERIE: ${data.encabezado.serie || ""}`,
+                style: "caption",
+                alignment: "center",
+              },
+              {
+                text: `NÚMERO: ${data.encabezado.numero || ""}`,
+                style: "caption",
+                alignment: "center",
+              },
+              {
+                text: `NÚMERO DE AUTORIZACIÓN: ${data.encabezado.uuid || ""}`,
+                style: "caption",
+                alignment: "center",
+              },
+              {
+                text: `FECHA EMISIÓN: ${data.encabezado.fechaEmision}`,
+                style: "caption",
+                alignment: "center",
+              },
+            ]),
 
-        { text: `NÚMERO INTERNO: ${data.encabezado.numeroInterno || ''}`, style: "caption", alignment: "center" },
-        { text: '\n', margin: [0, 0, 0, -6] },
+        {
+          text: `NÚMERO INTERNO: ${data.encabezado.numeroInterno || ""}`,
+          style: "caption",
+          alignment: "center",
+        },
+        { text: "\n", margin: [0, 0, 0, -6] },
 
         {
           canvas: [
@@ -268,17 +285,32 @@ const generarFacturaPDF = async (
               lineWidth: 1,
             },
           ],
-          margin: [0, 0, 0, 5]
-        },
+          margin: [0, 0, 0, 5],
+        }, // --- SECCIÓN: DATOS DEL CLIENTE ---
 
-        // --- SECCIÓN: DATOS DEL CLIENTE ---
-        { text: "DATOS DEL CLIENTE", style: "sectionTitle", alignment: "center" },
+        {
+          text: "DATOS DEL CLIENTE",
+          style: "sectionTitle",
+          alignment: "center",
+        },
         { text: `CLIENTE:`, style: "caption", alignment: "center" },
-        { text: `${data.cliente.nombre || 'Consumidor Final'}`, style: "caption", alignment: "center" },
-        { text: `NIT: ${data.cliente.nit || 'CF'}`, style: "caption", alignment: "center" },
+        {
+          text: `${data.cliente.nombre || "Consumidor Final"}`,
+          style: "caption",
+          alignment: "center",
+        },
+        {
+          text: `NIT: ${data.cliente.nit || "CF"}`,
+          style: "caption",
+          alignment: "center",
+        },
         { text: `DIRECCIÓN:`, style: "caption", alignment: "center" },
-        { text: `${data.cliente.direccion || 'Ciudad'}`, style: "caption", alignment: "center" },
-        { text: '\n', margin: [0, 0, 0, -6] },
+        {
+          text: `${data.cliente.direccion || "Ciudad"}`,
+          style: "caption",
+          alignment: "center",
+        },
+        { text: "\n", margin: [0, 0, 0, -6] },
 
         {
           canvas: [
@@ -291,10 +323,9 @@ const generarFacturaPDF = async (
               lineWidth: 1,
             },
           ],
-          margin: [0, 0, 0, 5]
-        },
+          margin: [0, 0, 0, 5],
+        }, // --- SECCIÓN: TABLA DE DETALLE (ITEMS) ---
 
-        // --- SECCIÓN: TABLA DE DETALLE (ITEMS) ---
         {
           table: {
             headerRows: 1,
@@ -329,7 +360,7 @@ const generarFacturaPDF = async (
           },
           margin: [0, 5],
         },
-        { text: '\n', margin: [0, 0, 0, -6] },
+        { text: "\n", margin: [0, 0, 0, -6] },
 
         {
           canvas: [
@@ -342,10 +373,9 @@ const generarFacturaPDF = async (
               lineWidth: 1,
             },
           ],
-          margin: [0, 0, 0, 5]
-        },
+          margin: [0, 0, 0, 5],
+        }, // --- SECCIÓN: RESUMEN Y PIE DE PÁGINA ---
 
-        // --- SECCIÓN: RESUMEN Y PIE DE PÁGINA ---
         {
           columns: [
             {
@@ -398,7 +428,7 @@ const generarFacturaPDF = async (
           margin: [0, 0, 0, 10],
         },
 
-          {
+        {
           canvas: [
             {
               type: "line",
@@ -408,16 +438,18 @@ const generarFacturaPDF = async (
               y2: 5,
               lineWidth: 1,
             },
-          ], 
-           margin: [0, 0, 0, 3],
-           
+          ],
+          margin: [0, 0, 0, 3],
         },
 
-        { text: " ", margin: [0, 5] }, 
+        { text: " ", margin: [0, 5] },
 
-        { text: `TOTAL ITEMS: ${data.resumen.totalItems || 0}`, style: "smallText" },
         {
-          text: `LE ATENDIO: ${data.nombreVendedor || 'Vendedor Desconocido'}`,
+          text: `TOTAL ITEMS: ${data.resumen.totalItems || 0}`,
+          style: "smallText",
+        },
+        {
+          text: `LE ATENDIO: ${data.nombreVendedor || "Vendedor Desconocido"}`,
           style: "smallText",
           margin: [0, 0, 0, 10],
         },
@@ -472,7 +504,7 @@ const generarFacturaPDF = async (
         tableHeader: { bold: true, fontSize: 7, color: "#000000" },
         tableCell: {
           fontSize: 7,
-          color: '#000000',
+          color: "#000000",
         },
         totalsHeader: { fontSize: 11, bold: true, color: "#000000" },
         legend: {
@@ -489,44 +521,44 @@ const generarFacturaPDF = async (
         },
       },
       defaultStyle: { fontSize: 9, color: "#000000" },
-    };
+    }; // --- DESCARGAR E IMPRIMIR PDF ---
 
-  // --- DESCARGAR E IMPRIMIR PDF ---
-  const pdfDocGenerator = pdfMake.createPdf(docDefinition);
+    const pdfDocGenerator = pdfMake.createPdf(docDefinition);
 
-  pdfDocGenerator.getBlob((blob) => {
-    const url = URL.createObjectURL(blob);
+    pdfDocGenerator.getBlob((blob) => {
+      const url = URL.createObjectURL(blob);
 
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = url;
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = url;
 
-    iframe.onload = () => {
-      try {
-        iframe.contentWindow!.print();
+      iframe.onload = () => {
+        try {
+          iframe.contentWindow!.print();
 
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-          URL.revokeObjectURL(url);
-        }, 1000);
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+            URL.revokeObjectURL(url);
+          }, 1000);
+        } catch (error) {
+          console.error("Error al intentar imprimir: ", error);
+        }
+      };
 
-      } catch (error) {
-        console.error("Error al intentar imprimir: ", error);
-      }
-    };
+      document.body.appendChild(iframe);
 
-    document.body.appendChild(iframe);
+      pdfSuccess.value = true;
+      pdfMessage.value =
+        "Factura PDF generada y enviada a impresión automáticamente.";
+    });
 
-    pdfSuccess.value = true;
-    pdfMessage.value = "Factura PDF generada y enviada a impresión automáticamente.";
-  });
-
-  return true;
-    
+    return true;
   } catch (error: any) {
     console.error("Error general al generar el PDF:", error);
     pdfSuccess.value = false;
-    pdfMessage.value = `Error al generar el PDF: ${error.message || 'Error desconocido'}`;
+    pdfMessage.value = `Error al generar el PDF: ${
+      error.message || "Error desconocido"
+    }`;
     return false;
   } finally {
     isGeneratingPdf.value = false;
