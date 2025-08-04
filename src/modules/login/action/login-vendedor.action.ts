@@ -1,9 +1,7 @@
-// login-vendedor.action.ts
 import posApi from "@/api/apiPos"
 import { Login } from "../interfaces/login.interface"
 import { getAxiosErrorMessage } from "@/common/helper/geterrordb"
 
-// Esta función hace el POST al backend para iniciar sesión
 export const loginVendedorAction = async (login: Partial<Login>): Promise<Login> => {
   // Eliminar campos innecesarios antes de enviar la solicitud
   delete login.CODIGO_VENDEDOR
@@ -20,8 +18,6 @@ export const loginVendedorAction = async (login: Partial<Login>): Promise<Login>
     })
 
     console.log('Login exitoso. Vendedor:', data.NOMBRE_VENDEDOR)
-
-    // Retornamos los datos del usuario, incluyendo el token
     return data
   } catch (error) {
     // Captura y procesa cualquier error HTTP

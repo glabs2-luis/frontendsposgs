@@ -184,7 +184,6 @@ const columnas: QTableColumn[] = [
 // variable para usar en tabla
 const detallesPedido = ref([])
 
-
 // actualización cuando cambia el id
 watch(idPedidoEnc, (nuevo) => {
   if (nuevo && nuevo > 0) {

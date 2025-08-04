@@ -298,7 +298,7 @@
 
         <q-card-section>
           <q-input v-model="cupon" label="Código del Cuponazo" outlined dense />
-          <q-input v-model="clave" label="Clave " type="password" outlined dense class="q-mt-md" />
+          <!-- <q-input v-model="clave" label="Clave " type="password" outlined dense class="q-mt-md" /> -->
         </q-card-section>
 
         <q-card-actions align="right">
@@ -337,7 +337,7 @@ import { useQuasar } from 'quasar'
 import { ref, computed, onMounted, watch, watchEffect, onBeforeUnmount, nextTick} from 'vue'
 import { useProductos } from '@/modules/Productos/composables/useProductos'
 import { usePedidoDet } from '@/modules/pedidos_det/composables/usePedidosDet'
-import { showConfirmationDialog, showErrorNotification, showSuccessNotification, showConfirmationInsideModal } from '@/common/helper/notification'
+import { showConfirmationDialog, showErrorNotification, showSuccessNotification, showConfirmationInsideModal, showErrorNotificationInside, showSuccessNotificationInside } from '@/common/helper/notification'
 import { usePedidoStore } from '@/stores/pedido'
 import usePedidosEnc from '../../pedidos_enc/composables/usePedidosEnc'
 import { useCodigo } from '@/modules/codigo_barras/composables/useCodigo'
@@ -351,6 +351,8 @@ import { usePdfFactura } from '@/modules/facturar_pdf/composables/usePdFactura'
 import { useClienteStore } from '@/stores/cliente'
 import { useFacturasEnc } from '@/modules/facturas_enc/composables/useFacturasEnc'
 import { useCertification } from '@/modules/certification/composables/useCertification'
+import { useDatosFel } from '@/modules/fel_empresa_establecimiento/composables/useFelDatos'
+import { useCupones } from '@/modules/cupones/composables/useCupones'
 
 const props = defineProps({
   pedidoId: {
@@ -363,6 +365,8 @@ const props = defineProps({
   }
 })
 
+const { mutateAplicarCupon } = useCupones()
+const { datosEmpresa, datosEstablecimiento } = useDatosFel()
 const contingencia = ref(false)
 const { mutateCertificar } = useCertification()
 const { obtenerDetalleFactura, obtenerFacturasEnc, obtenerFacturaId3 } = useFacturasEnc()
@@ -452,6 +456,28 @@ const cantidadIngresada = (producto) => {
     showErrorNotification("Cantidad", "Ingrese una cantidad válida")
     return
   }
+}
+
+// Cupon
+const aplicarCuponazo = () => {
+
+const datosCupon = {
+  numero_cupon: cupon.value,
+  id_pedido_enc: pedidoStore.idPedidoEnc,
+  usuario: userStore.nombreVendedor // codigo
+}
+
+console.log('datos del cupon: ', datosCupon)
+
+  mutateAplicarCupon(datosCupon, {
+    onSuccess: (res) => {
+      showSuccessNotificationInside('Aplicado','Cupon aplicado con exito')
+      modalCuponazo.value = false
+    },
+    onError: (error) => {
+      showErrorNotificationInside('Error', error)
+    }
+  })
 }
 
 // focus al Efectivo  
@@ -657,7 +683,6 @@ watch(tipoPago, async(nuevo) => {
     await nextTick()
     focusEfectivo.value?.focus()
   }
-  
 }) 
 
 // focus a tarjeta
@@ -680,14 +705,26 @@ watch(tipoPago, (nuevo) => {
   }
 })
 
+const formatearFecha = (fecha) => {
+  return new Date (fecha).toLocaleString('es-GT', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  })
+}
 
-const imprimirFactura = async (id) => {
+const certificarFactura = async (id) => {
 
 const factura = await obtenerFacturaId3(id)
-console.log('datos', factura)
+console.log('datos de factura:', factura)
+
+await mutateCertificar(
+  { sucursal:'1', serie: factura.SERIE, numero: factura.NUMERO_FACTURA,  },
+  {
+    onSuccess: async (data) => {
 
     const detalle = await obtenerDetalleFactura(id)
-    console.log(detalle)
+
+    console.log('dataCertificados', data)
 
     if (!detalle || detalle.length === 0) return
 
@@ -704,9 +741,10 @@ console.log('datos', factura)
 
     const dataFactura = {
       encabezado: {
-        serie: 'Pendiente',
-        numero: 'Pendiente',
-        uuid: 'Pendiente',
+        serie: data.SerieFacturaFel,
+        numero: data.NumeroFacturaFel,
+        uuid: data.Uuid,
+        fechaEmision: formatearFecha(data.FechaAccion),
         numeroInterno: `${factura.SERIE} | ${factura.NUMERO_FACTURA}`
       },
       cliente: {
@@ -731,6 +769,13 @@ console.log('datos', factura)
     console.error('Error imprimiendo factura:', error)
     showErrorNotification('Error al imprimir factura', 'Error')
   }
+
+    },
+    onError: (error) => {
+      console.error(' Error certificando factura:', error)
+    }
+  }
+)
 
 }
 
@@ -781,9 +826,12 @@ const confirmarFactura = async () => {
     
     // crear sincronización
     await mutateCrearSincronizacion(respuesta.ID_FACTURA_ENC)
+    
+    // certificar factura
+    //await certificarFactura(respuesta.ID_FACTURA_ENC)
 
       // mandar a imprimir
-    await imprimirFactura(respuesta.ID_FACTURA_ENC)
+    await certificarFactura(respuesta.ID_FACTURA_ENC)
 
 
     // limpiar stores
@@ -998,7 +1046,6 @@ const agregarProductoAlPedido2 = async (producto) => {
     }
 
     //console.log('Si se guarda en precio xd: ', precio)
-
     // Armar detalle para guardar
     const detalle2 = {
       ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,

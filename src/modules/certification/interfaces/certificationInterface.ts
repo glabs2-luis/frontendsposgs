@@ -1,5 +1,8 @@
 export interface Certification {
-    idSucursal?:     string;
-    serie?:          string;
-    numeroFactura?:  number;
+    CertificadoFel?:   boolean;
+    FechaAccion?:      Date;
+    NumeroFacturaFel?: number;
+    SerieFacturaFel?:  string;
+    Uuid?:             string;
+    MensajeFel?:       string;
 }
