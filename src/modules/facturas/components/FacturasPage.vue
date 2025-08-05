@@ -286,7 +286,7 @@ const reimprimirFactura = async (idFactura: number) => {
     const datosEmpresa1 = await obtenerDatosEmpresa(1)
     const datosEstablecimiento1 = await obtenerDatosEstablecimiento(1)
 
-    console.log('datos factura', factura)
+    //console.log('datos factura', factura)
     // console.log(datosFelCertificados)
     // console.log(factura.NUMERO_FACTURA)
     // console.log(datosEmpresa1)
@@ -316,13 +316,6 @@ const reimprimirFactura = async (idFactura: number) => {
     // Armar el objeto dataFactura para el PDF
     const dataFactura = {
 
-      empresa: {
-        nombreComercial: datosEmpresa1.NOMBRE_COMERCIAL,
-        razonSocial: datosEmpresa1.NOMBRE_EMISOR,
-        direccionEmpresa: datosEstablecimiento1.DIRECCION_ESTABLECIMIENTO,
-        nitEmpresa: datosEmpresa1.NIT_EMISOR,
-        telefonoEmpresa: datosEstablecimiento1.TELEFONO_ESTABLECIMIENTO
-      },
       encabezado: {
         serie: datosFelCertificados?.SERIE_FACTURA_FEL ?? '',
         numero: datosFelCertificados?.NUMERO_FACTURA_FEL ?? '',

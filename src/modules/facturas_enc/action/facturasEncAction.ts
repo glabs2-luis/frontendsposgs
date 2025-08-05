@@ -37,7 +37,7 @@ export const obtenerDetalleFacturaPorIdAction = async (idFacturaEnc:number) => {
         }
     }
 
-    // Por alguna razone etsa xd
+    // Por alguna razon esta xd
 export const crearFacturaEncAction = async () => {
     try {
         const { data } = await posApi.post<FacturaEnc[]>(`/facturas-enc/facturacion`)
@@ -70,5 +70,18 @@ export const obtenerDatosFelAction = async (numero: number) : Promise<DatosFel> 
         console.log(message)
     }
 }
+
+// obtener Facturas por fecha
+export const obtenerFacturasFechaAction = async(fecha_inicial: Date, fecha_final: Date, serie: string) : Promise<FacturaEnc> => {
+    try {
+        const { data } = await posApi.get(`/facturas-enc/by-fecha`,{ params: {fecha_inicial, fecha_final, serie}})
+        return data
+    } catch (error){
+        const message = getAxiosErrorMessage(error, 'Hubo un error obteniendo facturas por fecha')
+        console.log(message)
+        throw new Error(message)
+    }
+}
+
 
 

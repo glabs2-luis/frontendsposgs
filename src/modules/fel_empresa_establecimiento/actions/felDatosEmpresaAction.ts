@@ -7,7 +7,6 @@ import posApi from '@/api/apiPos'
 export const obtenerDatosEmpresaAction = async (id: number) : Promise<Empresa> => {
     try{
         const { data } = await posApi.get<Empresa>(`/fel-empresa/${id}`)
-        console.log('data de empresa desde action', data)
         return data
     }catch(error){
         const message = getAxiosErrorMessage(error, 'Hubo un error obteniendo los datos de la empresa')
@@ -20,7 +19,6 @@ export const obtenerDatosEmpresaAction = async (id: number) : Promise<Empresa> =
 export const obtenerDatosEstablecimientoAction = async (id: number) : Promise<Establecimiento> => {
     try{
         const { data } = await posApi.get<Establecimiento>(`/fel-establecimiento/${id}`)
-        console.log('data de establecimiento desde action', data)
         return data
     }catch(error){
         const message = getAxiosErrorMessage(error, 'Hubo un error obteniendo los datos del establecimiento')

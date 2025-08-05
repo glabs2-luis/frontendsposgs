@@ -20,7 +20,7 @@
 
       <!-- Botones alineados a la derecha -->
       <div class="col-auto row items-center q-gutter-sm">
-        <q-toggle v-model="contingencia" label="Contigencia" />
+        <q-toggle v-model="contingencia" label="Contingencia" color="yellow-9" keep-color class=" toggle-brillante" />
         <q-btn label="" icon="restart_alt" class="" @click="limpiar" />
         <q-btn label="Terminar Venta (F4)" icon="point_of_sale" @click="terminarVenta" class="boton-amarillo" />
       </div>
@@ -279,7 +279,7 @@
 
       <!-- Acciones -->
     <q-card-actions align="right">
-      <q-btn flat label="Cancelar" v-close-popup />
+      <q-btn flat label="Cancelar" @click="enfocarEfectivo" v-close-popup />
       <q-btn icon="taskalt" label="Confirmar Factura" class="boton-amarillo q-ml-auto" @click="confirmarFactura()"  />
     </q-card-actions>
        
@@ -297,7 +297,7 @@
         <q-separator />
 
         <q-card-section>
-          <q-input v-model="cupon" label="Código del Cuponazo" outlined dense />
+          <q-input ref="refCupon"  v-model="cupon" label="Código del Cuponazo"  @keyup.enter="aplicarCuponazo" outlined dense />
           <!-- <q-input v-model="clave" label="Clave " type="password" outlined dense class="q-mt-md" /> -->
         </q-card-section>
 
@@ -390,6 +390,7 @@ const montoTarjeta = ref(null)
 const opcionesPago2 = ['EFECTIVO', 'TARJETA', 'MIXTO']
 const tipoPago = ref('EFECTIVO') 
 const calcularCambio = ref(0)
+const refCupon = ref()
 const cupon = ref('')
 const clave = ref('')
 const modalCantidad = ref(false)
@@ -467,17 +468,22 @@ const datosCupon = {
   usuario: userStore.nombreVendedor // codigo
 }
 
-console.log('datos del cupon: ', datosCupon)
+//console.log('datos del cupon: ', datosCupon)
 
   mutateAplicarCupon(datosCupon, {
     onSuccess: (res) => {
       showSuccessNotificationInside('Aplicado','Cupon aplicado con exito')
       modalCuponazo.value = false
+
+      nextTick()
+      
     },
     onError: (error) => {
       showErrorNotificationInside('Error', error)
     }
   })
+
+  enfocarEfectivo()
 }
 
 // focus al Efectivo  
@@ -485,6 +491,14 @@ const enfocarEfectivo = async () => {
   await nextTick()
   focusEfectivo.value?.focus()
 }
+
+// focus en modal cupon
+watch(modalCuponazo, (val) => {
+  if (val)
+  nextTick(() => {
+    refCupon.value?.$el.querySelector('input')?.select()
+  })
+})
 
 //focus al modal cantidad
 watch(modalCantidad, (val) => {
@@ -609,8 +623,12 @@ const limpiar = async () => {
 }
 
 // modal cuponazo
-const abrirCuponazo = () => {
+const abrirCuponazo = async () => {
   modalCuponazo.value = true
+
+  await nextTick()
+
+  refCupon.value?.focus()
 }
 
 // nuevo catalogo
@@ -742,10 +760,11 @@ await mutateCertificar(
     const dataFactura = {
       encabezado: {
         serie: data.SerieFacturaFel,
-        numero: data.NumeroFacturaFel,
+        numero: contingencia ? factura.CORR_CONTINGENCIA : data.NumeroFacturaFel,
         uuid: data.Uuid,
         fechaEmision: formatearFecha(data.FechaAccion),
-        numeroInterno: `${factura.SERIE} | ${factura.NUMERO_FACTURA}`
+        numeroInterno: `${factura.SERIE} | ${factura.NUMERO_FACTURA}`,
+        tipoDocumento: contingencia ? "FACTURA EN CONTINGENCIA" : "FACTURA ELECTRONICA" 
       },
       cliente: {
         nombre: factura.NOMBRE_CLI_A_FACTUAR,
@@ -755,7 +774,7 @@ await mutateCertificar(
       items: itemsFactura,
       resumen: {
         subtotal: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
-        descuento: 'Q0.00',
+        descuento: `Q. ${factura.MONTO_DESCUENTO_FACT.toFixed(2)}`,
         totalPagar: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
         totalItems
       },
@@ -1337,4 +1356,11 @@ defineExpose({
   font-weight: 600;
   color: #495057;
 }
+
+.toggle-brillante.q-toggle--truthy {
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 10px 4px rgba(255, 235, 59, 0.6); /* amarillo brillante */
+  border-radius: 999px;
+}
+
 </style>
