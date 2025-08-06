@@ -272,6 +272,7 @@ const formatearFecha = (fechaIso:Date) => {
   })
 }
 
+// Imprimir Factura
 const reimprimirFactura = async (idFactura: number) => {
 
   try {
@@ -286,34 +287,29 @@ const reimprimirFactura = async (idFactura: number) => {
     const datosEmpresa1 = await obtenerDatosEmpresa(1)
     const datosEstablecimiento1 = await obtenerDatosEstablecimiento(1)
 
-    //console.log('datos factura', factura)
-    // console.log(datosFelCertificados)
-    // console.log(factura.NUMERO_FACTURA)
-    // console.log(datosEmpresa1)
-    // console.log(datosEstablecimiento1)
-
     const detalle = await obtenerDetalleFactura(idFactura)
     if (!detalle || detalle.length === 0) {
       return
     }
 
-    // Armar los items para el PDF
+    // Armar los items 
     const itemsFactura = detalle.map((item: any) => ({
       cantidad: item.CANTIDAD_VENDIDA,
       descripcion: item.producto.DESCRIPCION_PROD,
-      precio: `Q ${parseFloat(item.PRECIO_UNITARIO_VTA).toFixed(2)}`,
-      subtotal: `Q ${parseFloat(item.SUBTOTAL_GENERAL).toFixed(2)}`
+      precio: item.PRECIO_UNITARIO_VTA.toFixed(4),
+      subtotal: item.SUBTOTAL_GENERAL.toFixed(4)
     }))
 
     // Calcular total de items
     const totalItems = itemsFactura.reduce((total, item) => total + Number(item.cantidad), 0)
+    const Subtotal = itemsFactura.reduce((subtotal, item) => subtotal + Number(item.subtotal), 0)
 
     //fecha de emision
     const fecha = new Date(datosFelCertificados?.FECHA_ACCION)
     const fechaEmisionValida = !isNaN(fecha.getTime()) ? fecha.toLocaleString() : ''
 
 
-    // Armar el objeto dataFactura para el PDF
+    // Armar el objeto dataFactura 
     const dataFactura = {
 
       encabezado: {
@@ -331,7 +327,7 @@ const reimprimirFactura = async (idFactura: number) => {
       },
       items: itemsFactura,
       resumen: {
-        subtotal: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
+        subtotal: `Q. ${Subtotal.toFixed(2)}`,
         descuento: `Q ${factura.MONTO_DESCUENTO_FACT.toFixed(2)}`,
         totalPagar: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
         totalItems: totalItems
@@ -340,7 +336,7 @@ const reimprimirFactura = async (idFactura: number) => {
       qrCodeData: 'Pendiente'
     }
 
-    // Generar PDF
+    // Generar impresion
     await generarFacturaPDF(dataFactura)
 
   } catch (error) {

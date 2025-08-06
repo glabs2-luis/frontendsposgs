@@ -52,6 +52,7 @@ const obtenerDetalleFactura2 = (idFacturaEnc: number) => {
     }
   })
 
+    // This en uso
     const { mutate: mutateCrearFacturaEnc2 } = useMutation({
     mutationFn: crearFacturaEncAction2,
     onSuccess: () => {

@@ -24,4 +24,6 @@ export interface FacturaEnc {
     CORR_CONTINGENCIA?:     null;
     ESTADO_CERTIFICACION?:  null;
     CORR_CONTINGENCIA_INT?: null;
+    SUBTOTAL_PEDIDO?:       number;
+    ES_CONTINGENCIA?:       boolean;
 }

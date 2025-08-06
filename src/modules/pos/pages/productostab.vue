@@ -751,11 +751,14 @@ await mutateCertificar(
     const itemsFactura = detalle.map((item) => ({
       cantidad: item.CANTIDAD_VENDIDA,
       descripcion: item.producto.DESCRIPCION_PROD,
-      precio: `Q ${parseFloat(item.PRECIO_UNITARIO_VTA).toFixed(4)}`,
-      subtotal: `Q ${parseFloat(item.SUBTOTAL_GENERAL).toFixed(4)}`
+      precio: item.PRECIO_UNITARIO_VTA.toFixed(4),
+      subtotal: item.SUBTOTAL_GENERAL.toFixed(4)
     }))
 
     const totalItems = itemsFactura.reduce((total, item) => total + Number(item.cantidad), 0)
+    const Subtotal = itemsFactura.reduce((subtotal, item) => subtotal + Number(item.subtotal), 0)
+    
+    console.log('Subtotal', Subtotal)
 
     const dataFactura = {
       encabezado: {
@@ -773,7 +776,7 @@ await mutateCertificar(
       },
       items: itemsFactura,
       resumen: {
-        subtotal: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
+        subtotal: `Q. ${Subtotal.toFixed(2)}`,
         descuento: `Q. ${factura.MONTO_DESCUENTO_FACT.toFixed(2)}`,
         totalPagar: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
         totalItems
@@ -826,9 +829,10 @@ const confirmarFactura = async () => {
       ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
       USUARIO_QUE_FACTURA: userStore.nombreVendedor,
       SERIE: configuracionStore.serieSeleccionada,
-     // POR_DESCUENTO_GLOB: 1  // temporal hasta agregar descuento
+      ES_CONTINGENCIA: contingencia.value
     }
-
+    
+    console.log('estos son los datos de factura a enviar', datos)
     // Validación
     if (!datos.ID_PEDIDO_ENC || !datos.SERIE) {
       showErrorNotification('Factura','No hay serie para facturar ')
@@ -837,6 +841,7 @@ const confirmarFactura = async () => {
 
     // Ejecutar la facturación
     await mutateCrearFacturaEnc2(datos, {
+
 
     onSuccess: async (respuesta) => {
 
@@ -851,7 +856,6 @@ const confirmarFactura = async () => {
 
       // mandar a imprimir
     await certificarFactura(respuesta.ID_FACTURA_ENC)
-
 
     // limpiar stores
     cleanAllStores()

@@ -22,7 +22,8 @@ export const obtenerFacturasEncIdAction = async (id:number) : Promise<FacturaEnc
         return data    
     } catch (error){
         const message = getAxiosErrorMessage(error, 'Hubo un error obteniendo facturas enc por Id')
-        console.log(message)
+        //console.log(message)
+       // throw new Error(error)
     }
 }
 
