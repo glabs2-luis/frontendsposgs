@@ -751,8 +751,8 @@ await mutateCertificar(
     const itemsFactura = detalle.map((item) => ({
       cantidad: item.CANTIDAD_VENDIDA,
       descripcion: item.producto.DESCRIPCION_PROD,
-      precio: `Q ${parseFloat(item.PRECIO_UNITARIO_VTA).toFixed(2)}`,
-      subtotal: `Q ${parseFloat(item.SUBTOTAL_GENERAL).toFixed(2)}`
+      precio: `Q ${parseFloat(item.PRECIO_UNITARIO_VTA).toFixed(4)}`,
+      subtotal: `Q ${parseFloat(item.SUBTOTAL_GENERAL).toFixed(4)}`
     }))
 
     const totalItems = itemsFactura.reduce((total, item) => total + Number(item.cantidad), 0)

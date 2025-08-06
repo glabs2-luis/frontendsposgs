@@ -132,7 +132,6 @@
   
           </q-card-section>
 
-            
       </q-card>
     </div>
   </q-page>
@@ -209,20 +208,13 @@ const buscarFacturas = async () => {
     showErrorNotification('Serie', 'Debe seleccionar una serie')
     return
   }
-
-
-
   
   try {
-
-      if (rangoFechas.value.from && !rangoFechas.value.to) {
-      rangoFechas.value.to = rangoFechas.value.from
-    }
 
     console.log('datos antes', rangoFechas.value.from)
     console.log('datos antes', rangoFechas.value.to)
 
-      if (!rangoFechas.value.from || !rangoFechas.value.to) {
+    if (!rangoFechas.value.from || !rangoFechas.value.to) {
     showErrorNotification('Rango de Fechas', 'Debe seleccionar un rango de fechas válido')
     return
   }

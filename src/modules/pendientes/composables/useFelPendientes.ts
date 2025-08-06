@@ -5,12 +5,13 @@ export const useFacturasFel = () => {
 
     const queryClient = useQueryClient()
 
-    const { data: facturasErrores } =  useQuery({
+    const { data: facturasErrores, refetch: refetchFacturasErrores } =  useQuery({
         queryKey: ['facturas-pendientes'],
         queryFn: () => obtenerFacturasErroresAction()
     })
 
     return {
-        facturasErrores
+        facturasErrores,
+        refetchFacturasErrores
     }
 }
