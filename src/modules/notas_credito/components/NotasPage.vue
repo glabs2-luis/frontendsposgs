@@ -78,8 +78,14 @@
               <template v-slot:body-cell-ESTADO_DE_DEVOLUCION="props">
                 <q-td :props="props">
                   <q-badge
-                    :color="props.value.toLowerCase() === 'f' ? 'positive' : 'warning'"
-                    :label="props.value.toLowerCase() === 'f' ? 'Finalizada' : 'Pendiente'"
+                    v-if="estadosDevolucion[props.value]"
+                    :color="estadosDevolucion[props.value].color"
+                    :label="estadosDevolucion[props.value].label"
+                  />
+                  <q-badge
+                    v-else
+                    color="grey"
+                    label="Desconocido"
                   />
                 </q-td>
               </template>
@@ -93,14 +99,14 @@
                           clickable
                           v-ripple
                           @click="editNota(props.row)"
-                          :disable="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() === 'f'"
+                          :disable="['t', 'v'].includes(props.row.ESTADO_DE_DEVOLUCION.toLowerCase())"
                         >
                           <q-item-section avatar>
                             <q-icon color="primary" name="edit" />
                           </q-item-section>
                           <q-item-section>Editar</q-item-section>
-                          <q-tooltip v-if="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() === 'f'">
-                            No se puede editar una nota finalizada
+                          <q-tooltip v-if="['t', 'v'].includes(props.row.ESTADO_DE_DEVOLUCION.toLowerCase())">
+                            No se puede editar una nota finalizada o verificada
                           </q-tooltip>
                         </q-item>
 
@@ -108,14 +114,14 @@
                           clickable
                           v-ripple
                           @click="confirmDelete(props.row)"
-                          :disable="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() === 'f'"
+                          :disable="['t'].includes(props.row.ESTADO_DE_DEVOLUCION.toLowerCase())"
                         >
                           <q-item-section avatar>
                             <q-icon color="negative" name="delete" />
                           </q-item-section>
                           <q-item-section>Eliminar</q-item-section>
-                          <q-tooltip v-if="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() === 'f'">
-                            No se puede eliminar una nota finalizada
+                          <q-tooltip v-if="['t', 'v'].includes(props.row.ESTADO_DE_DEVOLUCION.toLowerCase())">
+                            No se puede eliminar una nota finalizada o verificada
                           </q-tooltip>
                         </q-item>
 
@@ -125,13 +131,13 @@
                           clickable
                           v-ripple
                           @click="printNota(props.row)"
-                          :disable="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() !== 'f'"
+                          :disable="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() !== 't'"
                         >
                           <q-item-section avatar>
                             <q-icon color="secondary" name="print" />
                           </q-item-section>
                           <q-item-section>Imprimir</q-item-section>
-                          <q-tooltip v-if="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() !== 'f'">
+                          <q-tooltip v-if="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() !== 't'">
                             Solo se puede imprimir una nota finalizada
                           </q-tooltip>
                         </q-item>
@@ -139,7 +145,7 @@
                         <q-item
                           clickable
                           v-ripple
-                          v-if="props.row.ESTADO_DE_DEVOLUCION.toLowerCase() !== 'f'"
+                          v-if="['p', 'v'].includes(props.row.ESTADO_DE_DEVOLUCION.toLowerCase())"
                           @click="certificarNota(props.row)"
                         >
                           <q-item-section avatar>
@@ -171,8 +177,12 @@ import type { DataFactura } from '@/modules/facturar_pdf/interfaces/pdfInterface
 import { useQuasar } from 'quasar';
 import { eliminarDevolucion } from '../action/useNotaCreditoActions';
 import { usePdfFactura } from '@/modules/facturar_pdf/composables/usePdFactura';
-// Importa tu acción para certificar, si la tienes
+import { useCertification } from '@/modules/certification/composables/useCertification'
+import { Certification, DtoCertificado } from '@/modules/certification/interfaces/certificationInterface';
+import { showErrorNotification } from '@/common/helper/notification';
 // import { certificarDevolucion } from '../action/useNotaCreditoActions';
+import { crearCertificacionNcAction } from '@/modules/certification/actions/certificationAction'
+import { obtenerDtoCertificado } from '@/modules/certification/actions/certificationAction'
 
 const $q = useQuasar();
 const { generarFacturaPDF } = usePdfFactura();
@@ -187,6 +197,13 @@ const notaSeleccionadaParaEditar = ref<DevolucionEnc | null>(null);
 const allNotas = ref<DevolucionEnc[]>([]);
 const filteredNotas = ref<DevolucionEnc[]>([]);
 const searchTerm = ref('');
+const { mutateCertificarNc } = useCertification()
+
+const estadosDevolucion = {
+  T: { label: 'Terminado', color: 'positive' },
+  P: { label: 'Pendiente', color: 'warning' },
+  V: { label: 'Verificado', color: 'info' }
+};
 
 const columns: QTableColumn<DevolucionEnc>[] = [
   { name: 'NUMERO_DEVOLUCION', label: 'NUMERO', field: 'NUMERO_DEVOLUCION', align: 'left', sortable: true },
@@ -231,11 +248,13 @@ async function loadNotasDeCredito() {
 }
 
 function filterNotes() {
-  const query = searchTerm.value.toLowerCase().trim();
+  const query = (searchTerm.value ?? '').toLowerCase().trim();
+  
   if (!query) {
     filteredNotas.value = [...allNotas.value];
     return;
   }
+  
   filteredNotas.value = allNotas.value.filter(nota =>
     nota.NUMERO_DEVOLUCION?.toString().includes(query) ||
     nota.SERIE?.toLowerCase().includes(query) ||
@@ -243,7 +262,8 @@ function filterNotes() {
     nota.ESTADO_DE_DEVOLUCION?.toLowerCase().includes(query) ||
     nota.OBSERVACIONES?.toLowerCase().includes(query) ||
     nota.CODIGO_DE_CLIENTE?.toString().includes(query) ||
-    nota.USUARIO_QUE_INGRESO?.toLowerCase().includes(query)
+    nota.USUARIO_QUE_INGRESO?.toLowerCase().includes(query) ||
+    nota.NOMBRE?.toLocaleLowerCase().includes(query)
   );
 }
 
@@ -259,26 +279,21 @@ function nuevaNota() {
 }
 
 function onNotaCreada(nuevaNota: DevolucionEnc) {
-  allNotas.value.unshift(nuevaNota);
   filterNotes();
 }
 
 function onNotaEditada(notaEditada: DevolucionEnc) {
-  const index = allNotas.value.findIndex(n => n.NUMERO_DEVOLUCION === notaEditada.NUMERO_DEVOLUCION);
-  if (index !== -1) {
-    allNotas.value[index] = notaEditada;
-  }
   filterNotes();
 }
 
 function editNota(nota: DevolucionEnc) {
-  if (nota.ESTADO_DE_DEVOLUCION.toLowerCase() !== 'f') {
+  if (nota.ESTADO_DE_DEVOLUCION.toLowerCase() !== 't' && nota.ESTADO_DE_DEVOLUCION.toLowerCase() !== 'v') {
     notaSeleccionadaParaEditar.value = nota;
     notaCreditoVisible.value = true;
   } else {
     $q.notify({
       type: 'negative',
-      message: 'No se puede editar una nota de crédito con estado finalizada.',
+      message: 'No se puede editar una nota de crédito con estado finalizada o verificada.',
       position: 'top',
       timeout: 3000
     });
@@ -350,34 +365,43 @@ async function certificarNota(nota: DevolucionEnc) {
     color: 'green'
   }).onOk(async () => {
     try {
+      console.log("Entra a certificas...")
       $q.loading.show({
         message: `Certificando Nota de Crédito ${nota.NUMERO_DEVOLUCION}...`,
         boxClass: 'bg-grey-2 text-grey-9',
         spinnerColor: 'positive'
       });
-      
-      // Funcion que manda a certificar NC
 
-      // Recargar de nuevo NC desde base de datos
-      
-      const notaIndex = allNotas.value.findIndex(n => n.NUMERO_DEVOLUCION === nota.NUMERO_DEVOLUCION);
-      if (notaIndex !== -1) {
-        allNotas.value[notaIndex].ESTADO_DE_DEVOLUCION = 'F';
+      const response = await certificarDevolucion(nota.NUMERO_DEVOLUCION)
+
+      console.log("Certificado:", response);
+
+      if (response) {
+        const notaDeCredito = await obtenerDtoCertificado('NCRE', nota.NUMERO_DEVOLUCION)
+        const datosNotasDeCredito = await prepararDataNotaDeCredito(nota, notaDeCredito);
+        const success = await generarFacturaPDF(datosNotasDeCredito);
+
+        if (success) {
+          console.log("Nota de credito generado con exito.")
+        } else {
+          console.log("Fallo al genera nota de credito.")
+        }
+
+        loadNotasDeCredito();
+
+        $q.notify({
+          type: 'positive',
+          message: `Nota de Crédito ${nota.NUMERO_DEVOLUCION} certificada exitosamente.`,
+          position: 'top',
+          timeout: 3000
+        });
       }
-      
-      filterNotes();
 
-      $q.notify({
-        type: 'positive',
-        message: `Nota de Crédito ${nota.NUMERO_DEVOLUCION} certificada exitosamente.`,
-        position: 'top',
-        timeout: 3000
-      });
     } catch (error) {
       console.error('Error al certificar la nota de crédito:', error);
       $q.notify({
         type: 'negative',
-        message: 'Error al certificar la nota. Por favor, inténtalo de nuevo.',
+        message: `Error al certificar la nota. Por favor, inténtalo de nuevo. ${error}`,
         position: 'top',
         timeout: 5000
       });
@@ -387,7 +411,7 @@ async function certificarNota(nota: DevolucionEnc) {
   });
 }
 
-const prepararDataNotaDeCredito = async (nota: DevolucionEnc): Promise<DataFactura> => {
+const prepararDataNotaDeCredito = async (nota: DevolucionEnc, dtoCertificado: DtoCertificado): Promise<DataFactura> => {
   const formatCurrency = (value: number) => `Q.${value.toFixed(4)}`;
 
   const apiResponse = await obtenerDevolucionesEncDetalle(nota.NUMERO_DEVOLUCION);
@@ -410,9 +434,9 @@ const prepararDataNotaDeCredito = async (nota: DevolucionEnc): Promise<DataFactu
 
   const dataFactura: DataFactura = {
     encabezado: {
-      serie: enc.SERIE,
-      numero: String(enc.NUMERO_DEVOLUCION),
-      uuid: "11112222-1234-AAAA-BBBB",
+      serie: dtoCertificado.SERIE_FACTURA_FEL,
+      numero: String(dtoCertificado.NUMERO_FACTURA_FEL),
+      uuid: dtoCertificado.UUID,
       numeroInterno: `${"NCRE"} | ${enc.NUMERO_DEVOLUCION}`,
       tipoDocumento: "NOTA DE CREDITO",
       fechaEmision: new Date().toISOString(),
@@ -440,7 +464,7 @@ const prepararDataNotaDeCredito = async (nota: DevolucionEnc): Promise<DataFactu
 };
 
 async function printNota(nota: DevolucionEnc) {
-  if (nota.ESTADO_DE_DEVOLUCION.toUpperCase() !== 'F') {
+  if (nota.ESTADO_DE_DEVOLUCION.toLowerCase() !== 't') {
     $q.notify({
       type: 'negative',
       message: 'No se puede imprimir una nota de credito sin finaliza.',
@@ -456,7 +480,10 @@ async function printNota(nota: DevolucionEnc) {
       boxClass: 'bg-grey-2 text-grey-9',
       spinnerColor: 'primary'
     });
-    const datosNotasDeCredito = await prepararDataNotaDeCredito(nota);
+
+    const notaDeCredito = await obtenerDtoCertificado('NCRE', nota.NUMERO_DEVOLUCION)
+
+    const datosNotasDeCredito = await prepararDataNotaDeCredito(nota, notaDeCredito);
 
     const success = await generarFacturaPDF(datosNotasDeCredito);
 
@@ -473,6 +500,22 @@ async function printNota(nota: DevolucionEnc) {
       type: 'negative',
       message: `Error al imprimir la nota de credito con numero: ${nota.NUMERO_DEVOLUCION}.`
     });
+  }
+}
+
+const certificarDevolucion = async (numeroDevolucion: number) => {
+  try {
+    const devolucion = await obtenerDevolucionesEncDetalle(numeroDevolucion)
+
+    if (!devolucion || devolucion.DEVOLUCION_ENC.DEVOLUCION_DET.length === 0) return
+
+    console.log('Datos de la devolucion:', devolucion.DEVOLUCION_ENC.NUMERO_DEVOLUCION)
+
+    const result = crearCertificacionNcAction({ sucursal: '1', numeroDevolucion: devolucion.DEVOLUCION_ENC.NUMERO_DEVOLUCION })
+
+    return result
+  } catch (error) {
+    console.error('Error al certificar la nota de credito: ', error)
   }
 }
 

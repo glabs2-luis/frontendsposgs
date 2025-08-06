@@ -292,9 +292,15 @@ import {
   obtenerDevolucionesEncPorNumero,
   actualizarDevolucionDet,
   actualizarDevolucionEnc,
-  eliminarDevolucionDet
+  eliminarDevolucionDet,
+  obtenerDevolucionesEncDetalle,
+  obtenerVendedor
 } from '@/modules/notas_credito/action/useNotaCreditoActions';
 import type { ApiFacturaResponse, DevolucionEnc, DevolucionDet, Vendedor, ProductoNotaCredito } from '@/modules/notas_credito/interfaces/NotaCredito';
+import { crearCertificacionNcAction, obtenerDtoCertificado } from '@/modules/certification/actions/certificationAction';
+import { DataFactura } from '@/modules/facturar_pdf/interfaces/pdfInterface';
+import { DtoCertificado } from '@/modules/certification/interfaces/certificationInterface';
+import { usePdfFactura } from '@/modules/facturar_pdf/composables/usePdFactura';
 
 interface Props {
   modelValue: boolean;
@@ -348,6 +354,7 @@ const timerId = ref<ReturnType<typeof setTimeout> | null>(null);
 const lastKeyPressTime = ref(0);
 const codigoInputRef = ref(null);
 const serieInputRef = ref(null);
+const { generarFacturaPDF } = usePdfFactura();
 
 const pagination = ref({
   sortBy: 'desc',
@@ -904,6 +911,30 @@ async function emitirNota() {
         emit('nota-creada', notaFinalizada);
         notify('positive', `¡Nota de Crédito ${numeroDevolucionNC.value} emitida exitosamente!`, 5000);
       }
+  
+      const response = await certificarDevolucion(numeroDevolucionNC.value)
+
+      console.log("Certificado:", response);
+
+      if (response) {
+        const notaDeCredito = await obtenerDtoCertificado('NCRE', numeroDevolucionNC.value)
+        const datosNotasDeCredito = await prepararDataNotaDeCredito(notaFinalizada, notaDeCredito);
+        const success = await generarFacturaPDF(datosNotasDeCredito);
+
+        if (success) {
+          console.log("Nota de credito generado con exito.")
+        } else {
+          console.log("Fallo al genera nota de credito.")
+        }
+
+        const reSuccess = await generarFacturaPDF(datosNotasDeCredito);
+        if (reSuccess) {
+          console.log("Nota de credito generado con exito.")
+        } else {
+          console.log("Fallo al genera nota de credito.")
+        }
+      }
+
       closeDialog();
 
     } catch (error: any) {
@@ -913,6 +944,74 @@ async function emitirNota() {
       hideLoading();
     }
   });
+}
+
+const prepararDataNotaDeCredito = async (nota: DevolucionEnc, dtoCertificado: DtoCertificado): Promise<DataFactura> => {
+  const formatCurrency = (value: number) => `Q.${value.toFixed(4)}`;
+
+  const apiResponse = await obtenerDevolucionesEncDetalle(nota.NUMERO_DEVOLUCION);
+  const vendedor = await obtenerVendedor(parseInt(apiResponse.DEVOLUCION_ENC.USUARIO_QUE_INGRESO))
+
+  const enc = apiResponse.DEVOLUCION_ENC;
+
+  const items = enc.DEVOLUCION_DET.map((item: any) => {
+    return {
+      cantidad: item.CANTIDAD_DEVUELTA,
+      descripcion: item.NOMBRE_PRODUCTO,
+      precio: formatCurrency(item.PRECIO_DEVOLUCION),
+      subtotal: formatCurrency(item.SUB_TOTAL + item.MONTO_IVA),
+    };
+  });
+
+  const totalItems = items.reduce((acc, item) => acc + item.cantidad, 0);
+  const subtotal = items.reduce((acc, item) => acc + parseFloat(item.subtotal.replace("Q.", "")), 0);
+  const totalPagar = subtotal + (enc.MONTO_IVA || 0);
+
+  const dataFactura: DataFactura = {
+    encabezado: {
+      serie: dtoCertificado.SERIE_FACTURA_FEL,
+      numero: String(dtoCertificado.NUMERO_FACTURA_FEL),
+      uuid: dtoCertificado.UUID,
+      numeroInterno: `${"NCRE"} | ${enc.NUMERO_DEVOLUCION}`,
+      tipoDocumento: "NOTA DE CREDITO",
+      fechaEmision: new Date().toISOString(),
+    },
+
+    cliente: {
+      nombre: "CLIENTE DE PRUEBA",
+      nit: String(enc.CODIGO_DE_CLIENTE ?? "CF"),
+      direccion: "CIUDAD",
+    },
+
+    items,
+
+    resumen: {
+      subtotal: formatCurrency(subtotal),
+      descuento: "Q.0.00",
+      totalPagar: formatCurrency(enc.TOTAL_DEVOLUCION),
+      totalItems,
+    },
+    nombreVendedor: vendedor.NOMBRE_VENDEDOR,
+    qrCodeData: `${dtoCertificado.UUID}`,
+  };
+
+  return dataFactura;
+};
+
+const certificarDevolucion = async (numeroDevolucion: number) => {
+  try {
+    const devolucion = await obtenerDevolucionesEncDetalle(numeroDevolucion)
+
+    if (!devolucion || devolucion.DEVOLUCION_ENC.DEVOLUCION_DET.length === 0) return
+
+    console.log('Datos de la devolucion:', devolucion.DEVOLUCION_ENC.NUMERO_DEVOLUCION)
+
+    const result = crearCertificacionNcAction({ sucursal: '1', numeroDevolucion: devolucion.DEVOLUCION_ENC.NUMERO_DEVOLUCION })
+
+    return result
+  } catch (error) {
+    console.error('Error al certificar la nota de credito: ', error)
+  }
 }
 
 function closeDialog() {

@@ -1,4 +1,4 @@
-import { crearCertificationAction } from '../actions/certificationAction'
+import { crearCertificacionNcAction, crearCertificationAction } from '../actions/certificationAction'
 import { showErrorNotification, showConfirmationDialog } from '@/common/helper/notification'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/vue-query'
 
@@ -13,8 +13,16 @@ const { mutate: mutateCertificar } = useMutation({
     }
 })
 
+const { mutate: mutateCertificarNc } = useMutation({
+    mutationFn: crearCertificacionNcAction,
+    onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['certificarNc']})
+    }
+})
+
 return {
-    mutateCertificar
+    mutateCertificar,
+    mutateCertificarNc
 }
 
 }

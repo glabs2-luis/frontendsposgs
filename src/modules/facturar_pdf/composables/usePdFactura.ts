@@ -116,8 +116,8 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
     const FONT_SIZE_FOR_DESCRIPTION = 7;
 
     const desiredLinePercentage = 0.8;
-    const desiredLineLength = contentWidth * desiredLinePercentage;
-    const lineStartX = (contentWidth - desiredLineLength) / 2;
+    const desiredLineLength = contentWidth * desiredLinePercentage + 20;
+    const lineStartX = ((contentWidth - desiredLineLength) / 2) - 5;
     const lineEndX = lineStartX + desiredLineLength;
 
     const tableBody: any[] = [];
@@ -157,10 +157,13 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
       ]);
     });
 
+    const qrDataUrlBase = 'https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid='
     let qrDataUrl = "";
     try {
       if (data.qrCodeData) {
-        qrDataUrl = await QRCode.toDataURL(data.qrCodeData, {
+        const qrData = `${qrDataUrlBase}${data.qrCodeData}`
+
+        qrDataUrl = await QRCode.toDataURL(qrData, {
           errorCorrectionLevel: "H",
           type: "image/png",
           margin: 1,
@@ -218,6 +221,13 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
         },
         { text: "\n", margin: [0, 0, 0, -6] },
 
+        // --- SECCIÓN: DATOS DE LA FACTURA ---
+        {
+          text: `DATOS DE LA ${data.encabezado.tipoDocumento}`,
+          style: "sectionTitle",
+          alignment: "center",
+        },
+
         {
           canvas: [
             {
@@ -230,13 +240,8 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
             },
           ],
           margin: [0, 0, 0, 5],
-        }, // --- SECCIÓN: DATOS DE LA FACTURA ---
-
-        {
-          text: `DATOS DE LA ${data.encabezado.tipoDocumento}`,
-          style: "sectionTitle",
-          alignment: "center",
         },
+
         { text: documentoTipo, style: "caption", alignment: "center" },
         {
           text: data.encabezado.tipoDocumento,
@@ -290,6 +295,13 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
         },
         { text: "\n", margin: [0, 0, 0, -6] },
 
+        // --- SECCIÓN: DATOS DEL CLIENTE ---
+        {
+          text: "DATOS DEL CLIENTE",
+          style: "sectionTitle",
+          alignment: "center",
+        },
+      
         {
           canvas: [
             {
@@ -302,13 +314,8 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
             },
           ],
           margin: [0, 0, 0, 5],
-        }, // --- SECCIÓN: DATOS DEL CLIENTE ---
-
-        {
-          text: "DATOS DEL CLIENTE",
-          style: "sectionTitle",
-          alignment: "center",
         },
+
         { text: `CLIENTE:`, style: "caption", alignment: "center" },
         {
           text: `${data.cliente.nombre || "Consumidor Final"}`,
@@ -340,7 +347,8 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
             },
           ],
           margin: [0, 0, 0, 5],
-        }, // --- SECCIÓN: TABLA DE DETALLE (ITEMS) ---
+        },
+        // --- SECCIÓN: TABLA DE DETALLE (ITEMS) ---
 
         {
           table: {
@@ -409,23 +417,31 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
           ],
           margin: [0, 0, 0, 2],
         },
-        {
-          columns: [
-            {
-              text: "Descuento:",
-              alignment: "right",
-              style: "smallText",
-              width: "*",
-            },
-            {
-              text: data.resumen.descuento,
-              alignment: "right",
-              style: "smallText",
-              width: 60,
-            },
-          ],
-          margin: [0, 0, 0, 5],
-        },
+
+        ...(data.encabezado.tipoDocumento.toUpperCase() !== 'NOTA DE CREDITO'
+          ?
+            [
+              {
+                columns: [
+                  {
+                    text: "Descuento:",
+                    alignment: "right",
+                    style: "smallText",
+                    width: "*",
+                  },
+                  {
+                    text: data.resumen.descuento,
+                    alignment: "right",
+                    style: "smallText",
+                    width: 60,
+                  },
+                ],
+                margin: [0, 0, 0, 5],
+              },
+            ]
+          :
+            []
+        ),
         {
           columns: [
             {
@@ -475,6 +491,55 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
           margin: [0, 0, 0, 10],
         },
 
+        // Apartado para firma de cliente en Nota de Credito
+
+        ...(data.encabezado.tipoDocumento.toUpperCase() === 'NOTA DE CREDITO'
+          ? 
+            [
+              {
+                text: '',
+                style: "smallText",
+                margin: [0, 30, 0, 0],
+              },
+              {
+                text: "F._______________________________________",
+                alignment: "center",
+                style: "smallTextContent",
+              },
+              {
+                text: '',
+                style: "smallText",
+                margin: [0, 5, 0, 0],
+              },
+              {
+                text: `${data.cliente.nombre}`,
+                alignment: "center",
+                style: "smallTextContent",
+              },
+              {
+                text: '',
+                style: "smallText",
+                margin: [0, 0, 0, 15],
+              },
+            ]
+          :
+            [
+            ]
+          ),
+
+        {
+          canvas: [
+            {
+              type: "line",
+              x1: lineStartX,
+              y1: 5,
+              x2: lineEndX,
+              y2: 5,
+              lineWidth: 1,
+            },
+          ],
+          margin: [0, 0, 0, 5],
+        },
         { text: "DATOS DEL CERTIFICADOR", style: "smallText", bold: true },
         { text: certificadorNombre, style: "smallText" },
         {
@@ -482,7 +547,21 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
           style: "smallText",
           margin: [0, 0, 0, 10],
         },
+        {
+          canvas: [
+            {
+              type: "line",
+              x1: lineStartX,
+              y1: 5,
+              x2: lineEndX,
+              y2: 5,
+              lineWidth: 1,
+            },
+          ],
+          margin: [0, 0, 0, 5],
+        },
 
+        // Codigo QR
         {
           image: qrDataUrl,
           alignment: "center",
@@ -521,6 +600,10 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
           margin: [0, 0, 0, 1],
           color: "#000000",
         },
+        smallTextContent: {
+          fontSize: 8,
+          color: "#000000",
+        },
         smallText: { fontSize: 8, color: "#000000" },
         tableHeader: { bold: true, fontSize: 7, color: "#000000" },
         tableCell: {
@@ -542,8 +625,9 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
         },
       },
       defaultStyle: { fontSize: 9, color: "#000000" },
-    }; // --- DESCARGAR E IMPRIMIR PDF ---
-
+    };
+    
+    // --- DESCARGAR E IMPRIMIR PDF ---
     const pdfDocGenerator = pdfMake.createPdf(docDefinition);
 
     pdfDocGenerator.getBlob((blob) => {
