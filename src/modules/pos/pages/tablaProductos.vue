@@ -138,7 +138,7 @@ import { usePedidoStore } from '@/stores/pedido'
 import type { QTableColumn } from 'quasar'
 import { usePedidosEnc } from '../../pedidos_enc/composables/usePedidosEnc'
 import { useTotalStore } from '@/stores/total'
-import { showConfirmationDialog, showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
+import { showConfirmationDialog, showErrorNotification } from '@/common/helper/notification'
 import { nextTick } from 'vue'
 
 const totalStore = useTotalStore()
@@ -154,6 +154,9 @@ const { data: listaProductosPedido, refetch: refetchListaProductosPedidoDet } = 
 // procesar filas 
 const rows = computed(() => data.value || [])
 
+watchEffect(() => {
+  console.log('Esto es rows:', rows.value)
+})
 // calcular total
 const idTotal = computed(() => pedidoStore.idPedidoEnc) 
 
@@ -170,8 +173,7 @@ watch(totalGeneral, (nuevoTotal) => {
   console.log('Total actualizado:', nuevoTotal)
 }, { immediate: true })
 
-
-
+// Columnas para la tabla
 const columnas: QTableColumn[] = [
   { name: 'PRODUCT0', label: 'Código', field: 'PRODUCT0', align: 'left' },
   { name: 'DESCRIPCION_PROD', label: 'Descripción', field: 'DESCRIPCION_PROD', align: 'left' },

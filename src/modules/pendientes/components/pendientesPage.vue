@@ -178,16 +178,16 @@ const Refrescar = async () =>{
     await refetchFacturasErrores()
 }
 
-// Columnas tabla izquierda
+// tabla pendientes - izquierda
 const columnasPendientes: QTableColumn[] = [
   { name: 'numero', label: 'Número', field: 'NUMERO_FACTURA', align: 'left' },
   { name: 'serie', label: 'Serie', field: 'SERIE', align: 'left' },
   { name: 'Fecha', label: 'Fecha Facturación', field: 'FECHA_FACTURACION', align: 'left', format: formatearFecha }
 ]
 
-// Columnas tabla derecha
+// tabla  derecha
 const columnasErrores: QTableColumn[] = [
-  { name: 'numero', label: 'Número de Factura', field: 'NUMERO_FACTURA', align: 'left' },
+  { name: 'numero', label: 'No.', field: 'NUMERO_FACTURA', align: 'left' },
   { name: 'error', label: 'Mensaje de Error', field: 'ERROR', align: 'left' }
 ]
 

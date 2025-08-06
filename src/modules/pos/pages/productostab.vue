@@ -824,6 +824,9 @@ const confirmarFactura = async () => {
     await nextTick()
     if(!confirmarFac) return
 
+
+    
+
     try {
     const datos = {
       ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
@@ -998,6 +1001,7 @@ const buscarProductoEscaneado = async () => {
       resultado = {
         producto: {
           PRODUCT0: codigoProducto.value,
+
         },
         precio: {
           PRECIO_FINAL: prod.PRECIO_FINAL,
@@ -1015,6 +1019,8 @@ const buscarProductoEscaneado = async () => {
     }
   } 
 
+    console.log('Este es el resultado',resultado)
+
   // 3. Insertar producto al pedido
     const detalle = {
     ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
@@ -1022,12 +1028,12 @@ const buscarProductoEscaneado = async () => {
     CANTIDAD_PEDIDA: cantidad2.value || 1, // usar cantidad del modal o 1 por defecto
     PRECIO_UNIDAD_VENTA: Number(resultado.precio.PRECIO_FINAL.toFixed(4)),
     SUBTOTAL_VENTAS: Number((1 * resultado.precio.PRECIO_FINAL).toFixed(4)),
-    DESCRIPCION_PROD_AUX: resultado.producto.DESCRIPCION_PROD || '', // vacio
+    DESCRIPCION_PROD_AUX: resultado.producto.DESCRIPCION_PROD, // vacio
     ID_SUCURSAL: '1',
     NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido
   }
 
-  console.log('impriendo detalle', detalle )
+  console.log('Este es el detalle: ', detalle )
 
   mutateCrearPedidoDet(detalle, {
     onSuccess: async (data) => {

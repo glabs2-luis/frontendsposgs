@@ -77,11 +77,29 @@
 
           </q-expansion-item>
         </div>
+        
+
+        <!-- Validado Nit-->
+        <!-- <div class="col-auto q-ml-sm">
+           <q-card flat bordered class="q-pa-sm bg-white shadow-3" >
+              <q-btn label="" icon="assignment" size="sm" color="deep-orange-5" class="text-caption" unelevated rounded  style="min-height: 38px" @click="abrirModalPedidosPendientes"
+              />
+            </q-card>
+
+        </div> -->
+
 
         <!-- Ver Pedidos Pendientes -->
         <div class="col-auto q-ml-sm">
+          
+          
+
+
             <q-card flat bordered class="q-pa-sm bg-white shadow-3" >
-              <q-btn label="Pedidos Pendientes" icon="assignment" size="sm" color="deep-orange-5" class="text-caption" unelevated rounded  style="min-height: 38px" @click="abrirModalPedidosPendientes"
+              <q-toggle v-model="validador" label="Validar" icon="assignment" size="sm" color="deep-orange-5" class="text-caption" unelevated rounded  style="min-height: 38px" ></q-toggle>
+              <q-tooltip > Validador de Nit</q-tooltip>
+              
+              <q-btn label="Pendientes" icon="assignment" size="sm" color="deep-orange-5" class="text-caption q-ml-sm" unelevated rounded  style="min-height: 38px" @click="abrirModalPedidosPendientes"
               />
             </q-card>
 
@@ -203,6 +221,7 @@ import { useTotalStore } from '@/stores/total'
 import { useClienteStore } from '@/stores/cliente'
 import { cleanAllStores } from '@/common/helper/cleanStore'
 
+const validador = ref(false)
 const $q = useQuasar()
 const tipoDocumento = ref<'nit' | 'dpi'>('nit')
 const clienteStore = useClienteStore()
@@ -500,7 +519,11 @@ const colocarCF = async () => {
 
 // Nueva ****************************************
 const buscarClienteDPINIT2 = async () => {
-      const doc = clienteStore.documento.trim()
+
+    //if(validador === false)
+
+    const doc = clienteStore.documento.trim()
+
     if(!doc) return 
     const tipo = tipoDocumento.value
 
@@ -515,12 +538,9 @@ const buscarClienteDPINIT2 = async () => {
       email: clienteEncontrado2.CORREO_ELECTRONICO || ''
     })
 
-    //expansion.value?.toggle()
-    //crearPedido()
   } else {
 
     // prellenar
-    
     abrirModalCliente.value = true
     clienteTemp.value.NIT = doc // prellenar el NIT buscado
     clienteTemp.value.DIRECCION = 'Ciudad'
