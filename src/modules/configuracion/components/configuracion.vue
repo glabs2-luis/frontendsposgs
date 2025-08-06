@@ -171,14 +171,15 @@ const mostrarConexion = () => {
   conexionMensaje.value = true
 }
 
-
+// probar impresion
 const probarFactura = () => {
   const dataFactura: DataFactura = {
     encabezado: {
       serie: "A",
       numero: "000123",
       uuid: "123e4567-e89b-12d3-a456-426614174000",
-      numeroInterno: "FAC-00123"
+      numeroInterno: "FAC-00123",
+      tipoDocumento: 'FACTURA ELECTRONICA'
     },
     cliente: {
       nombre: "Juan Pérez",

@@ -145,6 +145,7 @@ function cerrar() {
   clave.value = '';
   passwordFieldType.value = 'password';
 }
+
 </script>
 
 <style scoped>

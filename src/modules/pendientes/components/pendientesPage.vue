@@ -1,77 +1,112 @@
 <template>
+  <q-page class="q-pa-md">
+    <div class="row q-col-gutter-md">
 
-    <q-page class="q-pa-xs">
+      <!-- Tabla de facturas pendientes -->
+      <div class="col">
+        <q-card class="q-pa-md">
+          <q-section class="q-pa-xs q-ma-none">
 
-        <q-card class="q-pa-md q-ma-md">
+            <div class="row items-center justify-between q-mb-sm">
 
-        <q-section class="q-pa-xs text-h6" color="primary" >
-            Facturas Pendientes
+              <div class="text-h6 ">Facturas Pendientes</div>
 
-        <q-table :rows="facturasPendientes" :columns="columnasPendientes" row-key="id" flat bordered dense >
+              <div class="row q-gutter-sm">
+                <q-btn
+                icon="refresh"
+                label=""
+                color="cyan"
+                @click="Refrescar"
+              />
 
-        <!-- No hay datos-->
-         <template v-slot:no-data>
-            <div class="full-width text-center q-pa-lg">
-                <q-icon name="inventory_2" size="64px" color="grey-8" />
-                <div class="text-subtitle1 q-mt-sm text-gray-7">
+              <q-btn
+                label="Certificar"
+                color="primary"
+                @click="certificarAgain"
+              />
+              </div>
+            </div>
+            
+
+            <q-table
+              :rows="facturasPendientes"
+              :columns="columnasPendientes"
+              :row-key="row => `${row.NUMERO_FACTURA}-${row.SERIE}`"
+              flat
+              bordered
+              dense
+              :pagination="{ rowsPerPage: 20 }"
+              :rows-per-page-options="[10, 20, 50, 100]"
+              style="height: 600px"
+              virtual-scroll
+              selection="single"
+              v-model:selected="facturaSeleccionadaArray"
+            >
+              <template v-slot:no-data>
+                <div class="full-width text-center" style="padding: 200px 20px;">
+                  <q-icon name="inventory_2" size="64px" color="grey-8" />
+                  <div class="text-subtitle1 q-mt-sm text-grey-7">
                     No hay Facturas Pendientes
-                </div>
-                <div class="text-caption text-gray-5">
+                  </div>
+                  <div class="text-caption text-grey-5">
                     Todas las facturas ya fueron certificadas
+                  </div>
                 </div>
-            </div>
-         </template>
-
-        </q-table>
-
-        </q-section>
-    
+              </template>
+            </q-table>
+          </q-section>
         </q-card>
-    
-        <q-separator></q-separator>
-        
-        <q-card class="q-pa-md q-pt-xs q-ma-md">
+      </div>
 
-        
-        <q-section class="q-pa-xs text-h6 " color="primary">
-            Facturas con Error
+      <!-- Tabla de errores -->
+      <div class="col">
+        <q-card class="q-pa-md q-pt-xs">
+          <q-section class="q-pa-xs text-h6">
+            Errores
 
-
-        <q-table :rows="facturasConErrores" :columns="columnasErrores" row-key="id" flat bordered dense >
-
-             <!-- No hay datos-->
-         <template v-slot:no-data>
-            <div class="full-width text-center q-pa-lg">
-                <q-icon name="inventory_2" size="64px" color="grey-8" />
-                <div class="text-subtitle1 q-mt-sm text-gray-7">
-                    No hay Facturas Con Error
-                </div>
-                <div class="text-caption text-gray-5">
-                    Todas las facturas ya fueron certificadas
-                </div>
-            </div>
-         </template>
-
-        </q-table>
-
-        </q-section>
-
+            <q-table
+              :rows="facturasConErrores"
+              :columns="columnasErrores"
+              :row-key="row => `${row.NUMERO_FACTURA}-${row.SERIE}`"
+              flat
+              bordered
+              dense
+              :pagination="{ rowsPerPage: 20 }"
+              :rows-per-page-options="[10, 20, 50, 100]"
+              style="height: 600px"
+              virtual-scroll
+            />
+          </q-section>
         </q-card>
-
-
-    </q-page>
-
+      </div>
+    </div>
+  </q-page>
 </template>
 
 <script setup lang="ts">
 
-import { ref, onMounted, computed, reactive } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { QTableColumn } from 'quasar'
 import { useFacturasFel } from '../composables/useFelPendientes'
+import { useCertification } from '@/modules/certification/composables/useCertification'
+import { showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
 
-const { facturasErrores } = useFacturasFel()
+const { mutateCertificar } = useCertification()
+const { facturasErrores, refetchFacturasErrores } = useFacturasFel()
+const facturaSeleccionadaArray = ref([])
+const facturaSeleccionada = ref<string | null>(null)
 
+// Observa la factura seleccionada
+watch(facturaSeleccionadaArray, (newSelection) => {
+  if (newSelection.length > 0) {
+    const factura = newSelection[0]
+    facturaSeleccionada.value = `${factura.NUMERO_FACTURA}-${factura.SERIE}`
+  } else {
+    facturaSeleccionada.value = null
+  }
+})
 
+// Formato de fecha
 const formatearFecha = (fechaISO: string) => {
   const fecha = new Date(fechaISO)
   return new Intl.DateTimeFormat('es-GT', {
@@ -80,34 +115,97 @@ const formatearFecha = (fechaISO: string) => {
   }).format(fecha)
 }
 
-// Datos de ejemplo
-const facturasPendientes = ref([
+// Agrupar facturas únicas (por número y serie)
+const facturasPendientes = computed(() => {
+  const unicas: Record<string, any> = {}
+  facturasErrores.value?.forEach((factura) => {
+    const key = `${factura.NUMERO_FACTURA}-${factura.SERIE}`
+    if (!unicas[key]) {
+      unicas[key] = factura
+    }
+  })
+  return Object.values(unicas)
+})
 
-])
+// Filtrar errores según la factura seleccionada
+const facturasConErrores = computed(() => {
+  if (!facturaSeleccionada.value) return []
 
-// Esta es la forma correcta de usar la data
-const facturasConErrores = computed(() => facturasErrores.value || [])
+  const [numeroSel, serieSel] = facturaSeleccionada.value.split('-')
 
-// Columnas para tabla 1
+  return facturasErrores.value?.filter(factura =>
+    String(factura.NUMERO_FACTURA).trim() === numeroSel &&
+    String(factura.SERIE).trim() === serieSel
+  ) || []
+})
+
+// Intentar Certificar - Prueba
+const certificarAgain2 = async () => {
+    console.log('facturasErrores:', facturasErrores.value.filter(f => f.NUMERO_FACTURA === 114))
+
+     const [numero, serie] = facturaSeleccionada.value.split('-') 
+     console.log('numero', numero)
+     console.log('serie', serie)
+
+  console.log('datos:', facturaSeleccionada.value)
+}
+
+// Intentar certificar 
+const certificarAgain = async () => {
+
+    const [numero, serie] = facturaSeleccionada.value.split('-')  
+    const numero2= Number(numero)
+
+    await mutateCertificar(
+  { sucursal:'1', serie: serie, numero: numero2 },
+  {
+    onSuccess: async (data) => {
+
+    if(data.CertificadoFel === false) {
+        showErrorNotification('Error', 'La factura no pudo ser certificada')
+    }  else {
+        showSuccessNotification('Certificado', 'Factura fue certificada con exito')
+        await nextTick()
+         await refetchFacturasErrores() 
+    }
+    }
+
+  } )
+}
+
+// Recargar el error
+const Refrescar = async () =>{
+    await refetchFacturasErrores()
+}
+
+// Columnas tabla izquierda
 const columnasPendientes: QTableColumn[] = [
-  { name: 'serie', label: 'Serie', field: 'serie', align: 'left' },
-  { name: 'numero', label: 'Número', field: 'numero', align: 'left' },
-  { name: 'cliente', label: 'Cliente', field: 'cliente', align: 'left' }
-]
-
-// Columnas para tabla 2
-const columnasErrores: QTableColumn[] = [
-  { name: 'numero', label: 'Numero de Factura', field: 'NUMERO_FACTURA', align: 'left',  },
+  { name: 'numero', label: 'Número', field: 'NUMERO_FACTURA', align: 'left' },
   { name: 'serie', label: 'Serie', field: 'SERIE', align: 'left' },
-  { name: 'error', label: 'Mensaje de Error', field: 'ERROR', align: 'left' },
-  { name: 'Fecha', label: 'Fecha de Facturación', field: 'FECHA_FACTURACION', align: 'left', format: (val: string) => formatearFecha(val) } 
+  { name: 'Fecha', label: 'Fecha Facturación', field: 'FECHA_FACTURACION', align: 'left', format: formatearFecha }
 ]
 
+// Columnas tabla derecha
+const columnasErrores: QTableColumn[] = [
+  { name: 'numero', label: 'Número de Factura', field: 'NUMERO_FACTURA', align: 'left' },
+  { name: 'error', label: 'Mensaje de Error', field: 'ERROR', align: 'left' }
+]
 
 </script>
 
 <style scoped>
+.boton-amarillo {
+  background: linear-gradient(90deg, #FFEB3B, #FBC02D);
+  color: #070606;
+  font-weight: 500;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
 
-
-
+.boton-amarillo:hover {
+  background: linear-gradient(90deg, #FBC02D, #F9A825);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transform: scale(1.02);
+}
 </style>

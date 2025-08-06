@@ -1,5 +1,5 @@
 import { FacturaEnc } from "../interfaces/facturaEncInterface"
-import { obtenerFacturasEncAction, obtenerFacturasEncIdAction, obtenerDetalleFacturaPorIdAction, crearFacturaEncAction, crearFacturaEncAction2, obtenerDatosFelAction } from '../action/facturasEncAction'
+import { obtenerFacturasEncAction, obtenerFacturasEncIdAction, obtenerDetalleFacturaPorIdAction, crearFacturaEncAction, crearFacturaEncAction2, obtenerDatosFelAction, obtenerFacturasFechaAction } from '../action/facturasEncAction';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 
 export const useFacturasEnc = () => {
@@ -52,12 +52,17 @@ const obtenerDetalleFactura2 = (idFacturaEnc: number) => {
     }
   })
 
+    // This en uso
     const { mutate: mutateCrearFacturaEnc2 } = useMutation({
     mutationFn: crearFacturaEncAction2,
     onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['facturas-enc']})
     }
   })
+
+    const obtenerFacturasPorFecha = async (fecha_inicial: Date, fecha_final: Date, serie: string ) => {
+    return await obtenerFacturasFechaAction(fecha_inicial, fecha_final, serie)
+    }
 
     return {
     obtenerFacturasEnc,
@@ -66,7 +71,8 @@ const obtenerDetalleFactura2 = (idFacturaEnc: number) => {
     mutateCrearFacturaEnc2,
     obtenerFacturaPorId,
     obtenerFacturaId3,
-    obtenerDatosFel
+    obtenerDatosFel,
+    obtenerFacturasPorFecha
     }
 
 }

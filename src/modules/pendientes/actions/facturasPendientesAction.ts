@@ -12,3 +12,4 @@ export const obtenerFacturasErroresAction = async () : Promise<ErrorFacturas[]> 
         throw new Error(message)
     }
 }
+
