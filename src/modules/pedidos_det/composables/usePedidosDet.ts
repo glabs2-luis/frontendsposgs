@@ -21,6 +21,9 @@ export const usePedidoDet = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pedidos-det"] });
     },
+    onError: (error: Error) => {
+      showErrorNotification("Error", error.message);
+    },
   });
 
   // Obtener pedido Detalle por ID
