@@ -315,6 +315,8 @@ import TablaProductos from "./tablaProductos.vue";
 import { useTotalStore } from "@/stores/total";
 import { useClienteStore } from "@/stores/cliente";
 import { cleanAllStores } from "@/common/helper/cleanStore";
+import { useValidation } from "@/modules/validation/composables/useValidation";
+
 
 const validador = ref(false);
 const $q = useQuasar();
@@ -627,11 +629,28 @@ const colocarCF = async () => {
   }
 };
 
+
+const datos = (doc: string ) => {
+  
+  const numero = doc
+  console.log(doc)
+  
+}
+
+const numeroSat = ref ('')
+const  datosSat  = useValidation(numeroSat.value, 'nit', true, 'GS' )
+
+
 // Nueva ****************************************
 const buscarClienteDPINIT2 = async () => {
-  //if(validador === false)
-
+  
   const doc = clienteStore.documento.trim();
+
+  numeroSat.value = doc
+
+  console.log('estos son los datos de la sat: ', datosSat)
+
+
 
   if (!doc) return;
   const tipo = tipoDocumento.value;
