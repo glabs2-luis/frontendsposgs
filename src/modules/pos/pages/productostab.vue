@@ -990,6 +990,7 @@ const buscarProductoEscaneado = async () => {
         return
       }
 
+      // Tiene el precio 
       const prod = Array.isArray(productoDirecto) ? productoDirecto[0] : productoDirecto
 
       console.log('yo soy prod', prod)
@@ -1000,7 +1001,7 @@ const buscarProductoEscaneado = async () => {
 
       resultado = {
         producto: {
-          PRODUCT0: codigoProducto.value,
+         //PRODUCT0: codigoProducto.value,
 
         },
         precio: {
@@ -1018,13 +1019,13 @@ const buscarProductoEscaneado = async () => {
       return
     }
   } 
-
+    console.log('Este es codigo PRoducto', codigoProducto.value)
     console.log('Este es el resultado',resultado)
 
   // 3. Insertar producto al pedido
     const detalle = {
     ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
-    PRODUCT0: codigoProducto.value,
+    PRODUCT0: resultado.producto.PRODUCT0,
     CANTIDAD_PEDIDA: cantidad2.value || 1, // usar cantidad del modal o 1 por defecto
     PRECIO_UNIDAD_VENTA: Number(resultado.precio.PRECIO_FINAL.toFixed(4)),
     SUBTOTAL_VENTAS: Number((1 * resultado.precio.PRECIO_FINAL).toFixed(4)),

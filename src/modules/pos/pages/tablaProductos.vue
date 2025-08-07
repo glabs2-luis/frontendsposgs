@@ -81,7 +81,7 @@
               </template>
 
               <!-- Otras columnas -->
-              <template v-else-if="col.name === 'DESCRIPCION_PROD'"> <!-- negrita -->
+              <template v-else-if="col.name === 'DESCRIPCION_PROD_AUX'"> <!-- negrita -->
                 <div class="descripcion-prod">
                   {{ col.value }}
                 </div>
