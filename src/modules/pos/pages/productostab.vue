@@ -980,7 +980,6 @@ const buscarProductoEscaneado = async () => {
     try {
       const productoDirecto = await precioReal(codigoProducto.value, cantidad2.value)
 
-      // datos a consultar
       console.log('mandando a consultar el precio: ', codigoProducto.value, cantidad2.value)
 
       if(productoDirecto.PRECIO_FINAL === 0 || productoDirecto.PRECIO_FINAL === null){
@@ -1009,7 +1008,7 @@ const buscarProductoEscaneado = async () => {
         }
       }
 
-      console.log('resultado2: ', resultado)
+    //console.log('resultado2: ', resultado)
 
     } catch (err) {
 
@@ -1019,8 +1018,8 @@ const buscarProductoEscaneado = async () => {
       return
     }
   } 
-    console.log('Este es codigo PRoducto', codigoProducto.value)
-    console.log('Este es el resultado',resultado)
+
+    //console.log('Este es el resultado',resultado)
 
   // 3. Insertar producto al pedido
     const detalle = {
