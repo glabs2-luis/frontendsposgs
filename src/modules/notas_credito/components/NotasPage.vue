@@ -209,24 +209,10 @@ const columns: QTableColumn<DevolucionEnc>[] = [
   { name: 'NUMERO_DEVOLUCION', label: 'NUMERO', field: 'NUMERO_DEVOLUCION', align: 'left', sortable: true },
   { name: 'SERIE', label: 'Serie', field: 'SERIE', align: 'left', sortable: true },
   { name: 'NUMERO_FACTURA', label: 'FACTURA', field: 'NUMERO_FACTURA', align: 'left', sortable: true },
-  {
-    name: 'FECHA_DEVOLUCION',
-    label: 'Fecha Devolución',
-    field: 'FECHA_DE_INGRESO',
-    align: 'left',
-    sortable: true,
-    format: (val: string | Date) => val ? new Date(val).toLocaleDateString('es-GT') : 'Sin Fecha'
-  },
+  { name: 'FECHA_DEVOLUCION', label: 'Fecha Devolución', field: 'FECHA_DE_INGRESO', align: 'left', sortable: true, format: (val: string | Date) => val ? new Date(val).toLocaleDateString('es-GT') : 'Sin Fecha' },
   { name: 'ESTADO_DE_DEVOLUCION', label: 'Estado', field: 'ESTADO_DE_DEVOLUCION', align: 'left', sortable: true },
   { name: 'NOMBRE', label: 'NOMBRE CLIENTE', field: 'NOMBRE', align: 'left', sortable: true },
-  {
-    name: 'TOTAL_DEVOLUCION',
-    label: 'Total',
-    field: 'TOTAL_DEVOLUCION',
-    align: 'right',
-    sortable: true,
-    format: (val: number) => val ? `Q ${val.toFixed(2)}` : 'Q 0.00'
-  },
+  { name: 'TOTAL_DEVOLUCION', label: 'Total', field: 'TOTAL_DEVOLUCION', align: 'right', sortable: true, format: (val: number) => val ? `Q ${val.toFixed(2)}` : 'Q 0.00' },
   { name: 'actions', label: 'Acciones', align: 'center', field: row => row.NUMERO_DEVOLUCION },
 ];
 
@@ -255,16 +241,20 @@ function filterNotes() {
     return;
   }
   
-  filteredNotas.value = allNotas.value.filter(nota =>
-    nota.NUMERO_DEVOLUCION?.toString().includes(query) ||
-    nota.SERIE?.toLowerCase().includes(query) ||
-    nota.NUMERO_FACTURA?.toString().includes(query) ||
-    nota.ESTADO_DE_DEVOLUCION?.toLowerCase().includes(query) ||
-    nota.OBSERVACIONES?.toLowerCase().includes(query) ||
-    nota.CODIGO_DE_CLIENTE?.toString().includes(query) ||
-    nota.USUARIO_QUE_INGRESO?.toLowerCase().includes(query) ||
-    nota.NOMBRE?.toLocaleLowerCase().includes(query)
-  );
+  filteredNotas.value = allNotas.value.filter(nota => {
+    const estadoLabel = estadosDevolucion[nota.ESTADO_DE_DEVOLUCION]?.label.toLowerCase();
+
+    return (
+      nota.NUMERO_DEVOLUCION?.toString().includes(query) ||
+      nota.SERIE?.toLowerCase().includes(query) ||
+      nota.NUMERO_FACTURA?.toString().includes(query) ||
+      (estadoLabel && estadoLabel.includes(query)) ||
+      nota.OBSERVACIONES?.toLowerCase().includes(query) ||
+      nota.CODIGO_DE_CLIENTE?.toString().includes(query) ||
+      nota.USUARIO_QUE_INGRESO?.toLowerCase().includes(query) ||
+      nota.NOMBRE?.toLocaleLowerCase().includes(query)
+    )
+  });
 }
 
 function onClaveIngresada({ clave, vendedor }: { clave: string; vendedor: Vendedor }) {
@@ -457,7 +447,7 @@ const prepararDataNotaDeCredito = async (nota: DevolucionEnc, dtoCertificado: Dt
       totalItems,
     },
     nombreVendedor: vendedor.NOMBRE_VENDEDOR,
-    qrCodeData: "https://www.google.com/",
+    qrCodeData: `${dtoCertificado.UUID}`,
   };
 
   return dataFactura;
