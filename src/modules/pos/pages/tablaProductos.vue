@@ -48,12 +48,16 @@
                     "
                   >
                     <div class="text-grey text-strike">
-                      Q {{ Number(props.row.PRECIO_UNIDAD_VENTA).toFixed(4) }}
+                      {{
+                        formatCurrency(Number(props.row.PRECIO_UNIDAD_VENTA), 4)
+                      }}
                     </div>
                   </template>
                   <template v-else>
                     <div class="text-weight-medium" style="font-size: 16px">
-                      Q {{ Number(props.row.PRECIO_UNIDAD_VENTA).toFixed(4) }}
+                      {{
+                        formatCurrency(Number(props.row.PRECIO_UNIDAD_VENTA), 4)
+                      }}
                     </div>
                   </template>
                 </div>
@@ -64,12 +68,13 @@
                 <div class="price-cell">
                   <span class="text-weight-medium" style="font-size: 16px">
                     <!-- Calculo  manual-->
-                    Q
+
                     {{
-                      (
+                      formatCurrency(
                         props.row.CANTIDAD_PEDIDA *
-                        props.row.PRECIO_UNIDAD_VENTA
-                      ).toFixed(4)
+                          props.row.PRECIO_UNIDAD_VENTA,
+                        2
+                      )
                     }}
                   </span>
                 </div>
@@ -102,7 +107,7 @@
               <template v-else-if="col.name === 'CANTIDAD_PEDIDA'">
                 <!--centrar -->
                 <div class="align-cantidad">
-                  {{ col.value }}
+                  {{ formatNumber(col.value) }}
                 </div>
               </template>
 
@@ -160,8 +165,15 @@ import {
   showErrorNotification,
 } from "@/common/helper/notification";
 import { nextTick } from "vue";
+import useFormat from "@/common/composables/useFormat";
 
+const { formatCurrency, formatNumber } = useFormat();
 const $q = useQuasar();
+
+// Props
+const props = defineProps<{
+  onProductoEliminado?: () => void;
+}>();
 
 const totalStore = useTotalStore();
 const pedidoStore = usePedidoStore();
@@ -309,6 +321,14 @@ const eliminarProducto = async (detalle) => {
           position: "top",
           timeout: 2000,
         });
+
+        // Llamar al callback para mover el foco al input de código
+        if (props.onProductoEliminado) {
+          console.log(
+            "Producto eliminado, llamando callback para enfocar input"
+          );
+          props.onProductoEliminado();
+        }
       },
     });
   } catch (error) {

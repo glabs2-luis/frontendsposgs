@@ -260,7 +260,7 @@
                   class="text-body1 text-amber-10 text-weight-bold"
                   style="font-size: 280%"
                 >
-                  Total: Q. {{ totalStore.totalGeneral.toFixed(2) }}
+                  Total: {{ formatCurrency(totalStore.totalGeneral, 2) }}
                 </div>
               </div>
             </div>
@@ -283,7 +283,10 @@
     :pedidoId="pedidoStore.idPedidoEnc"
     :onNuevoPedido="nuevoPedido"
   />
-  <TablaProductos ref="tablaProductosRef" />
+  <TablaProductos
+    ref="tablaProductosRef"
+    :onProductoEliminado="enfocarInputCodigo"
+  />
 </template>
 
 <script setup lang="ts">
@@ -317,6 +320,9 @@ import { useClienteStore } from "@/stores/cliente";
 import { cleanAllStores } from "@/common/helper/cleanStore";
 import { useValidation } from "@/modules/validation/composables/useValidation";
 
+import useFormat from "@/common/composables/useFormat";
+
+const { formatCurrency, formatNumber, formatDecimal } = useFormat();
 
 const validador = ref(false);
 const $q = useQuasar();
@@ -490,6 +496,14 @@ watch(
 // focus al ref
 const enfocarCodigo = () => {
   focus.value?.focus();
+};
+
+// Función para enfocar el input de código en ProductosTab
+const enfocarInputCodigo = async () => {
+  // Pequeño delay para asegurar que la tabla se haya actualizado
+  await nextTick();
+  console.log("Enfocando input de código después de eliminar producto");
+  productosTabRef.value?.enfocarCodigo();
 };
 
 onMounted(() => {
