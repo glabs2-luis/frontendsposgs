@@ -11,6 +11,5 @@ export interface PedidosDet {
     MONTO_DESCUENTO_PDET?: number;
     MONTO_IVA?:            number;
     SUBTOTAL_VENTAS?:      number;
-    CORRELATIVO_INGRESO?:  number;
-    DESCRIPCION_PROD_AUX?: string;
+    DESCRIPCION_PROD?:     string;
 }

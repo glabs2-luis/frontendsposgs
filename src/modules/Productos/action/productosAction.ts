@@ -31,10 +31,10 @@ export const obtenerProductosIdAction = async (producto: string) : Promise<Produ
 export const ObtenerProductosPrecioAction = async (producto: string, cantidad: number): Promise<Productos> => {
     try{
         const { data } = await posApi.get<Productos>(`/maestro-productos/precioProducto/${producto}/${cantidad}`)
-        console.log('Action', data)
         return data
     } catch (error) {
         const message = getAxiosErrorMessage(error, "Hubo un error al obtener el precio del producto")
         console.log(message)
+        throw new Error(message)
     }
 }

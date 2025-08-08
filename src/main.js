@@ -25,9 +25,8 @@ app.use(Quasar, {
 })
 
 app.use(VueQueryPlugin, {
-enableDevtoolsV6Plugin: true,
+  enableDevtoolsV6Plugin: true,
 })
 app.use(pinia)
-app.use(VueQueryPlugin)
 app.use(router)
 app.mount('#app')
