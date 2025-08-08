@@ -1,4 +1,4 @@
-import type { Vendedor, ApiFacturaResponse, DevolucionEnc, DevolucionDet, ApiNotaCreditoResponse } from '@/modules/notas_credito/interfaces/NotaCredito';
+import type { Vendedor, ApiFacturaResponse, DevolucionEnc, DevolucionDet, ApiNotaCreditoResponse, ProductoAlterno } from '@/modules/notas_credito/interfaces/NotaCredito';
 import axios from 'axios';
 
 const baseUrl = 'http://localhost:3001/api';
@@ -218,5 +218,21 @@ export const obtenerVendedor = async (codigoVendedor: number): Promise<Vendedor>
   } catch (error) {
     console.error("Error al obtener vendedor: ", error);
     throw new Error("Error al obtener vendedor: " + error.message);
+  }
+}
+
+// Obtener codigo de producto en base al codigo de barras
+export const obtenerCodigoProducto = async (codigoBarras: string): Promise<ProductoAlterno | null> => {
+  try {
+    const response = await axios.get(`${baseUrl}/codigo-barra/${codigoBarras}`)
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response && (error.response.status === 404 || error.response.status === 500)) {
+      console.warn(`Producto con código de barras ${codigoBarras} no encontrado.`);
+      return null;
+    }
+    console.error("Error al obtener código de producto: ", error);
+    throw new Error("Error al obtener código de producto: ", error.message);
   }
 }

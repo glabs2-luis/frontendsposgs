@@ -167,7 +167,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { obtenerDevoluciones, obtenerDevolucionesEncDetalle, obtenerVendedor } from '../action/useNotaCreditoActions';
 import ClaveModal from '@/modules/notas_credito/components/ClaveModal.vue';
 import NotaCreditoView from '@/modules/notas_credito/components/NotaCreditoView.vue';
@@ -355,7 +355,6 @@ async function certificarNota(nota: DevolucionEnc) {
     color: 'green'
   }).onOk(async () => {
     try {
-      console.log("Entra a certificas...")
       $q.loading.show({
         message: `Certificando Nota de Crédito ${nota.NUMERO_DEVOLUCION}...`,
         boxClass: 'bg-grey-2 text-grey-9',
@@ -363,8 +362,6 @@ async function certificarNota(nota: DevolucionEnc) {
       });
 
       const response = await certificarDevolucion(nota.NUMERO_DEVOLUCION)
-
-      console.log("Certificado:", response);
 
       if (response) {
         const notaDeCredito = await obtenerDtoCertificado('NCRE', nota.NUMERO_DEVOLUCION)
@@ -431,6 +428,8 @@ const prepararDataNotaDeCredito = async (nota: DevolucionEnc, dtoCertificado: Dt
       tipoDocumento: "NOTA DE CREDITO",
       fechaEmision: new Date().toISOString(),
     },
+
+    observacion: nota.OBSERVACIONES,
 
     cliente: {
       nombre: "CLIENTE DE PRUEBA",
@@ -499,8 +498,6 @@ const certificarDevolucion = async (numeroDevolucion: number) => {
 
     if (!devolucion || devolucion.DEVOLUCION_ENC.DEVOLUCION_DET.length === 0) return
 
-    console.log('Datos de la devolucion:', devolucion.DEVOLUCION_ENC.NUMERO_DEVOLUCION)
-
     const result = crearCertificacionNcAction({ sucursal: '1', numeroDevolucion: devolucion.DEVOLUCION_ENC.NUMERO_DEVOLUCION })
 
     return result
@@ -511,18 +508,33 @@ const certificarDevolucion = async (numeroDevolucion: number) => {
 
 watch(notaCreditoVisible, (newValue, oldValue) => {
   if (!newValue && oldValue) {
-    console.log('Modal NotaCreditoView cerrado, recargando notas de crédito...');
     loadNotasDeCredito();
   }
 });
 
 watch(searchTerm, filterNotes);
 
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (event.key === 'F12' && accesoPermitido.value) {
+    event.preventDefault(); 
+    nuevaNota();
+  }
+};
+
 onMounted(() => {
-  if (accesoPermitido.value) {
+  document.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown);
+})
+
+watch(accesoPermitido, (newValue) => {
+  if (newValue) {
     loadNotasDeCredito();
   }
 });
+
 </script>
 
 <style scoped>
