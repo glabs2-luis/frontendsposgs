@@ -2,28 +2,46 @@
   <q-layout view="lHh Lpr lFf">
     <q-page-container>
       <div class="fondo-login">
-        <div class="login-container">
-          
+        <div
+          :class="['login-container', { 'login-container-centered': !bodega }]"
+        >
           <!-- Columna Izquierda - Logo y Descripción -->
-          <div class="columna-izquierda">
+          <div
+            :class="[
+              'columna-izquierda',
+              { 'columna-izquierda-centered': !bodega },
+            ]"
+          >
             <div class="logo-section">
-              <q-img src="/img/1.png" alt="Logo del sistema" class="logo-principal"
+              <q-img
+                src="/img/1.png"
+                alt="Logo del sistema"
+                class="logo-principal"
               />
-              <div class="sistema-titulo">
-                POS GS
-              </div>
+              <div class="sistema-titulo">POS GS</div>
             </div>
-            
-            <div class="descripcion-bodega">
-              <h2 class="bodega-nombre">
-                {{ bodega ? bodega.DESCRIPCION_BODEGA : "" }}
-              </h2>
 
+            <div class="descripcion-bodega">
+              <h2
+                :class="['bodega-nombre', { 'bodega-no-configurada': !bodega }]"
+              >
+                {{
+                  bodega
+                    ? bodega.DESCRIPCION_BODEGA
+                    : "No hay bodega configurada"
+                }}
+              </h2>
+              <div v-if="!bodega" class="bodega-warning-container">
+                <div class="bodega-warning bg-red-500 text-white">
+                  <q-icon name="warning" class="warning-icon text-white" />
+                  <span>Contacte al administrador del sistema</span>
+                </div>
+              </div>
             </div>
           </div>
 
           <!-- Columna Derecha - Formulario de Login -->
-          <div class="columna-derecha">
+          <div v-if="bodega" class="columna-derecha">
             <q-card class="login-card">
               <q-card-section class="login-header">
                 <div class="titulo-login">Iniciar sesión</div>
@@ -40,18 +58,26 @@
                   class="input-campo"
                   color="primary"
                 />
-                
+
                 <q-input
-                  ref="focusContra" 
+                  ref="focusContra"
                   v-model="password"
                   label="Contraseña"
-                  type="password"
+                  :type="isPwd ? 'password' : 'text'"
                   outlined
                   dense
                   class="input-campo"
                   color="primary"
                   @keydown.enter="realizarLogin"
-                />
+                >
+                  <template v-slot:append>
+                    <q-icon
+                      :name="isPwd ? 'visibility_off' : 'visibility'"
+                      class="cursor-pointer"
+                      @click="isPwd = !isPwd"
+                    />
+                  </template>
+                </q-input>
 
                 <q-checkbox
                   v-model="recordarUsuario"
@@ -90,6 +116,9 @@ import { useBodegas} from '@/modules/bodegas/composables/useBodegas';
 import type { Bodega } from '../../bodegas/interfaces/bodegaInterface';
 import { useStoreSucursal } from '@/stores/sucursal'
 
+import { useQuasar } from 'quasar'
+import { nextTick } from 'vue'
+
 const StoreSucursal = useStoreSucursal()
 const { loginMutation } = useUserStore()
 const { obtenerSucursal } = useSucursales()
@@ -101,56 +130,78 @@ const password = ref('')
 const bodega = ref<Bodega>()
 const recordarUsuario = ref(false)
 
-const mostrarBodega  = async () => {
-  bodega.value = await ObtenerBodegasId2()
-}
 
+const focusContra = ref(null);
+const focusUsuario = ref(null);
+const $q = useQuasar();
+const isPwd = ref(true);
 
-
+const mostrarBodega = async () => {
+  const result = await ObtenerBodegasId2();
+  if (result && result.obtenerBodegasId && result.obtenerBodegasId.value) {
+    bodega.value = result.obtenerBodegasId.value;
+  } else {
+    showErrorNotification(
+      "Error",
+      "No se pudo obtener la bodega, por favor contacte al administrador"
+    );
+  }
+};
 
 
 const realizarLogin = () => {
-  loginMutation({
-    USUARIO: usuario.value,
-    PASSWORD: password.value
-  }, {
-    // Login exitoso
-    onSuccess: async (data) => {
-
-      // Rrecordar usuario
-      if (recordarUsuario.value) {
-      localStorage.setItem('usuarioRecordado', usuario.value)
-    } else {
-      localStorage.removeItem('usuarioRecordado')
-    }
-
-      router.push('/ventas')
-
-      const response = await ObtenerBodegasId2() as Bodega
-      StoreSucursal.setbodega(
-      response.CODIGO_BODEGA,
-      response.DESCRIPCION_BODEGA,
-      response.ID_SUCURSAL
-    )
-
+  loginMutation(
+    {
+      USUARIO: usuario.value,
+      PASSWORD: password.value,
     },
-    onError: (error: Error) => {
-      // Login fallido
-      showErrorNotification('Error de inicio de sesión', error.message)
+    {
+      // Login exitoso
+      onSuccess: (data) => {
+        // Rrecordar usuario
+        if (recordarUsuario.value) {
+          localStorage.setItem("usuarioRecordado", usuario.value);
+        } else {
+          localStorage.removeItem("usuarioRecordado");
+        }
+
+        router.push("/ventas");
+      },
+      onError: (error: Error) => {
+        // Login fallido
+        $q.notify({
+          message: error.message,
+          position: "top-right",
+          caption: "Error de inicio de sesión",
+          color: "negative",
+          icon: "error",
+          timeout: 1000,
+        });
+        nextTick(() => {
+          focusContra.value.focus();
+          focusContra.value.select();
+        });
+      },
     }
-  })
-}
+  );
+};
 
-onMounted(() => {
-  mostrarBodega()
+onMounted(async () => {
+  await mostrarBodega();
 
-  const usuarioGuardado = localStorage.getItem('usuarioRecordado')
+  const usuarioGuardado = localStorage.getItem("usuarioRecordado");
   if (usuarioGuardado) {
-    usuario.value = usuarioGuardado
-    recordarUsuario.value = true
+    usuario.value = usuarioGuardado;
+    recordarUsuario.value = true;
+    nextTick(() => {
+      focusContra.value.focus();
+    });
+  } else {
+    nextTick(() => {
+      focusUsuario.value.focus();
+    });
   }
-})
-
+});
 </script>
 
 <style scoped>
@@ -171,12 +222,24 @@ onMounted(() => {
   align-items: center;
 }
 
+.login-container-centered {
+  justify-content: center;
+  max-width: 500px;
+}
+
 /* Columna Izquierda */
 .columna-izquierda {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 30px;
+}
+
+.columna-izquierda-centered {
+  flex: none;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
 }
 
 .logo-section {
@@ -209,8 +272,64 @@ onMounted(() => {
   font-size: 1.8rem;
   font-weight: 600;
   margin: 0 0 12px 0;
-  color: #FFEB3B;
+  color: #ffeb3b;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease-in-out;
+}
+
+.bodega-no-configurada {
+  font-size: 3rem;
+  color: #ff6b6b !important;
+  text-shadow: 1px 1px 2px rgba(8, 0, 0, 0.3);
+  animation: pulse 2s infinite;
+}
+
+.bodega-warning-container {
+  margin-top: 16px;
+  padding: 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.15),
+    rgba(220, 53, 69, 0.1)
+  );
+  border: 2px solid rgba(255, 107, 107, 0.4);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.bodega-warning {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.warning-icon {
+  font-size: 1.2rem;
+  color: #ff6b6b;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .bodega-subtitulo {
@@ -275,7 +394,7 @@ onMounted(() => {
 .boton-login {
   width: 100%;
   height: 48px;
-  background: linear-gradient(90deg, #FFEB3B, #e9a908);
+  background: linear-gradient(90deg, #ffeb3b, #e9a908);
   color: #070303;
   font-weight: 600;
   font-size: 1rem;
@@ -286,7 +405,7 @@ onMounted(() => {
 }
 
 .boton-login:hover {
-  background: linear-gradient(90deg, #FBC02D, #f59e13);
+  background: linear-gradient(90deg, #fbc02d, #f59e13);
   box-shadow: 0 4px 12px rgba(233, 169, 8, 0.4);
   transform: translateY(-1px);
 }
@@ -316,31 +435,31 @@ onMounted(() => {
     gap: 30px;
     max-width: 100%;
   }
-  
+
   .columna-izquierda {
     text-align: center;
     order: 2;
   }
-  
+
   .columna-derecha {
     flex: none;
     width: 100%;
     max-width: 350px;
     order: 1;
   }
-  
+
   .sistema-titulo {
     font-size: 2rem;
   }
-  
+
   .bodega-nombre {
     font-size: 1.5rem;
   }
-  
+
   .bodega-subtitulo {
     font-size: 0.9rem;
   }
-  
+
   .fondo-login {
     padding: 20px 16px;
   }
@@ -350,16 +469,17 @@ onMounted(() => {
   .login-card {
     margin: 0 8px;
   }
-  
-  .login-header, .login-form {
+
+  .login-header,
+  .login-form {
     padding-left: 24px;
     padding-right: 24px;
   }
-  
+
   .sistema-titulo {
     font-size: 2rem;
   }
-  
+
   .bodega-nombre {
     font-size: 1.5rem;
   }
