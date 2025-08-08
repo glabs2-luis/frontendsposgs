@@ -1,12 +1,8 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import { VueQueryPlugin } from '@tanstack/vue-query'
-<<<<<<< HEAD
 import { createPinia } from 'pinia'
 import axios from 'axios'
-=======
-// quasar
->>>>>>> db7049b (Agregar modulos)
 import 'quasar/src/css/index.sass'
 import '@quasar/extras/material-icons/material-icons.css'
 import { Quasar, Notify, Dialog, Loading } from 'quasar'
@@ -28,13 +24,9 @@ app.use(Quasar, {
   plugins: {Notify, Dialog, Loading} 
 })
 
-<<<<<<< HEAD
 app.use(VueQueryPlugin, {
   enableDevtoolsV6Plugin: true,
 })
 app.use(pinia)
-=======
-app.use(VueQueryPlugin)
->>>>>>> db7049b (Agregar modulos)
 app.use(router)
 app.mount('#app')

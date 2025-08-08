@@ -623,8 +623,9 @@ import useFormat from "@/common/composables/useFormat";
 const { formatNumber, formatCurrency } = useFormat();
 const props = defineProps({
   pedidoId: {
-    type: [String, Number],
-    required: true,
+    type: [String, Number, null],
+    required: false,
+    default: null,
   },
   onNuevoPedido: {
     type: Function,
@@ -687,7 +688,10 @@ const totalStore = useTotalStore();
 const modalFacturacion = ref(false);
 const userStore = useUserStore();
 const modalCuponazo = ref(false);
-const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc);
+const idPedidoEnc = computed(() => {
+  // Usar el prop pedidoId si está disponible, sino usar el del store
+  return props.pedidoId !== null ? props.pedidoId : pedidoStore.idPedidoEnc;
+});
 const { data: pedidoData, refetchObtenerPedidoID } =
   obtenerPedidoPorId(idPedidoEnc);
 const focusCantidad = ref(null); // focus modal cantidad
@@ -1348,7 +1352,11 @@ const buscarProductoEscaneado = async () => {
         cantidad2.value
       );
 
-      console.log('mandando a consultar el precio: ', codigoProducto.value, cantidad2.value)
+      console.log(
+        "mandando a consultar el precio: ",
+        codigoProducto.value,
+        cantidad2.value
+      );
       // datos a consultar
       console.log(
         "mandando a consultar el precio: ",
@@ -1386,10 +1394,8 @@ const buscarProductoEscaneado = async () => {
         },
         precio: {
           PRECIO_FINAL: prod.PRECIO_FINAL,
-        }
-      }
-
-
+        },
+      };
 
       console.log("resultado2: ", resultado);
     } catch (err) {
@@ -1401,10 +1407,10 @@ const buscarProductoEscaneado = async () => {
       loadingPorCodigo.value = false;
       return;
     }
-  } 
+  }
 
-    //console.log('Este es el resultado',resultado)
-  
+  //console.log('Este es el resultado',resultado)
+
   console.log("Este es codigo PRoducto", codigoProducto.value);
   console.log("Este es el resultado", resultado);
 
