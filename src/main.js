@@ -7,9 +7,15 @@ import 'quasar/src/css/index.sass'
 import '@quasar/extras/material-icons/material-icons.css'
 import { Quasar, Notify, Dialog, Loading } from 'quasar'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { registerSW } from 'virtual:pwa-register'
 
 // router
 import router from './router'
+
+registerSW({
+  onNeedRefresh() {},
+  onOfflineReady() {}
+})
 
 const token = localStorage.getItem('token')
 if (token) {
