@@ -281,7 +281,7 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
                 style: "caption",
                 alignment: "center",
               },
-                            {
+              {
                 text: `${data.encabezado.fechaEmision}`,
                 style: "caption",
                 alignment: "center",
@@ -384,22 +384,9 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
           },
           margin: [0, 5],
         },
-        { text: "\n", margin: [0, 0, 0, -6] },
+        { text: "\n", margin: [0, 0, 0, 0] },
 
-        {
-          canvas: [
-            {
-              type: "line",
-              x1: lineStartX,
-              y1: 5,
-              x2: lineEndX,
-              y2: 5,
-              lineWidth: 1,
-            },
-          ],
-          margin: [0, 0, 0, 5],
-        }, // --- SECCIÓN: RESUMEN Y PIE DE PÁGINA ---
-
+        // --- SECCIÓN: RESUMEN Y PIE DE PÁGINA ---
         {
           columns: [
             {
@@ -496,6 +483,22 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
         ...(data.encabezado.tipoDocumento.toUpperCase() === 'NOTA DE CREDITO'
           ? 
             [
+
+              {
+                text: `MOTIVO:`,
+                style: "smallText",
+                alignment: "left",
+              },
+              {
+                text: `${data.observacion}`,
+                style: "smallText",
+                alignment: "left",
+              },              
+              {
+                text: ``,
+                style: "smallText",
+                margin: [0, 0, 0, 10],
+              },
               {
                 text: '',
                 style: "smallText",

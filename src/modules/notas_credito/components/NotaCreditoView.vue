@@ -236,6 +236,8 @@
                   type="textarea"
                   rows="3"
                   placeholder="Ingrese cualquier observación relevante."
+                  ref="observacionInputRef"
+                  @keyup.enter="emitirNota"
                 />
               </div>
               <div class="col-md-6 col-xs-12">
@@ -282,7 +284,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useQuasar, QTableColumn } from 'quasar';
 import {
   buscarFactura as buscarFacturaAPI,
@@ -294,7 +296,8 @@ import {
   actualizarDevolucionEnc,
   eliminarDevolucionDet,
   obtenerDevolucionesEncDetalle,
-  obtenerVendedor
+  obtenerVendedor,
+  obtenerCodigoProducto
 } from '@/modules/notas_credito/action/useNotaCreditoActions';
 import type { ApiFacturaResponse, DevolucionEnc, DevolucionDet, Vendedor, ProductoNotaCredito } from '@/modules/notas_credito/interfaces/NotaCredito';
 import { crearCertificacionNcAction, obtenerDtoCertificado } from '@/modules/certification/actions/certificationAction';
@@ -354,6 +357,7 @@ const timerId = ref<ReturnType<typeof setTimeout> | null>(null);
 const lastKeyPressTime = ref(0);
 const codigoInputRef = ref(null);
 const serieInputRef = ref(null);
+const observacionInputRef = ref(null);
 const { generarFacturaPDF } = usePdfFactura();
 
 const pagination = ref({
@@ -507,6 +511,8 @@ watch(step, (newStep) => {
   nextTick(() => {
     if (newStep === '2') {
       codigoInputRef.value?.focus();
+    } else if (newStep === '3') {
+      observacionInputRef.value?.focus();
     }
   });
 });
@@ -628,7 +634,19 @@ function getMaxCantidad(): number {
 }
 
 async function agregarProducto(event?: KeyboardEvent) {
-  const codigo = codigoInputManual.value.trim();
+  let codigo = ''
+  const codigoInput = codigoInputManual.value.trim();
+  const codigoBarras = await obtenerCodigoProducto(codigoInput)
+
+  console.log(codigoBarras)
+
+  if (codigoBarras) {
+    codigo = codigoBarras.PRODUCT0
+  } else {
+    console.log("Usando codigo producto")
+    codigo = codigoInput
+  }
+
   const cantidad = cantidadInput.value;
 
   if (!codigo || cantidad <= 0 || isNaN(cantidad)) {
@@ -714,6 +732,7 @@ async function agregarProducto(event?: KeyboardEvent) {
       notify('positive', `Producto ${productoOriginal.producto} agregado correctamente.`, 2000);
     }
 
+    codigoInputRef.value?.focus();
     codigoInputManual.value = '';
     cantidadInput.value = 1;
 
@@ -1017,10 +1036,29 @@ const certificarDevolucion = async (numeroDevolucion: number) => {
 function closeDialog() {
   serieInputRef.value?.blur();
   codigoInputRef.value?.blur();
+  observacionInputRef.value?.blur();
 
   resetForm();
   emit('update:modelValue', false);
 }
+
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (event.key === 'F10' && step.value === '2' && (productosSeleccionados.value.length !== 0 || totalNC.value !== 0)) {
+    event.preventDefault();
+
+    console.log("F10 presionada...")    
+    step.value = '3'
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown);  
+})
+
 </script>
 
 <style scoped>

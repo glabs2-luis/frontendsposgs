@@ -6,6 +6,7 @@ export interface DataFactura {
   resumen: ResumenFactura;
   nombreVendedor: string;
   qrCodeData: string;
+  observacion?: string;
 }
 
 export interface DatosEmpresa {

@@ -1,19 +1,32 @@
+import { computed, type Ref } from 'vue';
 import { validationAction } from '../action/validationAction';
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
+import { Empresa } from '../../fel_empresa_establecimiento/interfaces/empresaInterface';
 
-export const useValidation = async (nit: string, tipo: string, validar: boolean, empresa: string) => {
-
-    const queryClient = useQueryClient()
-  
-  const { data: obtenerDatosSat, isLoading, error } = useQuery({
-    queryKey: ['Datos-Sat', nit, tipo, validar, empresa], 
-    queryFn: () => validationAction(nit, tipo, validar, empresa), 
-    enabled: !nit
+export const useValidation = (
+  nit: string,
+  tipo: string,
+  validan: boolean,
+  empresa: string
+) => {
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['Datos-Sat', nit],                  
+    queryFn: () => validationAction(nit, tipo, validan, empresa),
+    enabled: !!nit,                              
+    refetchOnWindowFocus: false,
+    retry: 0,
   })
 
+  // función simple para usar cuando quieras llamar directo
+  const DatosSat2 = (n: string, t: string, v: boolean, e: string) =>
+    validationAction(n, t, v, e)
 
-    return {
-        obtenerDatosSat
-    }
-
+  return {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    DatosSat2,
+  }
 }

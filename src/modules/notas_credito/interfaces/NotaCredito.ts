@@ -141,3 +141,10 @@ export interface DevolucionDet {
 export interface ApiNotaCreditoResponse  {
   DEVOLUCION_ENC: DevolucionEnc
 }
+
+export interface ProductoAlterno {
+  ID_PRODUCTOS_ALTERNOS: number;
+  PRODUCT0: string;
+  CODIGO_BARRA: string;
+  FECHA_SYNC_INSERT_UPDATE: Date;
+}
