@@ -1,12 +1,14 @@
+import posApi from '@/api/apiPos';
 import type { Vendedor, ApiFacturaResponse, DevolucionEnc, DevolucionDet, ApiNotaCreditoResponse } from '@/modules/notas_credito/interfaces/NotaCredito';
 import axios from 'axios';
 
-const baseUrl = 'http://localhost:3001/api';
+// const baseUrl = 'http://localhost:3001/api';
+
 
 // Buscar una factura
 export async function buscarFactura(serie: string, numero: number): Promise<ApiFacturaResponse | null> {
   try {
-    const response = await axios.get(`${baseUrl}/facturas-enc/factura/${serie}/${numero}`);
+    const response = await posApi.get(`/facturas-enc/factura/${serie}/${numero}`);
 
     if (!response) throw new Error('Factura no encontrada');
 
@@ -20,7 +22,7 @@ export async function buscarFactura(serie: string, numero: number): Promise<ApiF
 // Obtener tipo de vendedor
 export const obtenerTipoVendedor = async (clave: string): Promise<Vendedor | null> => {
   try {
-    const response = await axios.get(`${baseUrl}/vendedor/tipoVendedor/${clave}`);
+    const response = await posApi.get(`/vendedor/tipoVendedor/${clave}`);
     if (response.status !== 200) throw new Error('Vendedor no encontrado.');
     return response.data;
   } catch (error) {
@@ -32,7 +34,7 @@ export const obtenerTipoVendedor = async (clave: string): Promise<Vendedor | nul
 // Crear DevolucionEnc
 export const crearDevolucionEnc = async (paylod: DevolucionEnc): Promise<DevolucionEnc> => {
   try {
-    const response = await axios.post(`${baseUrl}/devoluciones-enc`, paylod);
+    const response = await posApi.post(`/devoluciones-enc`, paylod);
 
     if (!response) throw new Error('No fue posible crear la devolucion enc.')
 
@@ -61,7 +63,7 @@ export const crearDevolucionEnc = async (paylod: DevolucionEnc): Promise<Devoluc
 // Crear DevolucionDet
 export const crearDevolucionDet = async (paylod: DevolucionDet): Promise<DevolucionDet> => {
   try {
-    const response = await axios.post(`${baseUrl}/devoluciones-det`, paylod)
+    const response = await posApi.post(`/devoluciones-det`, paylod)
 
     if (!response) throw new Error("No fue posible crear la devolucion det.")
 
@@ -75,7 +77,7 @@ export const crearDevolucionDet = async (paylod: DevolucionDet): Promise<Devoluc
 // Obtener listado de devoluciones
 export const obtenerDevolucionesEnc = async (): Promise<DevolucionEnc[]> => {
   try {
-    const response = await axios.get(`${baseUrl}/devoluciones-enc`)
+    const response = await posApi.get(`/devoluciones-enc`)
 
     return response.data;
   } catch (error) {
@@ -85,7 +87,7 @@ export const obtenerDevolucionesEnc = async (): Promise<DevolucionEnc[]> => {
 
 export const obtenerDevoluciones = async () => {
   try {
-    const response = await axios.get(`${baseUrl}/devoluciones-enc/devoluciones`)
+    const response = await posApi.get(`/devoluciones-enc/devoluciones`)
 
     return response.data;
   } catch (error) {
@@ -96,7 +98,7 @@ export const obtenerDevoluciones = async () => {
 // Obtener devolucion enc por numero de devolucion
 export const obtenerDevolucionesEncPorNumero = async (numeroDevolucion: number): Promise<DevolucionEnc> => {
   try {
-    const response = await axios.get(`${baseUrl}/devoluciones-enc/${numeroDevolucion}`);
+    const response = await posApi.get(`/devoluciones-enc/${numeroDevolucion}`);
 
     return response.data;
   } catch (error) {
@@ -107,7 +109,7 @@ export const obtenerDevolucionesEncPorNumero = async (numeroDevolucion: number):
 // Obtener devoluciones det por numero de devolucion
 export const obtenerDevolucionesEncDetalle = async (numeroDevolucion: number): Promise<ApiNotaCreditoResponse> => {
   try {
-    const response = await axios.get(`${baseUrl}/devoluciones-enc/detalle/${numeroDevolucion}`)
+    const response = await posApi.get(`/devoluciones-enc/detalle/${numeroDevolucion}`)
 
     return response.data;
   } catch (error) {
@@ -118,7 +120,7 @@ export const obtenerDevolucionesEncDetalle = async (numeroDevolucion: number): P
 // Obtener devoluciones det por numero de devolucion
 export const obtenerDevolucionesDet = async (numeroDevolucion: number): Promise<DevolucionDet[]> => {
   try {
-    const response = await axios.get(`${baseUrl}/devoluciones-det/detalle/${numeroDevolucion}`)
+    const response = await posApi.get(`/devoluciones-det/detalle/${numeroDevolucion}`)
 
     return response.data;
   } catch (error) {
@@ -129,7 +131,7 @@ export const obtenerDevolucionesDet = async (numeroDevolucion: number): Promise<
 // Actualizar devolucion enc
 export const actualizarDevolucionEnc = async (numeroDevolucion: number, paylod: Partial<DevolucionEnc>) => {
   try {
-    const response = await axios.patch(`${baseUrl}/devoluciones-enc/${numeroDevolucion}`, {
+    const response = await posApi.patch(`/devoluciones-enc/${numeroDevolucion}`, {
       OBSERVACIONES: paylod.OBSERVACIONES
     })
 
@@ -142,7 +144,7 @@ export const actualizarDevolucionEnc = async (numeroDevolucion: number, paylod: 
 // Actualizar devolucion det
 export const actualizarDevolucionDet = async (id: number, paylod: Partial<DevolucionDet>) => {
   try {
-    const response = await axios.patch(`${baseUrl}/devoluciones-det/${id}`, {
+    const response = await posApi.patch(`/devoluciones-det/${id}`, {
       CANTIDAD_DEVUELTA: paylod.CANTIDAD_DEVUELTA,
       PRECIO_DEVOLUCION: paylod.PRECIO_DEVOLUCION
     });
@@ -157,7 +159,7 @@ export const actualizarDevolucionDet = async (id: number, paylod: Partial<Devolu
 // Eliminar devolucion det
 export const eliminarDevolucionDet = async (id: number) => {
   try {
-    const response = await axios.delete(`${baseUrl}/devoluciones-det/eliminar/${id}`);
+    const response = await posApi.delete(`/devoluciones-det/eliminar/${id}`);
 
     return response.data;
   } catch (error) {
@@ -184,7 +186,7 @@ export const eliminarDevolucionDet = async (id: number) => {
 // Eliminar devolucion enc
 export const eliminarDevolucion = async (numeroDevolucion: number) => {
   try {
-    const response = await axios.delete(`${baseUrl}/devoluciones-enc/eliminar/${numeroDevolucion}`)
+    const response = await posApi.delete(`/devoluciones-enc/eliminar/${numeroDevolucion}`)
 
     if (!response.data.ok) throw new Error("No fue posible eliminar la devolucion.")
 
@@ -213,7 +215,7 @@ export const eliminarDevolucion = async (numeroDevolucion: number) => {
 // Obtener datos de vendedor
 export const obtenerVendedor = async (codigoVendedor: number): Promise<Vendedor> => {
   try {
-    const response = await axios.get(`${baseUrl}/vendedor/${codigoVendedor}`)
+    const response = await posApi.get(`/vendedor/${codigoVendedor}`)
     return response.data;
   } catch (error) {
     console.error("Error al obtener vendedor: ", error);
