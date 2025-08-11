@@ -98,7 +98,8 @@
               </template>
 
               <!-- Otras columnas -->
-              <template v-else-if="col.name === 'DESCRIPCION_PROD'"> <!-- negrita -->
+              <template v-else-if="col.name === 'DESCRIPCION_PROD'">
+                <!-- negrita -->
                 <div class="descripcion-prod">
                   {{ col.value }}
                 </div>
@@ -197,24 +198,24 @@ const rows = computed(() => data.value || []);
 
 watchEffect(() => {
   //console.log("Esto es rows:", rows.value);
-})
+});
 
 // calcular total
 const idTotal = computed(() => pedidoStore.idPedidoEnc);
 
-const { data: dataPedido } = obtenerPedidoPorId(idTotal)
+const { data: dataPedido } = obtenerPedidoPorId(idTotal);
 
 const totalGeneral = computed(() => {
   if (!dataPedido.value) return 0;
   return Number(dataPedido.value.TOTAL_GENERAL_PEDIDO) || 0;
-})
+});
 
 // Watch para actualizar el store
 watch(
   totalGeneral,
   (nuevoTotal) => {
     totalStore.setTotal(nuevoTotal);
-    console.log("Total actualizado:", nuevoTotal);
+    //console.log("Total actualizado:", nuevoTotal);
   },
   { immediate: true }
 );
@@ -285,7 +286,7 @@ watch(
     if (nuevoPedido) {
       const nuevoTotal = Number(nuevoPedido.TOTAL_GENERAL_PEDIDO) || 0;
       totalStore.setTotal(nuevoTotal);
-      console.log("Total actualizado desde watch pedidoData:", nuevoTotal);
+      //console.log("Total actualizado desde watch pedidoData:", nuevoTotal);
     }
   },
   { immediate: true }
@@ -312,7 +313,7 @@ const eliminarProducto = async (detalle) => {
         if (pedidoData.value) {
           const nuevoTotal = Number(pedidoData.value.TOTAL_GENERAL_PEDIDO) || 0;
           totalStore.setTotal(nuevoTotal);
-          console.log("Nuevo total actualizado desde backend:", nuevoTotal);
+          // console.log("Nuevo total actualizado desde backend:", nuevoTotal);
         }
 
         // Mostrar notificación de éxito

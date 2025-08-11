@@ -123,7 +123,6 @@
                         style="font-size: 13px"
                       />
                     </div>
-                    
                   </div>
                 </q-form>
               </div>
@@ -255,13 +254,18 @@
 
               <!-- Total de Venta -->
               <div class="row items-center q-gutter-xs total-card q-pa-xs">
-                <q-icon name="paid" size="sm" class="text-amber-10" />
-
                 <div
                   class="text-body1 text-amber-10 text-weight-bold"
                   style="font-size: 280%"
                 >
                   Total: {{ formatCurrency(totalStore.totalGeneral, 2) }}
+                </div>
+              </div>
+              <!-- Último cambio (vuelto) -->
+              <div class="row items-center q-gutter-xs q-mt-xs q-ml-md">
+                <q-icon name="undo" size="sm" class="text-green-7" />
+                <div class="text-positive text-weight-bold">
+                  Cambio: {{ formatCurrency(totalStore.ultimoCambio, 2) }}
                 </div>
               </div>
             </div>
@@ -324,11 +328,11 @@ import useFormat from "@/common/composables/useFormat";
 import { useBodegas } from "@/modules/bodegas/composables/useBodegas";
 import { useStoreSucursal } from "@/stores/sucursal";
 
-const { ObtenerBodegasId2 } = useBodegas()
-const  storeSucursal  = useStoreSucursal()
+const { ObtenerBodegasId2 } = useBodegas();
+const storeSucursal = useStoreSucursal();
 
 const { formatCurrency, formatNumber, formatDecimal } = useFormat();
-const validador = ref(true)
+const validador = ref(true);
 const $q = useQuasar();
 const tipoDocumento = ref<"nit" | "dpi">("nit");
 const clienteStore = useClienteStore();
@@ -347,32 +351,38 @@ const focus = ref(null);
 const modalPendientes = ref(false);
 const mostrarModalFacturacion = ref(false);
 const expansionCliente = ref(false);
-const formRef = ref()
-const bodega = ref()
-const { obtenerClientePorDocumento, refetchMostrarCF, mutateCrearCliente } = useClientes();
-const {mutateCrearPedidoEnc, obtenerPedidosPendientes, obtenerPedidoPorId, mutateAnularPedidoPendiente} = usePedidosEnc()
+const formRef = ref();
+const bodega = ref();
+const { obtenerClientePorDocumento, refetchMostrarCF, mutateCrearCliente } =
+  useClientes();
+const {
+  mutateCrearPedidoEnc,
+  obtenerPedidosPendientes,
+  obtenerPedidoPorId,
+  mutateAnularPedidoPendiente,
+} = usePedidosEnc();
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc);
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
 const focus2 = ref<HTMLInputElement | null>(null);
 
-const mostrarBodega  = async () => {
-  bodega.value = await ObtenerBodegasId2()
-  console.log(bodega.value)
-}
+const mostrarBodega = async () => {
+  bodega.value = await ObtenerBodegasId2();
+  // console.log(bodega.value);
+};
 
 // abrir expansion item y focus a nit
 watch(
   () => clienteStore.documento,
   async (nuevo) => {
     if (!nuevo || nuevo.trim() === "" || nuevo === "0") {
-      await nextTick()
-      expansion.value?.show()
+      await nextTick();
+      expansion.value?.show();
 
-      await formRef.value?.resetValidation()
+      await formRef.value?.resetValidation();
 
-      await nextTick()
-      focus.value?.focus()
+      await nextTick();
+      focus.value?.focus();
     }
   },
   { immediate: true }
@@ -381,9 +391,9 @@ watch(
 // controla que exista un pedido
 watch(idPedidoEnc, (nuevoId) => {
   if (nuevoId && nuevoId > 0) {
-    console.log("Pedido actualizado desde query:", {
-      total: totalReal.value,
-    });
+    // console.log("Pedido actualizado desde query:", {
+    //   total: totalReal.value,
+    // });
   }
 });
 
@@ -406,22 +416,23 @@ const anularPedido = async (pedido) => {
 const continuarPedido = async (pedido) => {
   const confirmado = await showConfirmationInsideModal(
     "Continuar Pedido",
-    `¿Está seguro que desea continuar con el pedido #${pedido.NUMERO_DE_PEDIDO}?`
+    `¿Está seguro que desea continuar con el pedido N° ${pedido.NUMERO_DE_PEDIDO}?`
   );
 
   if (!confirmado) return;
 
-  cleanAllStores()
-  await nextTick()
+  cleanAllStores();
+  await nextTick();
 
-  await formRef.value?.resetValidation()
+  await formRef.value?.resetValidation();
   // Enfocar productosTab para continuar
-  await productosTabRef.value?.enfocarCodigo()
+  await productosTabRef.value?.enfocarCodigo();
 
   // Actualizar el store con el ID del pedido pendiente
   pedidoStore.setPedidoEncabezado(
     pedido.ID_PEDIDO_ENC,
-    pedido.NUMERO_DE_PEDIDO
+    pedido.NUMERO_DE_PEDIDO,
+    pedido.CODIGO_VENDEDOR
   );
 
   // set cliente
@@ -434,36 +445,36 @@ const continuarPedido = async (pedido) => {
   });
 
   // Cerrar modal de pendientes
-  modalPendientes.value = false
+  modalPendientes.value = false;
 
   // Enfocar productosTab para continuar
-  await productosTabRef.value?.enfocarCodigo()
+  await productosTabRef.value?.enfocarCodigo();
 };
 
 // signo menos
 onMounted(() => {
-  window.addEventListener("keydown", usarMenos)
+  window.addEventListener("keydown", usarMenos);
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener("keydown", usarMenos)
+  window.removeEventListener("keydown", usarMenos);
 });
 
 // usar tecla - para abrir modal pendientes
 const usarMenos = (e) => {
   if (e.key === "-") {
     e.preventDefault();
-    abrirModalPedidosPendientes()
+    abrirModalPedidosPendientes();
   }
 };
 
 // Crear Pedido con F3
 onMounted(() => {
-  window.addEventListener("keydown", crearPedidoConF3)
+  window.addEventListener("keydown", crearPedidoConF3);
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener("keydown", crearPedidoConF3)
+  window.removeEventListener("keydown", crearPedidoConF3);
 });
 
 const crearPedidoConF3 = (e: KeyboardEvent) => {
@@ -476,10 +487,10 @@ const crearPedidoConF3 = (e: KeyboardEvent) => {
 
 // Cerrar expansion cuando se crea un pedido
 watchEffect(() => {
-  const cerrar = pedidoStore.idPedidoEnc
+  const cerrar = pedidoStore.idPedidoEnc;
 
   if (cerrar > 0) {
-    expansion.value?.hide()
+    expansion.value?.hide();
   }
 });
 
@@ -488,8 +499,8 @@ watch(
   () => clienteStore.documento,
   (nuevoValor, oldValor) => {
     if (!nuevoValor) {
-      expansionCliente.value = true
-      expansion.value?.show()
+      expansionCliente.value = true;
+      expansion.value?.show();
       enfocarCodigo();
     }
   }
@@ -504,8 +515,8 @@ const enfocarCodigo = () => {
 const enfocarInputCodigo = async () => {
   // Pequeño delay para asegurar que la tabla se haya actualizado
   await nextTick();
-  console.log("Enfocando input de código después de eliminar producto")
-  productosTabRef.value?.enfocarCodigo()
+  // console.log("Enfocando input de código después de eliminar producto");
+  productosTabRef.value?.enfocarCodigo();
 };
 
 onMounted(() => {
@@ -515,26 +526,25 @@ onMounted(() => {
 // Actualizar numPedido y Total
 watchEffect(() => {
   if (pedidoEnc.value) {
-    numPedido.value = pedidoEnc.value.NUMERO_DE_PEDIDO || 0
-    totalReal.value = pedidoEnc.value.TOTAL_GENERAL_PEDIDO || 0
-    console.log("Pedido actualizado desde query:", {
-      numero: numPedido.value,
-      total: totalReal.value,
-    })
+    numPedido.value = pedidoEnc.value.NUMERO_DE_PEDIDO || 0;
+    totalReal.value = pedidoEnc.value.TOTAL_GENERAL_PEDIDO || 0;
+    // console.log("Pedido actualizado desde query:", {
+    //   numero: numPedido.value,
+    //   total: totalReal.value,
+    // });
   }
-})
-
+});
 
 const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
   Number(storeSucursal.idSucursal), // Convertido a numero
   userStore.codigoVendedor
-)
+);
 
-const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0)
+const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 
 const abrirModalPedidosPendientes = () => {
-  modalPendientes.value = true
-}
+  modalPendientes.value = true;
+};
 
 //Llenar modal desde esta pagina
 const clienteTemp = ref({
@@ -543,7 +553,7 @@ const clienteTemp = ref({
   DIRECCION: "",
   TELEFONO: "",
   CORREO_ELECTRONICO: "",
-})
+});
 
 //Limpiar los datos del cliente
 const resetCliente = () => {
@@ -562,9 +572,17 @@ const nuevoPedido = () => {
 
 // crear pedido xd
 const crearPedido = () => {
-  const nombre = clienteStore.nombre?.trim()
-  const direccion = clienteStore.direccion?.trim()
-  const nit = clienteStore.documento?.trim()
+  if (pedidoStore.idPedidoEnc) {
+    showErrorNotification(
+      "Error",
+      "Ya existe un pedido pendiente, por favor anule o factura el pedido pendiente antes de crear uno nuevo"
+    );
+    return;
+  }
+
+  const nombre = clienteStore.nombre?.trim();
+  const direccion = clienteStore.direccion?.trim();
+  const nit = clienteStore.documento?.trim();
 
   if (!nombre || !direccion || !nit) {
     showErrorNotification(
@@ -589,31 +607,32 @@ const crearPedido = () => {
   mutateCrearPedidoEnc(pedidoEnc, {
     onSuccess: async (data) => {
       // Actualizar variables reactivas
-      numPedido.value = data.NUMERO_DE_PEDIDO
-      totalReal.value = data.TOTAL_GENERAL_PEDIDO
-      totalStore.setTotal(data.TOTAL_GENERAL_PEDIDO)
+      numPedido.value = data.NUMERO_DE_PEDIDO;
+      totalReal.value = data.TOTAL_GENERAL_PEDIDO;
+      totalStore.setTotal(data.TOTAL_GENERAL_PEDIDO);
 
       //store pedido
       pedidoStore.setPedidoEncabezado(
         data.ID_PEDIDO_ENC,
-        data.NUMERO_DE_PEDIDO
+        data.NUMERO_DE_PEDIDO,
+        data.CODIGO_VENDEDOR
       );
 
-      mostrarCardPedidoCreado.value = true
-      mostrarCardTotal.value = true
+      mostrarCardPedidoCreado.value = true;
+      mostrarCardTotal.value = true;
 
       // notificaccion de creado
       $q.notify({
         type: "success",
-        message: `Pedido creado`,
+        message: `Pedido N° ${data.NUMERO_DE_PEDIDO} creado con éxito`,
         position: "top",
         color: "green",
         timeout: 2000,
         group: false, // se muestra de inmediato
-        progress: false,
+        progress: true,
       });
 
-      await nextTick()
+      await nextTick();
       productosTabRef.value?.enfocarCodigo();
     },
     onError: (error: any) => {
@@ -625,12 +644,12 @@ const crearPedido = () => {
   });
 
   //focus
-  productosTabRef.value?.enfocarCodigo()
+  productosTabRef.value?.enfocarCodigo();
 };
 
 // Funcion para Colocar CF
 const colocarCF = async () => {
-  const cf = await refetchMostrarCF()
+  const cf = await refetchMostrarCF();
 
   if (cf.data) {
     clienteStore.setCliente({
@@ -640,43 +659,47 @@ const colocarCF = async () => {
       telefono: cf.data.TELEFONO || "",
       email: cf.data.CORREO_ELECTRONICO || "",
     });
-    crearPedido()
-    expansion.value?.hide()
+    crearPedido();
+    expansion.value?.hide();
   }
-}
+};
 
 // Datos para el validador
 
-const nit = ref('')
-const tipo2 = ref('nit')
+const nit = ref("");
+const tipo2 = ref("nit");
 // Validador
-const empresa = ref('GS')
+const empresa = ref("GS");
 
-const { data, DatosSat2 } = useValidation(nit.value, tipoDocumento.value, validador.value, empresa.value)
+const { data, DatosSat2 } = useValidation(
+  nit.value,
+  tipoDocumento.value,
+  validador.value,
+  empresa.value
+);
 
 const buscarClienteDPINIT2 = async () => {
   try {
-
     // VAlor que se ingresa es doc
-    const doc = (clienteStore.documento || '').trim()
-    if (!doc) return
+    const doc = (clienteStore.documento || "").trim();
+    if (!doc) return;
 
     // asignar el nit a doc
-    nit.value = doc
+    nit.value = doc;
 
     // 1)  BD local
-    const tipo = tipoDocumento.value
-    const clienteBD = await obtenerClientePorDocumento(doc, tipo)
+    const tipo = tipoDocumento.value;
+    const clienteBD = await obtenerClientePorDocumento(doc, tipo);
 
     if (clienteBD) {
       clienteStore.setCliente({
-        documento: clienteBD.NIT || '',
-        nombre: clienteBD.NOMBRE || '',
-        direccion: clienteBD.DIRECCION || '',
-        telefono: clienteBD.TELEFONO || '',
-        email: clienteBD.CORREO_ELECTRONICO || '',
-      })
-      return
+        documento: clienteBD.NIT || "",
+        nombre: clienteBD.NOMBRE || "",
+        direccion: clienteBD.DIRECCION || "",
+        telefono: clienteBD.TELEFONO || "",
+        email: clienteBD.CORREO_ELECTRONICO || "",
+      });
+      return;
     }
 
     // 2) SEGUNDO: SAT (si el validador está activo)
@@ -686,29 +709,28 @@ const buscarClienteDPINIT2 = async () => {
         tipoDocumento.value,
         validador.value,
         empresa.value
-      )
+      );
       // result = texto
-      const nombreSat = result
+      const nombreSat = result;
 
       if (nombreSat) {
         // 3) No existe en BD pero SAT devolvió nombre -> abrir modal con datos prellenados
-        abrirModalCliente.value = true
-        clienteTemp.value.NIT = doc
-        clienteTemp.value.NOMBRE = nombreSat
-        clienteTemp.value.DIRECCION = 'Ciudad'
-        return
+        abrirModalCliente.value = true;
+        clienteTemp.value.NIT = doc;
+        clienteTemp.value.NOMBRE = nombreSat;
+        clienteTemp.value.DIRECCION = "Ciudad";
+        return;
       }
     }
 
     // 4) Si no hay en BD y SAT no devolvió nombre -> abrir modal solo con NIT
-    abrirModalCliente.value = true
-    clienteTemp.value.NIT = doc
-    clienteTemp.value.DIRECCION = 'Ciudad'
-
+    abrirModalCliente.value = true;
+    clienteTemp.value.NIT = doc;
+    clienteTemp.value.DIRECCION = "Ciudad";
   } catch (err) {
-    console.error('Error en buscarClienteDPINIT2:', err)
+    console.error("Error en buscarClienteDPINIT2:", err);
   }
-}
+};
 
 // Deshabilitada ---------------------------------
 const buscarClienteDPINIT = async () => {

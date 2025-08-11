@@ -172,7 +172,7 @@
               bordered
               separator="cell"
               :rows-per-page-options="[10, 20, 50, 100]"
-              :wrap-cells="false"
+              :wrap-cells="true"
             >
               <!-- Columna personalizada para código -->
               <template #body-cell-codigo="props">
@@ -334,7 +334,7 @@
       </q-card>
     </q-dialog>
 
-    <!-- Modal Para Facturacion -->
+    <!-- Modal Para Facturación -->
     <q-dialog
       v-model="modalFacturacion"
       @show="enfocarEfectivo"
@@ -342,159 +342,194 @@
       transition-show="fade"
       transition-hide="fade"
     >
-      <q-card
-        class="q-dialog-plugin q-pa-md"
-        style="min-width: 700px; max-width: 90vw; max-height: 90vh"
-      >
-        <!-- header-->
-        <q-card-section class="row q-pa-xs items-center justify-between">
-          <div class="text-h6 text-primary">Facturación</div>
-
-          <div v-if="contingencia" class="text-red-6" style="font-size: 19px">
-            Factura en contingencia
+      <q-card class="q-dialog-plugin facturacion-card">
+        <!-- Header profesional -->
+        <q-card-section
+          class="row items-center justify-between facturacion-header"
+        >
+          <div class="row items-center q-gutter-sm">
+            <q-icon name="point_of_sale" size="28px" color="black" />
+            <div class="text-h6 text-black">Facturación</div>
+            <q-chip
+              v-if="contingencia"
+              color="red-6"
+              text-color="white"
+              icon="warning"
+              dense
+            >
+              Contingencia
+            </q-chip>
           </div>
-
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn
+            icon="close"
+            flat
+            round
+            dense
+            v-close-popup
+            color="black"
+            class="bg-yellow-10"
+          />
         </q-card-section>
 
-        <q-separator />
-
-        <div
-          class="text-h6 text-center text-gray-8 q-pb-xs q-pt-md"
-          style="font-size: 22px"
-        >
-          {{
-            `Pedido: # ${pedidoStore.numeroDePedido} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Serie: ${configuracionStore.serieSeleccionada}`
-          }}
-        </div>
-
-        <!-- Mostrar info cliente-->
-        <q-card-section>
-          <q-card class="q-mb-md q-pb bg-grey-1">
-            <q-card-section class="q-pa-xs row q-col-gutter-sm items-start">
-              <div class="col-auto">
-                <q-icon name="person" size="36px" color="yellow-8" />
+        <!-- Encabezado de pedido/serie -->
+        <q-card-section class="q-pt-sm q-pb-none">
+          <div class="row items-center justify-between text-grey-7">
+            <div class="row items-center q-gutter-sm">
+              <div class="text-h6">
+                Pedido No. {{ pedidoStore.numeroDePedido }}
               </div>
-              <div class="col">
-                <div class="text-subtitle2 text-weight-bold text-black">
-                  {{ pedidoData.NOMBRE_A_FACTURAR }}
+            </div>
+            <div class="row items-center q-gutter-sm">
+              <div class="text-h6">
+                Serie:
+                {{ configuracionStore.serieSeleccionada || "No hay serie" }}
+              </div>
+            </div>
+          </div>
+        </q-card-section>
+
+        <!-- Información del cliente y total -->
+        <q-card-section class="q-pt-md">
+          <div class="row q-col-gutter-md">
+            <!-- Total -->
+            <div class="col-12">
+              <q-card flat bordered class="total-card">
+                <q-card-section class="text-center">
+                  <div class="text-caption text-grey-6">Total a pagar</div>
+                  <div class="text-h4 text-weight-bold text-green-7">
+                    {{ formatCurrency(totalAPagar, 2) }}
+                  </div>
+                </q-card-section>
+              </q-card>
+            </div>
+          </div>
+        </q-card-section>
+
+        <!-- Método de pago -->
+        <q-card-section class="q-pt-sm">
+          <div class="row q-col-gutter-sm items-start">
+            <div class="col-12">
+              <q-select
+                v-model="tipoPago"
+                :options="opcionesPago2"
+                label="Tipo de Pago"
+                outlined
+                dense
+                class="bg-grey-1"
+              >
+                <template #prepend>
+                  <q-icon name="payments" color="primary" />
+                </template>
+              </q-select>
+            </div>
+
+            <div class="col-12 q-mt-sm">
+              <q-input
+                ref="focusEfectivo"
+                v-model.number="montoEfectivo"
+                label="Efectivo"
+                prefix="Q"
+                :disable="tipoPago !== 'EFECTIVO' && tipoPago !== 'MIXTO'"
+                outlined
+                dense
+                class="bg-grey-1"
+                input-class="text-bold"
+                type="number"
+                min="0"
+                step="0.01"
+                @keydown.enter.prevent="focusBtnConfirmar"
+              >
+                <template #prepend>
+                  <q-icon name="account_balance_wallet" color="brown" />
+                </template>
+              </q-input>
+            </div>
+
+            <div class="col-12 q-mt-sm">
+              <q-input
+                ref="focusTarjeta"
+                v-model.number="montoTarjeta"
+                label="Tarjeta"
+                prefix="Q"
+                :disable="tipoPago !== 'TARJETA' && tipoPago !== 'MIXTO'"
+                outlined
+                dense
+                class="bg-grey-1"
+                input-class="text-bold"
+                type="number"
+                min="0"
+                step="0.01"
+                @keydown.enter.prevent="focusBtnConfirmar"
+              >
+                <template #prepend>
+                  <q-icon name="credit_card" color="blue" />
+                </template>
+              </q-input>
+            </div>
+          </div>
+        </q-card-section>
+
+        <!-- Resumen de pago y estado -->
+        <q-card-section class="q-pt-none">
+          <q-card flat bordered class="resumen-pago-card">
+            <q-card-section>
+              <div class="row items-center justify-between">
+                <div class="text-body2 text-grey-7">Pagado</div>
+                <div class="text-subtitle1 text-weight-bold">
+                  {{ formatCurrency(sumaPago, 2) }}
                 </div>
-                <div class="text-body2 text-grey-8">
-                  Documento: <strong>{{ pedidoData.NIT_A_FACTURAR }}</strong>
+              </div>
+              <div class="row items-center justify-between q-mt-xs">
+                <div class="text-body2 text-grey-7">Faltante</div>
+                <div
+                  class="text-subtitle1 text-weight-bold"
+                  :class="{ 'text-negative': faltantePago > 0 }"
+                >
+                  {{ formatCurrency(faltantePago, 2) }}
                 </div>
-                <div class="text-body2 text-grey-8">
-                  Dirección:
-                  <strong>{{ pedidoData.DIRECCION_FACTURAR }}</strong>
+              </div>
+              <div class="row items-center justify-between q-mt-xs">
+                <div class="text-body2 text-grey-7">Cambio</div>
+                <div
+                  v-if="cambioPago > 0"
+                  class="text-subtitle1 text-weight-bold text-positive bg-green-1"
+                >
+                  {{ formatCurrency(cambioPago, 2) }}
                 </div>
               </div>
             </q-card-section>
+            <q-separator />
+            <q-card-section class="q-pt-sm">
+              <q-banner
+                v-if="!isPagoValido"
+                dense
+                rounded
+                class="bg-orange-1 text-orange-9"
+              >
+                Ingresa un monto de pago igual o superior al total.
+              </q-banner>
+              <div class="q-mt-sm">
+                <q-btn
+                  icon="discount"
+                  color="yellow-8"
+                  class="q-ml-sm text-black"
+                  label="Agregar Cupón"
+                  @click="abrirCuponazo"
+                />
+              </div>
+            </q-card-section>
           </q-card>
-
-          <!-- total verde bonito -->
-          <q-card-section class="q-pa-none q-pb-md">
-            <div
-              class="bg-green-5 text-black text-center q-pa-sm"
-              style="font-size: 240%; font-weight: bold"
-            >
-              Total Q.{{ pedidoData.TOTAL_GENERAL_PEDIDO.toFixed(2) }}
-            </div>
-          </q-card-section>
-
-          <!-- Opcion de pago -->
-          <q-card-section class="q-gutter-md">
-            <div class="row q-col-gutter-md items-start">
-              <!-- Selector de tipo de pago -->
-              <div class="col-12 col-sm-4">
-                <q-select
-                  v-model="tipoPago"
-                  :options="opcionesPago2"
-                  label="Tipo de Pago"
-                  outlined
-                  dense
-                  class="bg-grey-3"
-                  input-class="text-bold"
-                >
-                  <template v-slot:prepend>
-                    <q-icon name="payment" color="primary" />
-                  </template>
-                </q-select>
-              </div>
-
-              <!-- Campo efectivo -->
-              <div class="col-12 col-sm-4">
-                <q-input
-                  ref="focusEfectivo"
-                  v-model="montoEfectivo"
-                  label="Efectivo"
-                  prefix="Q"
-                  :disable="tipoPago !== 'EFECTIVO' && tipoPago !== 'MIXTO'"
-                  outlined
-                  dense
-                  class="bg-grey-3"
-                  input-class="text-bold"
-                  type="number"
-                  min="0"
-                  @keydown.enter.prevent="confirmarFactura"
-                >
-                  <template v-slot:prepend>
-                    <q-icon name="account_balance_wallet" color="brown" />
-                  </template>
-                </q-input>
-              </div>
-
-              <!-- Campo tarjeta -->
-              <div class="col-12 col-sm-4">
-                <q-input
-                  ref="focusTarjeta"
-                  v-model="montoTarjeta"
-                  label="Tarjeta"
-                  prefix="Q"
-                  :disable="tipoPago !== 'TARJETA' && tipoPago !== 'MIXTO'"
-                  outlined
-                  dense
-                  class="bg-grey-3"
-                  input-class="text-bold"
-                  type="number"
-                  min="0"
-                  @keydown.enter.prevent="confirmarFactura"
-                >
-                  <template v-slot:prepend>
-                    <q-icon name="credit_card" color="blue" />
-                  </template>
-                </q-input>
-              </div>
-            </div>
-          </q-card-section>
-
-          <q-card-section class="q-pa-sm">
-            <div class="text-subtitle2 text-weight-bold text-grey-8 q-mb-sm">
-              {{
-                calcularCambio > 0
-                  ? `Cambio: Q. ${calcularCambio.toFixed(2)}`
-                  : "No hay cambio"
-              }}
-            </div>
-          </q-card-section>
-
-          <!-- Cuponazos -->
-          <q-card-section class="q-pa-sm">
-            <q-btn
-              class="q-mb-sm"
-              color="primary"
-              label="Agregar Cuponazo"
-              icon="add"
-              @click="abrirCuponazo"
-            />
-          </q-card-section>
         </q-card-section>
 
         <!-- Acciones -->
-        <q-card-actions align="right">
-          <q-btn flat label="Cancelar" @click="enfocarEfectivo" v-close-popup />
+        <q-card-actions align="right" class="q-pt-none">
           <q-btn
+            ref="btnConfirmarFactura"
+            color="secondary"
             icon="taskalt"
-            label="Confirmar Factura"
-            class="boton-amarillo q-ml-auto"
+            label="Facturar "
+            class="q-ml-sm"
+            :disable="!isPagoValido"
             @click="confirmarFactura()"
           />
         </q-card-actions>
@@ -510,31 +545,58 @@
     >
       <q-card
         class="q-dialog-plugin q-pa-md"
-        style="min-width: 400px; max-width: 90vw; max-height: 90vh"
+        style="
+          min-width: 400px;
+          max-width: 90vw;
+          max-height: 90vh;
+          border-radius: 10px;
+        "
       >
-        <q-card-section class="row items-center justify-between">
-          <div class="text-h6 text-primary">Cuponazo</div>
-          <q-btn icon="close" flat round dense v-close-popup />
+        <q-card-section
+          class="row items-center justify-between"
+          style="border-radius: 10px"
+        >
+          <div
+            class="text-h6 text-primary q-ml-sm bg-yellow-8 text-black q-pa-xs"
+            style="border-radius: 10px"
+          >
+            Agregar cupón
+          </div>
+          <q-btn
+            class="bg-yellow-8 text-black"
+            icon="close"
+            flat
+            round
+            dense
+            v-close-popup
+          />
         </q-card-section>
-
-        <q-separator />
 
         <q-card-section>
           <q-input
+            filled
             ref="refCupon"
             v-model="cupon"
-            label="Código del Cuponazo"
+            label="Escribe el cupón"
             @keyup.enter="aplicarCuponazo"
             outlined
             dense
           />
-          <!-- <q-input v-model="clave" label="Clave " type="password" outlined dense class="q-mt-md" /> -->
+          <q-input
+            v-model="clave"
+            label="Clave de autorización"
+            type="password"
+            outlined
+            dense
+            class="q-mt-md"
+            @keyup.enter="aplicarCuponazo()"
+          />
         </q-card-section>
 
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" v-close-popup />
           <q-btn
-            label="Aplicar Cuponazo"
+            label="Aplicar cupón"
             class="boton-amarillo"
             @click="aplicarCuponazo"
           />
@@ -584,6 +646,7 @@
 
 <script setup>
 import { useQuasar } from "quasar";
+import { useQueryClient } from "@tanstack/vue-query";
 import {
   ref,
   computed,
@@ -634,7 +697,7 @@ const props = defineProps({
   },
 });
 
-const  storeSucursal  = useStoreSucursal()
+const storeSucursal = useStoreSucursal();
 const { mutateAplicarCupon } = useCupones();
 const { datosEmpresa, datosEstablecimiento } = useDatosFel();
 const contingencia = ref(false);
@@ -656,7 +719,7 @@ const {
 } = usePedidoDet();
 const configuracionStore = useConfiguracionStore();
 const { mutateCrearFacturaEnc2 } = useFacturasEnc();
-const { obtenerPedidoPorId } = usePedidosEnc();
+const { obtenerPedidoPorId, obtenerPedidosPendientes } = usePedidosEnc();
 const {
   todosProductos,
   refetchTodosProductos,
@@ -690,6 +753,7 @@ const totalStore = useTotalStore();
 const modalFacturacion = ref(false);
 const userStore = useUserStore();
 const modalCuponazo = ref(false);
+const queryClient = useQueryClient();
 const idPedidoEnc = computed(() => {
   // Usar el prop pedidoId si está disponible, sino usar el del store
   return props.pedidoId !== null ? props.pedidoId : pedidoStore.idPedidoEnc;
@@ -703,8 +767,37 @@ const focusTarjeta = ref(null);
 const modalProductos2 = ref(false);
 const cantidadInputs = ref({}); // Referencias a los inputs de cantidad en el catálogo
 const buscadorProductoRef = ref(null);
+const { mutateAnularPedidoPendiente } = usePedidosEnc();
 
+// Facturación - cálculos y validaciones
+const totalAPagar = computed(() =>
+  Number(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0)
+);
+const montoEfectivoNum = computed(() => Number(montoEfectivo.value) || 0);
+const montoTarjetaNum = computed(() => Number(montoTarjeta.value) || 0);
+const sumaPago = computed(() => {
+  if (tipoPago.value === "EFECTIVO") return montoEfectivoNum.value;
+  if (tipoPago.value === "TARJETA") return montoTarjetaNum.value;
+  return montoEfectivoNum.value + montoTarjetaNum.value;
+});
+const faltantePago = computed(() =>
+  Math.max(0, totalAPagar.value - sumaPago.value)
+);
+const cambioPago = computed(() =>
+  Math.max(0, sumaPago.value - totalAPagar.value)
+);
+const isPagoValido = computed(
+  () => sumaPago.value >= totalAPagar.value && totalAPagar.value > 0
+);
 
+// Referencia y helper para enfocar botón Confirmar
+const btnConfirmarFactura = ref(null);
+const focusBtnConfirmar = async () => {
+  await nextTick();
+  if (btnConfirmarFactura.value && btnConfirmarFactura.value.$el) {
+    btnConfirmarFactura.value.$el.focus();
+  }
+};
 
 // Inicializar cantidadInputs de manera segura
 onMounted(() => {
@@ -781,7 +874,7 @@ const aplicarCuponazo = () => {
   const datosCupon = {
     numero_cupon: cupon.value,
     id_pedido_enc: pedidoStore.idPedidoEnc,
-    usuario: userStore.nombreVendedor, // codigo
+    usuario: clave.value,
   };
 
   //console.log('datos del cupon: ', datosCupon)
@@ -790,11 +883,30 @@ const aplicarCuponazo = () => {
     onSuccess: (res) => {
       showSuccessNotificationInside("Aplicado", "Cupon aplicado con exito");
       modalCuponazo.value = false;
-
+      clave.value = "";
+      cupon.value = "";
       nextTick();
     },
     onError: (error) => {
-      showErrorNotificationInside("Error", error);
+      // $q.notify({
+      //   type: "negative",
+
+      //   message: error.message,
+      //   position: "top-right",
+      //   timeout: 3000,
+      //   icon: "error",
+      //   actions: [
+      //     {
+      //       label: "OK",
+      //       color: "white",
+      //     },
+      //   ],
+      // });
+      showErrorNotificationInside("Error", error.message);
+      nextTick(() => {
+        refCupon.value?.setFocus();
+        refCupon.value?.select();
+      });
     },
   });
 
@@ -925,19 +1037,38 @@ watch(modalProductos, async (val) => {
   }
 });
 
-// limpiar pantalla
+// anular pedido
 const limpiar = async () => {
+  if (!pedidoStore.idPedidoEnc) {
+    showErrorNotification("Error", "No existe un pedido para anular");
+    return;
+  }
+
   const confirmado = await showConfirmationDialog(
-    "Limpiar Pedido",
-    "¿Estás seguro de que deseas iniciar un nuevo pedido?"
+    "Anular Pedido",
+    "¿Estás seguro de que deseas anular el pedido?"
   );
 
   if (confirmado) {
+    mutateAnularPedidoPendiente(
+      {
+        id: Number(pedidoStore.idPedidoEnc),
+        usuario: String(userStore.nombreVendedor || ""),
+      },
+      {
+        onSuccess: () => {
+          $q.notify({
+            type: "positive",
+            message: "Pedido anulado con éxito",
+            position: "top-right",
+            timeout: 3000,
+            icon: "check",
+          });
+        },
+      }
+    );
     cleanAllStores();
-    enfocarCodigo();
-
-    // await expansion.value.show()
-    window.location.reload();
+    focus.value.setFocus();
   }
 };
 
@@ -1058,7 +1189,11 @@ const certificarFactura = async (id) => {
   console.log("datos de factura:", factura);
 
   await mutateCertificar(
-    { sucursal: storeSucursal.idSucursal, serie: factura.SERIE, numero: factura.NUMERO_FACTURA },
+    {
+      sucursal: storeSucursal.idSucursal,
+      serie: factura.SERIE,
+      numero: factura.NUMERO_FACTURA,
+    },
     {
       onSuccess: async (data) => {
         const detalle = await obtenerDetalleFactura(id);
@@ -1145,15 +1280,16 @@ const terminarVenta = async () => {
 
 // Guarda factura enc y det
 const confirmarFactura = async () => {
-  // modal confirmacion factura
-  const confirmarFac = await showConfirmationInsideModal(
-    "Facturar",
-    "Esta seguro que desea facturar"
-  );
+  if (!configuracionStore.serieSeleccionada) {
+    modalFacturacion.value = false;
+    showErrorNotification(
+      "No hay serie",
+      "No se detectó una serie de facturacion, asigne uno en menu/configuracion "
+    );
+    return;
+  }
 
-  // esperar confirmacion de factura
-  await nextTick();
-  if (!confirmarFac) return;
+  // modal confirmacion factura
 
   const datos = {
     ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
@@ -1162,22 +1298,16 @@ const confirmarFactura = async () => {
     ES_CONTINGENCIA: contingencia.value,
   };
 
-  console.log("estos son los datos de factura a enviar", datos);
-  // Validación
-  if (!datos.ID_PEDIDO_ENC || !datos.SERIE) {
-    showErrorNotification("Factura", "No hay serie para facturar ");
-    return;
-  }
+  // Capturar el cambio actual antes de que muten estados
+  const cambioCapturado = cambioPago.value;
 
   // Ejecutar la facturación
   mutateCrearFacturaEnc2(datos, {
     onSuccess: async (respuesta) => {
+      // Guardar último cambio para mostrarlo en clienteform luego de cerrar el modal
+      totalStore.setUltimoCambio(cambioCapturado);
+
       modalFacturacion.value = false;
-      await showSuccessNotification("Factura", "Factura creada con éxito");
-
-      // crear sincronización
-
-      console.log("respuesta de factura enc", respuesta);
 
       // certificar factura
       //await certificarFactura(respuesta.ID_FACTURA_ENC)
@@ -1193,18 +1323,24 @@ const confirmarFactura = async () => {
       cleanAllStores();
 
       props.onNuevoPedido();
+      // limpiar campos de pago
+      montoEfectivo.value = null;
+      montoTarjeta.value = null;
 
-      //refrescar la pagina
-      //window.location.reload()
+      // Invalidate pedidos pendientes y refetch
+
+      await queryClient.invalidateQueries({
+        queryKey: ["pedidos-pendientes"],
+      });
+
+      await showSuccessNotification("Factura", "Factura generada con éxito");
     },
 
     onError: (error) => {
-      console.error(error);
+      modalFacturacion.value = false;
+      showErrorNotification("Error", error.message);
     },
   });
-
-  // borrar efectivo
-  montoEfectivo.value = null;
 };
 
 const columnasCatalogo2 = [
@@ -1624,6 +1760,19 @@ defineExpose({
 </script>
 
 <style scoped>
+.facturacion-card {
+  width: min(500px, 96vw);
+  max-width: 96vw;
+  max-height: 92vh;
+}
+
+.facturacion-header {
+  background: linear-gradient(135deg, #ffeb3b 0%, #fbc02d 100%);
+  color: #181717;
+  padding: 10px 14px;
+  border-radius: 8px 8px 0 0;
+}
+
 .pedido-detalle-container {
   padding: 6px 6px 0px 0;
   max-width: auto;
@@ -1916,6 +2065,8 @@ defineExpose({
 /* Celdas personalizadas */
 .codigo-cell {
   min-width: 200px;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .codigo-cell .text-weight-bold {
@@ -1930,6 +2081,8 @@ defineExpose({
 
 .descripcion-cell {
   min-width: 300px;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .descripcion-cell .text-weight-medium {
@@ -1941,6 +2094,8 @@ defineExpose({
 .precio-cell {
   min-width: 150px;
   text-align: center;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .precio-normal-table .text-weight-bold {
@@ -2049,6 +2204,15 @@ defineExpose({
   .catalogo-table .q-table__tbody td {
     padding: 8px 12px;
   }
+  .descripcion-cell {
+    min-width: 240px;
+  }
+  .codigo-cell {
+    min-width: 160px;
+  }
+  .precio-cell {
+    min-width: 120px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -2072,6 +2236,15 @@ defineExpose({
   .cantidad-cell,
   .accion-cell {
     min-width: auto;
+  }
+  .descripcion-cell {
+    min-width: 180px;
+  }
+  .codigo-cell {
+    min-width: 120px;
+  }
+  .precio-cell {
+    min-width: 96px;
   }
 }
 
