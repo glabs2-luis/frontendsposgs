@@ -102,49 +102,58 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, nextTick } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useLogin } from "../composables/useLogin";
-import { Login } from "../interfaces/login.interface";
-import { useQuery } from "@tanstack/vue-query";
-import { loginVendedorAction } from "../action/login-vendedor.action";
-import Swal from "sweetalert2";
-import { useUserStore } from "@/stores/user";
-import {
-  showErrorNotification,
-  showSuccessNotification,
-} from "@/common/helper/notification";
-import { useSucursales } from "@/modules/Sucursales/composables/useSucursales";
-import { useBodegas } from "@/modules/bodegas/composables/useBodegas";
-import type { Bodega } from "../../bodegas/interfaces/bodegaInterface";
-import { useQuasar } from "quasar";
 
-const { loginMutation } = useUserStore();
-const { obtenerSucursal } = useSucursales();
-const { obtenerBodegasId } = useBodegas();
-const { ObtenerBodegasId2 } = useBodegas();
-const router = useRouter();
-const usuario = ref("");
-const password = ref("");
-const bodega = ref<Bodega>();
-const recordarUsuario = ref(false);
-const focusContra = ref(null);
-const focusUsuario = ref(null);
-const $q = useQuasar();
-const isPwd = ref(true);
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useLogin } from '../composables/useLogin'
+import { Login } from '../interfaces/login.interface'
+import { useQuery } from '@tanstack/vue-query'
+import { loginVendedorAction } from '../action/login-vendedor.action'
+import Swal from 'sweetalert2'
+import { useUserStore } from '@/stores/user'
+import { showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
+import { useSucursales } from '@/modules/Sucursales/composables/useSucursales'
+import { useBodegas} from '@/modules/bodegas/composables/useBodegas';
+import type { Bodega } from '../../bodegas/interfaces/bodegaInterface';
+import { useStoreSucursal } from '@/stores/sucursal'
+import { useQuasar } from 'quasar'
+import { nextTick } from 'vue'
+
+const StoreSucursal = useStoreSucursal()
+const { loginMutation } = useUserStore()
+const { obtenerSucursal } = useSucursales()
+const { obtenerBodegasId } = useBodegas()
+const { ObtenerBodegasId2 } = useBodegas()
+const router = useRouter()
+const usuario = ref('')
+const password = ref('')
+const bodega = ref<Bodega>()
+const recordarUsuario = ref(false)
+const focusContra = ref(null)
+const focusUsuario = ref(null)
+const $q = useQuasar()
+const isPwd = ref(true)
 
 const mostrarBodega = async () => {
   const result = await ObtenerBodegasId2();
   if (result && result.obtenerBodegasId && result.obtenerBodegasId.value) {
-    bodega.value = result.obtenerBodegasId.value;
+    bodega.value = result.obtenerBodegasId.value
+
+    StoreSucursal.setbodega(
+      bodega.value.CODIGO_BODEGA,
+      bodega.value.DESCRIPCION_BODEGA,
+      bodega.value.ID_SUCURSAL
+    )
+    console.log(bodega.value)
   } else {
     showErrorNotification(
       "Error",
       "No se pudo obtener la bodega, por favor contacte al administrador"
-    );
+    )
   }
-};
+}
 
+// Login
 const realizarLogin = () => {
   loginMutation(
     {
@@ -156,12 +165,17 @@ const realizarLogin = () => {
       onSuccess: (data) => {
         // Rrecordar usuario
         if (recordarUsuario.value) {
-          localStorage.setItem("usuarioRecordado", usuario.value);
+          localStorage.setItem("usuarioRecordado", usuario.value)
         } else {
-          localStorage.removeItem("usuarioRecordado");
+          localStorage.removeItem("usuarioRecordado")
         }
 
-        router.push("/ventas");
+        router.push("/ventas")
+
+
+
+
+
       },
       onError: (error: Error) => {
         // Login fallido

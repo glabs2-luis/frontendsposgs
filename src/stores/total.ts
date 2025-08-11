@@ -21,4 +21,4 @@ export const useTotalStore = defineStore('total', () => {
         resetStore
     }
 
-})
+}, )

@@ -64,7 +64,7 @@
           class="q-mr-sm"
         />
         <q-toolbar-title>
-          POS GS - {{ obtenerSucursal?.NOMBRE_DE_SUCURSAL }}
+          POS GS - {{ StoreSucursal.descripcionBodega }}
         </q-toolbar-title>
 
         <div class="q-mr-md text-weight-medium">
@@ -173,7 +173,9 @@ import { cleanAllStores } from "@/common/helper/cleanStore";
 import { useQuasar } from "quasar";
 import { useSyncManager } from "@/modules/sync/composables/useSyncManager";
 import SyncResultsModal from "@/modules/sync/components/SyncResultsModal.vue";
+import { useStoreSucursal } from "@/stores/sucursal";
 
+const StoreSucursal  = useStoreSucursal()
 const { obtenerSucursal } = useSucursales();
 const { nombreVendedor, codigoVendedor } = useUserStore();
 const router = useRouter();

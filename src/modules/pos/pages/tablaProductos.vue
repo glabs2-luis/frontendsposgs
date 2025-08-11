@@ -196,17 +196,18 @@ const { data: listaProductosPedido, refetch: refetchListaProductosPedidoDet } =
 const rows = computed(() => data.value || []);
 
 watchEffect(() => {
-  console.log("Esto es rows:", rows.value);
-});
+  //console.log("Esto es rows:", rows.value);
+})
+
 // calcular total
 const idTotal = computed(() => pedidoStore.idPedidoEnc);
 
-const { data: dataPedido } = obtenerPedidoPorId(idTotal);
+const { data: dataPedido } = obtenerPedidoPorId(idTotal)
 
 const totalGeneral = computed(() => {
   if (!dataPedido.value) return 0;
   return Number(dataPedido.value.TOTAL_GENERAL_PEDIDO) || 0;
-});
+})
 
 // Watch para actualizar el store
 watch(

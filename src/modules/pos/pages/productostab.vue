@@ -619,6 +619,7 @@ import { useCertification } from "@/modules/certification/composables/useCertifi
 import { useDatosFel } from "@/modules/fel_empresa_establecimiento/composables/useFelDatos";
 import { useCupones } from "@/modules/cupones/composables/useCupones";
 import useFormat from "@/common/composables/useFormat";
+import { useStoreSucursal } from "@/stores/sucursal";
 
 const { formatNumber, formatCurrency } = useFormat();
 const props = defineProps({
@@ -633,6 +634,7 @@ const props = defineProps({
   },
 });
 
+const  storeSucursal  = useStoreSucursal()
 const { mutateAplicarCupon } = useCupones();
 const { datosEmpresa, datosEstablecimiento } = useDatosFel();
 const contingencia = ref(false);
@@ -701,6 +703,9 @@ const focusTarjeta = ref(null);
 const modalProductos2 = ref(false);
 const cantidadInputs = ref({}); // Referencias a los inputs de cantidad en el catálogo
 const buscadorProductoRef = ref(null);
+
+
+
 // Inicializar cantidadInputs de manera segura
 onMounted(() => {
   cantidadInputs.value = {};
@@ -1053,7 +1058,7 @@ const certificarFactura = async (id) => {
   console.log("datos de factura:", factura);
 
   await mutateCertificar(
-    { sucursal: "1", serie: factura.SERIE, numero: factura.NUMERO_FACTURA },
+    { sucursal: storeSucursal.idSucursal, serie: factura.SERIE, numero: factura.NUMERO_FACTURA },
     {
       onSuccess: async (data) => {
         const detalle = await obtenerDetalleFactura(id);
