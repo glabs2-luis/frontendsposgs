@@ -9,6 +9,8 @@ lerna-debug.log*
 
 node_modules
 .DS_Store
+.env
+
 dist
 dist-ssr
 coverage
@@ -29,6 +31,4 @@ coverage
 
 *.tsbuildinfo
 
-*.env
 
-*.env
