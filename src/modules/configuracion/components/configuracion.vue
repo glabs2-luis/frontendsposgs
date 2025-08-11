@@ -137,7 +137,6 @@ const { generarFacturaPDF } = usePdfFactura()
 const configuracionStore = useConfiguracionStore()
 const { seriesSucursal } = useSeries()
 
-
 // sync
 import { useSync } from '@/modules/sync/composables/useSync'
 const { refetchArchivosCreados, archivosTransferidos, refetchArchivosTransferidos, refetchArchivosErrores, reintentarEnviarArchivos, archivosErrores, estadoConexion } = useSync()
@@ -175,10 +174,6 @@ const mostrarConexion = () => {
 const actualizarBodega = () => {
 
 }
-
-
-
-
 
 
 function ListaDet1(idPedidoEnc: any): { data: any; isLoading: any; refetch: any } {

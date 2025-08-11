@@ -1,6 +1,7 @@
 <template>
   <div class="row">
     <div class="col-12">
+      
       <!-- informacion mas pedido y cantidad-->
       <div class="row items-start no-wrap q-gutter-sm">
         <!-- ExpansionItem -->
@@ -323,10 +324,11 @@ import { useValidation } from "@/modules/validation/composables/useValidation";
 import useFormat from "@/common/composables/useFormat";
 import { useBodegas } from "@/modules/bodegas/composables/useBodegas";
 import { useStoreSucursal } from "@/stores/sucursal";
+import { useConfiguracionPos } from "@/modules/configuracion_pos/composables/useConfiguracionPos";
 
 const { ObtenerBodegasId2 } = useBodegas()
 const  storeSucursal  = useStoreSucursal()
-
+const { obtenerConfiguracionPos } = useConfiguracionPos()
 const { formatCurrency, formatNumber, formatDecimal } = useFormat();
 const validador = ref(true)
 const $q = useQuasar();
@@ -580,10 +582,10 @@ const crearPedido = () => {
     NIT_A_FACTURAR: nit,
     SUBTOTAL_PEDIDO: 0,
     TOTAL_GENERAL_PEDIDO: 0,
-    ID_SUCURSAL: 1, // Sera unica
+    ID_SUCURSAL: Number(storeSucursal.idSucursal),
     USUARIO_INGRESO_PEDI: userStore.nombreVendedor.substring(0, 10),
     CODIGO_VENDEDOR: userStore.codigoVendedor,
-    CODIGO_DE_CLIENTE: 1021, //
+    CODIGO_DE_CLIENTE: obtenerConfiguracionPos.value.CODIGO_CLIENTE_CF // Cliente Ticket 
   };
 
   mutateCrearPedidoEnc(pedidoEnc, {
@@ -785,6 +787,7 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
     },
   });
 };
+
 </script>
 
 <style scoped>
@@ -842,4 +845,5 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 .tabla-elegante tbody tr:last-child td {
   border-bottom: none;
 }
+
 </style>

@@ -1,4 +1,5 @@
 import posApi from '@/api/apiPos';
+import { getAxiosErrorMessage } from '@/helper/geterrordb';
 import type { Vendedor, ApiFacturaResponse, DevolucionEnc, DevolucionDet, ApiNotaCreditoResponse, ProductoAlterno } from '@/modules/notas_credito/interfaces/NotaCredito';
 import axios from 'axios';
 
@@ -26,8 +27,9 @@ export const obtenerTipoVendedor = async (clave: string): Promise<Vendedor | nul
     if (response.status !== 200) throw new Error('Vendedor no encontrado.');
     return response.data;
   } catch (error) {
-    console.error("Error al obtener el tipo de vendedor:", error);
-    return null;
+    const message = getAxiosErrorMessage(error, 'Hubo un error buscando al vendedor')
+    console.log(message)
+    //throw new Error(message)
   }
 }
 

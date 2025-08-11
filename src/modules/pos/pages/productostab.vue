@@ -621,7 +621,6 @@ import { useCupones } from "@/modules/cupones/composables/useCupones";
 import useFormat from "@/common/composables/useFormat";
 import { useStoreSucursal } from "@/stores/sucursal";
 
-const { formatNumber, formatCurrency } = useFormat();
 const props = defineProps({
   pedidoId: {
     type: [String, Number, null],
@@ -634,6 +633,7 @@ const props = defineProps({
   },
 });
 
+const { formatNumber, formatCurrency } = useFormat();
 const  storeSucursal  = useStoreSucursal()
 const { mutateAplicarCupon } = useCupones();
 const { datosEmpresa, datosEstablecimiento } = useDatosFel();
@@ -1427,7 +1427,7 @@ const buscarProductoEscaneado = async () => {
     PRECIO_UNIDAD_VENTA: Number(resultado.precio.PRECIO_FINAL.toFixed(4)),
     SUBTOTAL_VENTAS: Number((1 * resultado.precio.PRECIO_FINAL).toFixed(4)),
     DESCRIPCION_PROD_AUX: resultado.producto.DESCRIPCION_PROD, // vacio
-    ID_SUCURSAL: "1",
+    ID_SUCURSAL: storeSucursal.idSucursal,
     NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido,
   };
 
@@ -1493,7 +1493,7 @@ const agregarProductoAlPedido2 = async (producto) => {
       SUBTOTAL_VENTAS:
         cantidadFinal * (precio.PRECIO_PROMOCION ?? precio.PRECIO_FINAL),
       DESCRIPCION_PROD_AUX: producto.DESCRIPCION_PROD,
-      ID_SUCURSAL: "1",
+      ID_SUCURSAL: storeSucursal.idSucursal,
       NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido,
     };
 
@@ -1522,10 +1522,11 @@ const agregarProductoAlPedido2 = async (producto) => {
       },
       onError: (error) => {
         console.error("Error al guardar producto en BD:", error);
-        showErrorNotification(
+        showErrorNotificationInside(
           "No hay pedido",
           "Debe de crear un pedido primero"
         );
+        throw new Error(error)
       },
       onSettled: () => {
         loadingAgregar.value = false;
@@ -1622,6 +1623,7 @@ defineExpose({
   totalPedido,
 });
 </script>
+
 
 <style scoped>
 .pedido-detalle-container {

@@ -172,10 +172,6 @@ const realizarLogin = () => {
 
         router.push("/ventas")
 
-
-
-
-
       },
       onError: (error: Error) => {
         // Login fallido
@@ -212,9 +208,12 @@ onMounted(async () => {
     });
   }
 });
+
 </script>
 
+
 <style scoped>
+
 .fondo-login {
   background: linear-gradient(135deg, hsl(66, 97%, 49%), #252e10);
   min-height: 100vh;

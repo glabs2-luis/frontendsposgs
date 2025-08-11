@@ -478,7 +478,6 @@ const cerrarSesion = async () => {
   }
 }
 
-/* Estilos para el separador */
 .q-separator {
   background: #fdd835;
   opacity: 0.3;

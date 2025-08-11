@@ -147,6 +147,8 @@ import useSeries from '../../fel_establecimiento_series/composables/useSeries'
 import { date } from 'quasar'
 import { useFacturasEnc } from '@/modules/facturas_enc/composables/useFacturasEnc'
 import { FacturaEnc } from '@/modules/facturas_enc/interfaces/facturaEncInterface'
+import { obtenerTipoVendedor } from '@/modules/notas_credito/action/useNotaCreditoActions'
+import { getAxiosErrorMessage } from '../../../common/helper/geterrordb';
 
 const { obtenerFacturasPorFecha} = useFacturasEnc()
 const { seriesSucursal } = useSeries()
@@ -158,7 +160,6 @@ const { data: series} = seriesSucursal(1)
 const serie = ref('')
 //const rangoFechas = ref({ from: '', to: ''})
 const rangoFechas = ref<{ from: string; to?: string }>({ from: '' })
-
 let totalCorte = ref(0) // Calcular total
 const ticketRef = ref<HTMLElement | null>(null) // Para impresion
 const listaFacturas = ref<FacturaEnc[]>([])
@@ -176,13 +177,22 @@ onMounted(() => {
   mostrarModal.value = true
 })
 
-// Comparar clave
-const verificarPassword = () => {
-  if (password.value === '123') { // backend - pending
-    accesoPermitido.value = true
+// Comparar clave para ingresar 
+const verificarPassword = async () => {
+
+  const datos = await obtenerTipoVendedor(password.value)
+
+      // Validar si no encontro al vendedor
+    if (!datos || !datos.TIPO_VENDEDOR) {
+      showErrorNotificationInside('Contraseña incorrecta', 'Verifique sus credenciales')
+      return
+    }
+
+    if (datos.TIPO_VENDEDOR === 'SA') { // Validar que sea tipo SA
+    accesoPermitido.value = true // Activar acceso
     mostrarModal.value = false
-  } else {
-    showErrorNotificationInside('Contraseña incorrecta', 'No se ha podido ingresar')
+   } else {
+    showErrorNotificationInside('Acceso No Autorizado', 'Contacte a algun administrador')
   }
 }
 
