@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import { loginRoutes } from '@/modules/login/router'
 import { posRoutes } from '@/modules/pos/router'
 import { clientesRoutes } from '@/modules/clientes/router'
@@ -10,7 +10,7 @@ import { settingsRoutes } from '@/modules/configuracion/router'
 import { pendientesRoutes } from '@/modules/pendientes/router'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     { path: '/', redirect: '/login' },
     loginRoutes,
