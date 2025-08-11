@@ -8,13 +8,17 @@
       :vendedor="vendedorActual"
       :nota-para-editar="notaSeleccionadaParaEditar"
     />
-
+    
     <template v-if="accesoPermitido">
       <div class="q-pa-md q-mx-auto" style="max-width: 1200px">
         <div class="row items-center q-mb-md">
-          <div class="text-h4 text-primary q-mr-md">Gestión de Notas de Crédito</div>
+
+          <div class="text-h5 text-weight-bold text-grey-8">
+            <q-icon name="receipt" size="sm" class="q-mr-sm text-amber-7" />
+            Gestión de Notas de Crédito
+          </div>
           <q-space />
-          <q-btn color="primary" icon="add" label="Nueva Nota" @click="nuevaNota" />
+          <q-btn style="background: #f3cf3f; color: black; font-weight: 500;" icon="add" label="Nueva Nota" @click="nuevaNota" />
         </div>
 
         <q-card flat bordered class="q-pa-sm">

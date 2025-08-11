@@ -1,7 +1,7 @@
 <template>
-  <q-dialog v-model="visible" persistent>
+  <q-dialog v-model="visible" persistent style="z-index: auto;">
     <q-card style="min-width: 350px; max-width: 450px;">
-      <q-card-section class="bg-primary text-white q-py-md">
+      <q-card-section class="title-card text-balance q-py-md">
         <div class="text-h6 text-center text-weight-bold">
           <q-icon name="lock_open" class="q-mr-sm" size="md" />Acceso a Notas de Crédito
         </div>
@@ -44,8 +44,8 @@
           class="q-px-md"
         />
         <q-btn
-          color="primary"
           label="Ingresar"
+          style="background: #f3cf3f; color: black; font-weight: 600;"
           icon-right="arrow_forward"
           @click="aceptar"
           :disable="!clave"
@@ -152,4 +152,9 @@ function cerrar() {
 .q-card {
   border-radius: 8px;
 }
+
+.title-card {
+  background-color: #f3cf3f;
+}
+
 </style>
