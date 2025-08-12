@@ -71,8 +71,8 @@ const columns : QTableColumn<Cliente>[] = [
   { name: 'ID_ACLIENTE', label: 'ID', field: 'ID_ACLIENTE', align: 'left' },
   { name: 'NOMBRE', label: 'Nombre', field: 'NOMBRE', align: 'left' },
   { name: 'NIT', label: 'NIT', field: 'NIT', align: 'left' },
-  { name: 'DPI', label: 'DPI', field: 'DPI', align: 'left' },
   { name: 'DIRECCION', label: 'Dirección', field: 'DIRECCION', align: 'left' },
+  { name: 'DPI', label: 'DPI', field: 'DPI', align: 'left' },
   { name: 'TELEFONO', label: 'Teléfono', field: 'TELEFONO', align: 'left' },
   { name: 'CORREO_ELECTRONICO', label: 'Correo', field: 'CORREO_ELECTRONICO', align: 'left' },
   { name: 'ACTION', label: 'Acciones', field: 'ACTION', align: 'left' }

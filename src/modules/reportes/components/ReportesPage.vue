@@ -3,14 +3,15 @@
 
     <!-- Modal de contraseña -->
     <q-dialog v-model="mostrarModal" style="z-index: auto;" persistent>
-      <q-card style="width: 300px;">
-        <q-card-section class="q-pa-sm q-pl-md q-ma-none title-card">
-          <div class="text-h6 text-bold">Corte de Caja</div>
+      <q-card style="width: 340px; height: 210px;">
+        <q-card-section class="q-pa-md q-pl-md q-ma-none title-card">
+          <div class="text-h6 text-bold"><q-icon name="lock_open" />      Corte de Caja
+          </div>
         </q-card-section>
 
         <q-card-section class="q-pa-sm q-mt-none q-ml-md q-mr-md">
           <q-input v-model="password" label="Ingrese la contraseña" autofocus @keyup.enter="verificarPassword" :type="mostrarPassword ? 'text' : 'password'"
-          >
+          >    
             <template #append>
               <q-icon
                 :name="mostrarPassword ? 'visibility_off' : 'visibility'"
@@ -21,9 +22,9 @@
           </q-input>
         </q-card-section>
 
-        <q-card-actions align="right">
-          <q-btn flat label="Cancelar" @click="cancelar" color="negative" />
-          <q-btn label="Ingresar" class="boton-amarillo" @click="verificarPassword" />
+        <q-card-actions align="right" class="q-pa-md">
+          <q-btn flat label="Cancelar" @click="cancelar" color="black" />
+          <q-btn label="Ingresar" class="boton-amarillo" icon-right="arrow_forward" @click="verificarPassword" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -321,6 +322,10 @@ ventanaImpresion.document.write(`
 </script>
 
 <style scoped>
+
+.q-card {
+  border-radius: 8px;
+}
 
 .title-card {
   background-color: #f3cf3f;

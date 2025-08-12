@@ -146,7 +146,7 @@
 
     <q-footer>
       <div class="bg-yellow-8 text-black text-center q-pa-sm">
-        <strong> Made by Hugo Boss - 2025 </strong>
+        <strong> Made by Hugo Love Shady - 2025 </strong>
       </div>
     </q-footer>
 

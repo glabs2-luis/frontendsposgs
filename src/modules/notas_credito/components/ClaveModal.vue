@@ -39,7 +39,7 @@
         <q-btn
           flat
           label="Cancelar"
-          color="grey-8"
+          color="black"
           @click="cerrar"
           class="q-px-md"
         />
