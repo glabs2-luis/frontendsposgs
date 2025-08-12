@@ -1,6 +1,7 @@
 import { getAxiosErrorMessage } from '@/common/helper/geterrordb'
 import { Certification, DtoCertificado } from '../interfaces/certificationInterface'
 import posApiCertificador from '@/api/apiPosCertificacion'
+import posApi from '@/api/apiPos';
 
 import axios from 'axios';
 import { env } from 'node:process';
@@ -10,7 +11,7 @@ import { env } from 'node:process';
 
 export const crearCertificationAction = async (  datos: { sucursal: string; serie: string; numero: number } ) : Promise<Certification> => {
     try {
-        const { data } = await posApiCertificador.post(`/certification`, {idSucursal: datos.sucursal, serie: datos.serie, numeroFactura: datos.numero})
+        const { data } = await posApi.post(`/certification`, {idSucursal: datos.sucursal, serie: datos.serie, numeroFactura: datos.numero})
         console.log('retornando crear certificacion desde action: ', data)
         return data
     } catch (error){

@@ -39,6 +39,7 @@ export const usePedidoDet = () => {
 
   // Actualizar descripcion detalle
   const { mutate: mutateActualizarPedidoDetId } = useMutation({
+    
     mutationFn: (params: { id: number; descripcion: string }) =>
       actualizarDescripcionPedidoDetAction(params.id, params.descripcion),
 
@@ -57,10 +58,10 @@ export const usePedidoDet = () => {
     mutationFn: eliminarPedidoDetId,
     onSuccess: () => {
       // Invalidar todas las queries relacionadas con pedidos-det
-      queryClient.invalidateQueries({ queryKey: ["pedidos-det"] });
-      queryClient.invalidateQueries({ queryKey: ["pedido-det"] });
-      queryClient.invalidateQueries({ queryKey: ["pedido-enc"] });
-      queryClient.invalidateQueries({ queryKey: ["pedido-enc-id"] });
+      queryClient.invalidateQueries({ queryKey: ["pedidos-det"] })
+      queryClient.invalidateQueries({ queryKey: ["pedido-det"] })
+      queryClient.invalidateQueries({ queryKey: ["pedido-enc"] })
+      queryClient.invalidateQueries({ queryKey: ["pedido-enc-id"] })
     },
     onError: (error: Error) => {
       showErrorNotification("Error", error.message);

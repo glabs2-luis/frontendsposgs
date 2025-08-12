@@ -98,12 +98,34 @@
               </template>
 
               <!-- Otras columnas -->
-              <template v-else-if="col.name === 'DESCRIPCION_PROD'">
-                <!-- negrita -->
-                <div class="descripcion-prod">
-                  {{ col.value }}
+          <!-- Descripción editable con  (AUX -> PROD) -->
+          <template v-else-if="col.name === 'DESCRIPCION_PROD'">
+            <div class="descripcion-prod row items-center no-wrap cursor-pointer">
+              <span class="ellipsis">{{ col.value }}</span>
+              <!-- Icono de editar
+              <q-icon name="edit" size="16px" class="q-ml-xs text-grey-6" /> -->
+
+                  <q-popup-edit
+                    :model-value="col.value"
+                    buttons
+                    label-set="Guardar"
+                    label-cancel="Cancelar"
+                    :disable="savingDescId === props.row.ID_PEDIDO_DET"
+                    @save="(val) => onGuardarDescripcion(props.row, val)"
+                    v-slot="scope"
+                  >
+                    <q-input
+                      v-model="scope.value"
+                      dense
+                      autofocus
+                      counter
+                      :maxlength="120"
+                      @keyup.enter.stop="onGuardarDescripcion(props.row, scope.value)"
+                    />
+                  </q-popup-edit>
                 </div>
               </template>
+
 
               <template v-else-if="col.name === 'CANTIDAD_PEDIDA'">
                 <!--centrar -->
@@ -179,7 +201,7 @@ const props = defineProps<{
 const totalStore = useTotalStore();
 const pedidoStore = usePedidoStore();
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc);
-const { ListaDet1, useListaProductosPedidoDet, mutateEliminarPedidoDetID } =
+const { ListaDet1, useListaProductosPedidoDet, mutateEliminarPedidoDetID, mutateActualizarPedidoDetId } =
   usePedidoDet();
 const { data, isLoading: isLoadingQuery, refetch } = ListaDet1(idPedidoEnc);
 
@@ -197,7 +219,7 @@ const { data: listaProductosPedido, refetch: refetchListaProductosPedidoDet } =
 const rows = computed(() => data.value || []);
 
 watchEffect(() => {
-  //console.log("Esto es rows:", rows.value);
+  console.log("Esto es rows:", rows.value);
 });
 
 // calcular total
@@ -220,13 +242,19 @@ watch(
   { immediate: true }
 );
 
+// Mostrar la descripcion del producto o descripcion actualizada
+const descMostrar = (row: any) => {
+  const aux = (row?.DESCRIPCION_PROD_AUX ?? '').trim();
+  return aux.length ? aux : row?.DESCRIPCION_PROD;
+};
+
 // Columnas para la tabla
 const columnas: QTableColumn[] = [
   { name: "PRODUCT0", label: "Código", field: "PRODUCT0", align: "left" },
   {
     name: "DESCRIPCION_PROD",
     label: "Descripción",
-    field: "DESCRIPCION_PROD",
+    field: (row) => (row?.DESCRIPCION_PROD_AUX?.trim() || row?.DESCRIPCION_PROD), 
     align: "left",
   },
   {
@@ -263,6 +291,38 @@ const forzarActualizacionTabla = async () => {
   } catch (error) {
     console.error("Error forzando actualización:", error);
   }
+};
+
+// estado de guardado por fila
+const savingDescId = ref<number | null>(null);
+
+
+const onGuardarDescripcion = (row: any, nuevaDescripcion: string) => {
+  const desc = (nuevaDescripcion ?? '').trim();
+
+  if (!desc || desc === descMostrar(row)) return;
+
+    savingDescId.value = row.ID_PEDIDO_DET;
+    
+    row.DESCRIPCION_PROD_AUX = desc;
+    row.DESCRIPCION_MOSTRAR = desc;
+
+  mutateActualizarPedidoDetId(
+    { id: row.ID_PEDIDO_DET, descripcion: desc },
+    {
+      onSuccess: async () => {
+        await forzarActualizacionTabla();        // actualizar Tabla
+        $q.notify({ type: 'positive', message: 'Descripción actualizada' });
+      },
+      onError: (e: any) => {
+        const message = e?.message || 'No se pudo actualizar la descripción';
+        showErrorNotification('Error', message);
+      },
+      onSettled: () => {
+        savingDescId.value = null;
+      }
+    }
+  );
 };
 
 // actualización cuando cambia el id
