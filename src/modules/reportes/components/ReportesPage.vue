@@ -68,10 +68,19 @@
                   style="width: 250px;"
                   emit-value
                   map-options
+                  autofocus
                   />
 
-                  <!-- Botón -->
+                  <!-- Botón Buscar Facturas -->
                   <q-btn class="q-pa-sm q-mt-md boton-amarillo" label="Buscar" @click="buscarFacturas" />
+
+                  <!-- PImprimir -->
+                  <div v-if="listaFacturas.length > 0"  class="col-auto q-ma-md">         
+
+                  <div class="text-center q-mb-md">
+                    <q-btn align="left" class="boton-amarillo" label="Imprimir" color="black" @click="imprimirTicket" />
+                  </div>
+                  </div>
 
               </div>
               
@@ -121,14 +130,16 @@
 
                 </div>
 
-                 <!-- Botón Imprimir -->
+                 <!-- Botón Imprimir 
                   <div v-if="listaFacturas.length > 0"  class="col-auto q-ma-md">         
 
                   <div class="text-center q-mb-md">
                     <q-btn  class="boton-amarillo" label="Imprimir" color="black" @click="imprimirTicket" />
                   </div>
-
+                
                   </div>
+                -->
+
               </div>
   
           </q-card-section>
@@ -149,7 +160,6 @@ import { date } from 'quasar'
 import { useFacturasEnc } from '@/modules/facturas_enc/composables/useFacturasEnc'
 import { FacturaEnc } from '@/modules/facturas_enc/interfaces/facturaEncInterface'
 import { obtenerTipoVendedor } from '@/modules/notas_credito/action/useNotaCreditoActions'
-import { getAxiosErrorMessage } from '../../../common/helper/geterrordb';
 
 const { obtenerFacturasPorFecha} = useFacturasEnc()
 const { seriesSucursal } = useSeries()
@@ -202,7 +212,7 @@ const cancelar = () => {
   mostrarModal.value = false
 }
 
-// Formato de decha
+// Formato de fecha
 const formatearFechaGT = (fecha: string) =>
   fecha ? date.formatDate(new Date(fecha + 'T00:00:00'), 'DD/MM/YYYY') : ''
 
@@ -222,8 +232,8 @@ const buscarFacturas = async () => {
   
   try {
 
-    console.log('datos antes', rangoFechas.value.from)
-    console.log('datos antes', rangoFechas.value.to)
+    console.log('fecha antes', rangoFechas.value.from)
+    console.log('fecha despues', rangoFechas.value.to)
 
     if (!rangoFechas.value.from || !rangoFechas.value.to) {
     showErrorNotification('Rango de Fechas', 'Debe seleccionar un rango de fechas válido')

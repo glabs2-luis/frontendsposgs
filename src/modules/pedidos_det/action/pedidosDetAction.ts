@@ -40,7 +40,8 @@ export const eliminarPedidoDetId = async (id: number) : Promise<PedidosDet[]> =>
 // Actualizar la descripcion en pedido det
 export const actualizarDescripcionPedidoDetAction = async (id: number, descripcion: string) : Promise<PedidosDet> => {
     try {
-        const { data } = await posApi.patch<PedidosDet>(`/pedidos-det/${id}`,{ DESCRIPCION_PROD_AUX: descripcion })
+      const desc = encodeURIComponent(descripcion.trim()) // Evitar errores con los caracteres
+        const { data } = await posApi.patch<PedidosDet>(`/pedidos-det/cambiarDescripcion/${id}/${desc}`)
         return data
     } catch (error){
         console.log(error, 'error')

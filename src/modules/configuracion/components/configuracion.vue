@@ -116,7 +116,7 @@
 
 
       <q-page class="q-mt-lg">
-        <q-btn label="Actualizar bodega" color="black" @click="actualizarBodega" />
+        <!--<q-btn label="Actualizar bodega" color="black" @click="actualizarBodega" /> -->
       </q-page>
 
   </q-page>

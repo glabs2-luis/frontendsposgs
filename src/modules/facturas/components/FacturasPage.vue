@@ -23,6 +23,7 @@
               outlined
               debounce="300"
               class="search-input"
+              autofocus 
             >
               <template #prepend>
                 <q-icon name="search" color="grey-6" />

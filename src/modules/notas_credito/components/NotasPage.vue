@@ -31,6 +31,7 @@
                   v-model="searchTerm"
                   placeholder="Buscar..."
                   clearable
+                  autofocus
                   @update:model-value="filterNotes"
                 >
                   <template v-slot:prepend>

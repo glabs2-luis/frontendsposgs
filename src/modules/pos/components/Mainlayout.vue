@@ -93,7 +93,7 @@
           dense
           :icon="isSyncing ? 'sync' : 'sync'"
           :class="isSyncing ? 'rotating' : ''"
-          :color="isSyncing ? 'primary' : 'grey-7'"
+          :color="isSyncing ? 'green' : 'grey-7'"
           class="q-mr-sm sync-button"
           @click="abrirModalSincronizacion"
           :disable="isSyncing"

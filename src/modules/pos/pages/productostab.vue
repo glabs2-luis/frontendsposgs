@@ -25,7 +25,7 @@
           <q-toggle
             v-model="contingencia"
             label="Contingencia"
-            color="yellow-9"
+            color="yellow-10"
             keep-color
             class="toggle-brillante"
           />
@@ -906,6 +906,9 @@ const aplicarCuponazo = () => {
       nextTick(() => {
         refCupon.value?.setFocus();
         refCupon.value?.select();
+        refetchObtenerPedidoID()
+
+
       });
     },
   });
@@ -1246,7 +1249,7 @@ const certificarFactura = async (id) => {
               totalPagar: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
               totalItems,
             },
-            nombreVendedor: factura.USUARIO_QUE_FACTURA || "Desconocido",
+            nombreVendedor: factura.USUARIO_QUE_FACTURA,
             qrCodeData: "Pendiente",
           };
 
