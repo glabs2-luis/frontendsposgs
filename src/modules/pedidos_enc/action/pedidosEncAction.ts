@@ -30,8 +30,6 @@ export const obtenerPedidosPendientesAction = async (
     const { data } = await posApi.get<PedidosEnc[]>(`/pedidos-enc/pendientes`, {
       params: { ID_SUCURSAL, CODIGO_VENDEDOR },
     });
-
-    console.log("Pedidos pendientes:", data);
     return data;
   } catch (error) {
     const message = getAxiosErrorMessage(

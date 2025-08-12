@@ -4,8 +4,8 @@
     <!-- Modal de contraseña -->
     <q-dialog v-model="mostrarModal" style="z-index: auto;" persistent>
       <q-card style="width: 300px;">
-        <q-card-section class="q-pa-sm q-ma-sm">
-          <div class="text-h6">Corte de Caja</div>
+        <q-card-section class="q-pa-sm q-pl-md q-ma-none title-card">
+          <div class="text-h6 text-bold">Corte de Caja</div>
         </q-card-section>
 
         <q-card-section class="q-pa-sm q-mt-none q-ml-md q-mr-md">
@@ -321,6 +321,10 @@ ventanaImpresion.document.write(`
 </script>
 
 <style scoped>
+
+.title-card {
+  background-color: #f3cf3f;
+}
 
 .boton-amarillo {
   background: linear-gradient(90deg, #FFEB3B, #FBC02D);

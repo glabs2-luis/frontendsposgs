@@ -3,9 +3,9 @@
     <div class="col-12">
       
       <!-- informacion mas pedido y cantidad-->
-      <div class="row items-start no-wrap q-gutter-sm">
+      <div class="row items-start q-gutter-sm">
         <!-- ExpansionItem -->
-        <div class="col">
+        <div class="col-12 col-md">
           <q-expansion-item
             ref="expansion"
             v-model="expansionCliente"
@@ -22,7 +22,7 @@
 
               <q-item-section>
                 <q-item-label>Información del Cliente</q-item-label>
-                <q-item-label caption class="text-black text-weight-bold">
+                <q-item-label caption class="text-black text-weight-bold ellipsis">
                   {{ clienteStore.documento }} - {{ clienteStore.nombre }} -
                   {{ clienteStore.direccion }}
                 </q-item-label>
@@ -254,7 +254,7 @@
               <q-separator vertical class="q-mx-sm" />
 
               <!-- Total de Venta -->
-              <div class="row items-center q-gutter-xs total-card q-pa-xs">
+              <div class="row items-center q-gutter-xs total-card q-pa-xs ellipsis">
                 <div
                   class="text-body1 text-amber-10 text-weight-bold"
                   style="font-size: 280%"
@@ -281,6 +281,7 @@
           @guardar="guardarClienteDesdeModal"
         />
       </div>
+
     </div>
   </div>
 
@@ -296,6 +297,7 @@
 </template>
 
 <script setup lang="ts">
+
 import { useQuasar } from "quasar";
 import {
   ref,
@@ -813,6 +815,7 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 </script>
 
 <style scoped>
+
 .total-card {
   background-color: #fcf5d6;
   border: 1px solid #fae4a2;
@@ -866,6 +869,12 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 /* Última fila sin borde inferior */
 .tabla-elegante tbody tr:last-child td {
   border-bottom: none;
+}
+
+.ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 </style>

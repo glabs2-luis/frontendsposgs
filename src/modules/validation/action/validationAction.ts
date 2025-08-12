@@ -1,5 +1,6 @@
 import posApi from '@/api/apiPos'
 import { getAxiosErrorMessage } from '@/common/helper/geterrordb'
+import posApiCertificador from '@/api/apiPosCertificacion'
 
 // Obtener Datos Sat
 export const validationAction = async (nit: string, tipo: string, validar: boolean, empresa: string ) : Promise<any> => {
