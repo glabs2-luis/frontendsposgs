@@ -1,7 +1,6 @@
 <template>
   <div class="row">
     <div class="col-12">
-      
       <!-- informacion mas pedido y cantidad-->
       <div class="row items-start q-gutter-sm">
         <!-- ExpansionItem -->
@@ -22,7 +21,10 @@
 
               <q-item-section>
                 <q-item-label>Información del Cliente</q-item-label>
-                <q-item-label caption class="text-black text-weight-bold ellipsis">
+                <q-item-label
+                  caption
+                  class="text-black text-weight-bold ellipsis"
+                >
                   {{ clienteStore.documento }} - {{ clienteStore.nombre }} -
                   {{ clienteStore.direccion }}
                 </q-item-label>
@@ -254,7 +256,9 @@
               <q-separator vertical class="q-mx-sm" />
 
               <!-- Total de Venta -->
-              <div class="row items-center q-gutter-xs total-card q-pa-xs ellipsis">
+              <div
+                class="row items-center q-gutter-xs total-card q-pa-xs ellipsis"
+              >
                 <div
                   class="text-body1 text-amber-10 text-weight-bold"
                   style="font-size: 280%"
@@ -281,7 +285,6 @@
           @guardar="guardarClienteDesdeModal"
         />
       </div>
-
     </div>
   </div>
 
@@ -297,7 +300,6 @@
 </template>
 
 <script setup lang="ts">
-
 import { useQuasar } from "quasar";
 import {
   ref,
@@ -332,9 +334,9 @@ import { useBodegas } from "@/modules/bodegas/composables/useBodegas";
 import { useStoreSucursal } from "@/stores/sucursal";
 import { useConfiguracionPos } from "@/modules/configuracion_pos/composables/useConfiguracionPos";
 
-const { ObtenerBodegasId2 } = useBodegas()
-const  storeSucursal  = useStoreSucursal()
-const { obtenerConfiguracionPos } = useConfiguracionPos()
+const { ObtenerBodegasId2 } = useBodegas();
+const storeSucursal = useStoreSucursal();
+const { obtenerConfiguracionPos } = useConfiguracionPos();
 const { formatCurrency, formatNumber, formatDecimal } = useFormat();
 const validador = ref(true);
 const $q = useQuasar();
@@ -512,7 +514,11 @@ watch(
 
 // focus al ref
 const enfocarCodigo = () => {
+  // focus al input NIT/DPI
   focus.value?.focus();
+  // refuerzo contra re-enfoque posterior
+  setTimeout(() => focus.value?.focus(), 120);
+  setTimeout(() => focus.value?.focus(), 300);
 };
 
 // Función para enfocar el input de código en ProductosTab
@@ -605,7 +611,7 @@ const crearPedido = () => {
     ID_SUCURSAL: Number(storeSucursal.idSucursal),
     USUARIO_INGRESO_PEDI: userStore.nombreVendedor.substring(0, 10),
     CODIGO_VENDEDOR: userStore.codigoVendedor,
-    CODIGO_DE_CLIENTE: obtenerConfiguracionPos.value.CODIGO_CLIENTE_CF // Cliente Ticket 
+    CODIGO_DE_CLIENTE: obtenerConfiguracionPos.value.CODIGO_CLIENTE_CF, // Cliente Ticket
   };
 
   mutateCrearPedidoEnc(pedidoEnc, {
@@ -811,11 +817,9 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
     },
   });
 };
-
 </script>
 
 <style scoped>
-
 .total-card {
   background-color: #fcf5d6;
   border: 1px solid #fae4a2;
@@ -876,5 +880,4 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 </style>
