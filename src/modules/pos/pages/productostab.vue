@@ -982,7 +982,14 @@ const usarF4 = (e) => {
     e.preventDefault();
     terminarVenta();
   }
-};
+}
+
+const usarF1 = (e) => {
+  if(e.key === "F1") {
+    e.preventDefault()
+    abrirCatalogo2()
+  }
+}
 
 // limpiar pedido
 const usarDelete = (e) => {
@@ -1111,7 +1118,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", usarMultiplicador)
-});
+})
 
 // limpiar
 onMounted(() => {
@@ -1129,6 +1136,15 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", usarF4)
+})
+
+// Abrir Catalogo
+onMounted(() => {
+  window.addEventListener("keydown", usarF1)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", usarF1)
 })
 
 // calcular cambio
@@ -1255,7 +1271,7 @@ const certificarFactura = async (id) => {
               totalItems,
             },
             nombreVendedor: factura.USUARIO_QUE_FACTURA,
-            qrCodeData: "Pendiente",
+            qrCodeData: data.Uuid,
           };
 
           nextTick( async () => {

@@ -106,6 +106,11 @@
                   <td>Crear Pedido</td>
                 </tr>
 
+                <tr>
+                  <td><kbd><strong>F1</strong></kbd></td>
+                  <td>Abri Catalogo Productos</td>
+                </tr>
+
               </tbody>
             </q-markup-table>
           </q-expansion-item>

@@ -65,6 +65,7 @@
                         hide-bottom-space
                         style="font-size: 13px"
                         @keydown.enter.prevent="buscarClienteDPINIT2"
+                        @update:model-value="busquedaAutomatica"
                         @keydown="usarF2"
                       >
                         <template v-slot:append>
@@ -73,7 +74,7 @@
                             dense
                             icon="search"
                             color="primary"
-                            @click="buscarClienteDPINIT2"
+                            @click="crearPedidod2"
                             :disable="!clienteStore.documento"
                             size="xs"
                           />
@@ -300,6 +301,7 @@
 </template>
 
 <script setup lang="ts">
+
 import { useQuasar } from "quasar";
 import {
   ref,
@@ -370,16 +372,11 @@ const {
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc);
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
-const focus2 = ref<HTMLInputElement | null>(null);
-
-const mostrarBodega = async () => {
-  bodega.value = await ObtenerBodegasId2();
-  // console.log(bodega.value);
-};
+const focus2 = ref<HTMLInputElement | null>(null)
+let espera: ReturnType<typeof setTimeout> | null = null // Para la busqueda automatica
 
 // abrir expansion item y focus a nit
-watch(
-  () => clienteStore.documento,
+watch(() => clienteStore.documento,
   async (nuevo) => {
     if (!nuevo || nuevo.trim() === "" || nuevo === "0") {
       await nextTick();
@@ -394,6 +391,16 @@ watch(
   { immediate: true }
 );
 
+//crear pedido
+const crearPedidod2 = () => {
+  crearPedido()
+}
+
+// si dpi o nit cambia, limpiar el store
+watch(tipoDocumento, async(nuevo) => {
+  clienteStore.limpiarCliente()
+})
+
 // controla que exista un pedido
 watch(idPedidoEnc, (nuevoId) => {
   if (nuevoId && nuevoId > 0) {
@@ -402,6 +409,18 @@ watch(idPedidoEnc, (nuevoId) => {
     // });
   }
 });
+
+//busqueda automatica
+const busquedaAutomatica = () => {
+  
+  if (espera) clearTimeout(espera) // Limpir tiempo
+
+  if(clienteStore.documento.length>7){ //  Longitud mayor a 7 para buscar
+  espera = setTimeout(()=>{
+    buscarClienteDPINIT2()
+  }, 500)
+}
+}
 
 // Anular pedido pendiente
 const anularPedido = async (pedido) => {
@@ -485,9 +504,9 @@ onBeforeUnmount(() => {
 
 const crearPedidoConF3 = (e: KeyboardEvent) => {
   if (e.key === "F3") {
-    e.preventDefault();
-    crearPedido();
-    expansion.value?.hide();
+    e.preventDefault()
+    crearPedido()
+    expansion.value?.hide()
   }
 };
 
@@ -559,6 +578,7 @@ const abrirModalPedidosPendientes = () => {
 //Llenar modal desde esta pagina
 const clienteTemp = ref({
   NIT: "",
+  DPI: "",
   NOMBRE: "",
   DIRECCION: "",
   TELEFONO: "",
@@ -569,6 +589,7 @@ const clienteTemp = ref({
 const resetCliente = () => {
   clienteTemp.value = {
     NIT: "",
+    DPI: "",
     NOMBRE: "",
     DIRECCION: "",
     TELEFONO: "",
@@ -725,10 +746,11 @@ const buscarClienteDPINIT2 = async () => {
 
       if (nombreSat) {
         // 3) No existe en BD pero SAT devolvió nombre -> abrir modal con datos prellenados
-        abrirModalCliente.value = true;
-        clienteTemp.value.NIT = doc;
-        clienteTemp.value.NOMBRE = nombreSat;
-        clienteTemp.value.DIRECCION = "Ciudad";
+        abrirModalCliente.value = true
+        clienteTemp.value.NIT = tipoDocumento.value ==='nit' ? doc : '',
+        clienteTemp.value.DPI = tipoDocumento.value ==='dpi' ? doc : '',
+        clienteTemp.value.NOMBRE = nombreSat
+        clienteTemp.value.DIRECCION = "Ciudad"
         return;
       }
     }

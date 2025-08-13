@@ -35,15 +35,16 @@
           <q-item-section>Reportes</q-item-section>
         </q-item>
 
+        <q-item clickable v-ripple @click="router.push('/pendientes')">
+          <q-item-section avatar><q-icon name="schedule" /></q-item-section>
+          <q-item-section>Pendientes</q-item-section>
+        </q-item>
+
         <q-item clickable v-ripple @click="router.push('/configuracion')">
           <q-item-section avatar><q-icon name="settings" /></q-item-section>
           <q-item-section>Configuracion</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple @click="router.push('/pendientes')">
-          <q-item-section avatar><q-icon name="schedule" /></q-item-section>
-          <q-item-section>Pendientes</q-item-section>
-        </q-item>
       </q-list>
     </q-drawer>
 

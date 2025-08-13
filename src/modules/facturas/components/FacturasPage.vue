@@ -309,7 +309,6 @@ const reimprimirFactura = async (idFactura: number) => {
     const fecha = new Date(datosFelCertificados?.FECHA_ACCION)
     const fechaEmisionValida = !isNaN(fecha.getTime()) ? fecha.toLocaleString() : ''
 
-
     // Armar el objeto dataFactura 
     const dataFactura = {
 
@@ -333,8 +332,8 @@ const reimprimirFactura = async (idFactura: number) => {
         totalPagar: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
         totalItems: totalItems
       },
-      nombreVendedor: factura.USUARIO_QUE_FACTURA || 'Desconocido',
-      qrCodeData: 'Pendiente'
+      nombreVendedor: factura.USUARIO_QUE_FACTURA,
+      qrCodeData: datosFelCertificados?.UUID ?? '',
     }
 
     // Generar impresion
