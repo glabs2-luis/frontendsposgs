@@ -424,7 +424,7 @@
             </div>
 
             <div class="col-12 q-mt-sm">
-              <q-input
+          <q-input
                 ref="focusEfectivo"
                 v-model.number="montoEfectivo"
                 label="Efectivo"
@@ -1070,113 +1070,113 @@ const limpiar = async () => {
         },
       }
     );
-    cleanAllStores();
-    focus.value.setFocus();
+    cleanAllStores()
+    focus.value.setFocus()
   }
-};
+}
 
 // modal cuponazo
 const abrirCuponazo = async () => {
-  modalCuponazo.value = true;
+  modalCuponazo.value = true
 
-  await nextTick();
+  await nextTick()
 
-  refCupon.value?.focus();
-};
+  refCupon.value?.focus()
+}
 
 // nuevo catalogo
 const abrirCatalogo2 = async () => {
   try {
     // Asegurar que los productos estén cargados antes de abrir el modal
-    await refetchTodosProductos();
-    modalProductos2.value = true;
+    await refetchTodosProductos()
+    modalProductos2.value = true
   } catch (error) {
-    console.error("Error al cargar productos:", error);
-    showErrorNotification("Error", "No se pudieron cargar los productos");
+    console.error("Error al cargar productos:", error)
+    showErrorNotification("Error", "No se pudieron cargar los productos")
   }
-};
+}
 
 const abrirModalCantidad = () => {
-  modalCantidad.value = true;
-};
+  modalCantidad.value = true
+}
 
 // Multiplicador
 onMounted(() => {
-  window.addEventListener("keydown", usarMultiplicador);
-});
+  window.addEventListener("keydown", usarMultiplicador)
+})
 
 onBeforeUnmount(() => {
-  window.removeEventListener("keydown", usarMultiplicador);
+  window.removeEventListener("keydown", usarMultiplicador)
 });
 
 // limpiar
 onMounted(() => {
-  window.addEventListener("keydown", usarDelete);
-});
+  window.addEventListener("keydown", usarDelete)
+})
 
 onBeforeUnmount(() => {
-  window.removeEventListener("keydown", usarDelete);
-});
+  window.removeEventListener("keydown", usarDelete)
+})
 
 // Abrir facturacion con F4
 onMounted(() => {
-  window.addEventListener("keydown", usarF4);
-});
+  window.addEventListener("keydown", usarF4)
+})
 
 onBeforeUnmount(() => {
-  window.removeEventListener("keydown", usarF4);
-});
+  window.removeEventListener("keydown", usarF4)
+})
 
 // calcular cambio
 const calcularCambioModal = () => {
-  if (opcionesPago2 === "MIXTO") calcularCambio.value = 0;
+  if (opcionesPago2 === "MIXTO") calcularCambio.value = 0
   else {
-    calcularCambio.value = montoEfectivo.value - totalStore.totalGeneral;
+    calcularCambio.value = montoEfectivo.value - totalStore.totalGeneral
   }
-};
+}
 
 // si el efectivo cambia, calcular cambio
 watch(montoEfectivo, (nuevoValor) => {
   if (nuevoValor !== null && nuevoValor >= 0) {
-    calcularCambioModal();
+    calcularCambioModal()
   } else {
-    calcularCambio.value = 0;
+    calcularCambio.value = 0
   }
 });
 
 //focus a efectivo
 watch(tipoPago, async (nuevo) => {
   if (nuevo === "EFECTIVO") {
-    await nextTick();
-    focusEfectivo.value?.focus();
+    await nextTick()
+    focusEfectivo.value?.focus()
   }
 });
 
 // focus desde mixto
 watch(tipoPago, async (nuevo) => {
   if (nuevo === "MIXTO") {
-    await nextTick();
-    focusEfectivo.value?.focus();
+    await nextTick()
+    focusEfectivo.value?.focus()
   }
 });
 
 // focus a tarjeta
 watch(tipoPago, async (nuevo) => {
   if (nuevo === "TARJETA") {
-    await nextTick();
-    focusTarjeta.value?.focus();
+    await nextTick()
+    focusTarjeta.value?.focus()
   }
 });
 
 // limpiar campos de pago
 watch(tipoPago, (nuevo) => {
   if (nuevo === "EFECTIVO") {
-    montoTarjeta.value = null;
+    montoTarjeta.value = null
   } else if (nuevo === "TARJETA") {
-    montoEfectivo.value = null;
+    montoEfectivo.value = null
   } else if (nuevo === "MIXTO") {
-    montoEfectivo.value = null;
-    montoTarjeta.value = null;
+    montoEfectivo.value = null
+    montoTarjeta.value = null
   }
 });
 
@@ -1188,8 +1188,9 @@ const formatearFecha = (fecha) => {
 };
 
 const certificarFactura = async (id) => {
-  const factura = await obtenerFacturaId3(id);
-  console.log("datos de factura:", factura);
+
+  const factura = await obtenerFacturaId3(id)
+  //console.log("datos de factura:", factura)
 
   await mutateCertificar(
     {
@@ -1199,11 +1200,11 @@ const certificarFactura = async (id) => {
     },
     {
       onSuccess: async (data) => {
-        const detalle = await obtenerDetalleFactura(id);
+        const detalle = await obtenerDetalleFactura(id)
 
-        console.log("dataCertificados", data);
+        console.log("dataCertificados", data)
 
-        if (!detalle || detalle.length === 0) return;
+        if (!detalle || detalle.length === 0) return
 
         try {
           const itemsFactura = detalle.map((item) => ({
@@ -1222,7 +1223,7 @@ const certificarFactura = async (id) => {
             0
           );
 
-          console.log("Subtotal", Subtotal);
+          //console.log("Subtotal", Subtotal);
 
           const dataFactura = {
             encabezado: {
@@ -1253,18 +1254,21 @@ const certificarFactura = async (id) => {
             qrCodeData: "Pendiente",
           };
 
-          await generarFacturaPDF(dataFactura);
+          nextTick( async () => {
+            await generarFacturaPDF(dataFactura)
+          })
+
         } catch (error) {
-          console.error("Error imprimiendo factura:", error);
-          showErrorNotification("Error al imprimir factura", "Error");
+          console.error("Error imprimiendo factura:", error)
+          showErrorNotification("Error al imprimir factura", "Error")
         }
       },
       onError: (error) => {
-        console.error(" Error certificando factura:", error);
+        console.error(" Error certificando factura:", error)
       },
     }
-  );
-};
+  )
+}
 
 // modal factura
 const terminarVenta = async () => {
@@ -1283,6 +1287,7 @@ const terminarVenta = async () => {
 
 // Guarda factura enc y det
 const confirmarFactura = async () => {
+
   if (!configuracionStore.serieSeleccionada) {
     modalFacturacion.value = false;
     showErrorNotification(
@@ -1293,7 +1298,6 @@ const confirmarFactura = async () => {
   }
 
   // modal confirmacion factura
-
   const datos = {
     ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
     USUARIO_QUE_FACTURA: userStore.nombreVendedor,
@@ -1317,6 +1321,7 @@ const confirmarFactura = async () => {
 
       // mandar a imprimir
       await certificarFactura(respuesta.ID_FACTURA_ENC, {
+
         onSuccess: () => {
           mutateCrearSincronizacion(respuesta.ID_FACTURA_ENC);
         },

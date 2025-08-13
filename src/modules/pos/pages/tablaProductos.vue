@@ -219,7 +219,7 @@ const { data: listaProductosPedido, refetch: refetchListaProductosPedidoDet } =
 const rows = computed(() => data.value || []);
 
 watchEffect(() => {
-  console.log("Esto es rows:", rows.value);
+ // console.log("Esto es rows:", rows.value);
 });
 
 // calcular total
@@ -304,8 +304,7 @@ const onGuardarDescripcion = (row: any, nuevaDescripcion: string) => {
 
     savingDescId.value = row.ID_PEDIDO_DET;
     
-    row.DESCRIPCION_PROD_AUX = desc;
-    row.DESCRIPCION_MOSTRAR = desc;
+ // const updatedRow = { ...row, DESCRIPCION_PROD_AUX: desc, DESCRIPCION_MOSTRAR: desc };
 
   mutateActualizarPedidoDetId(
     { id: row.ID_PEDIDO_DET, descripcion: desc },
