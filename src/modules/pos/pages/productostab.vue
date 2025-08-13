@@ -697,7 +697,7 @@ const props = defineProps({
 });
 
 const { formatNumber, formatCurrency } = useFormat();
-const  storeSucursal  = useStoreSucursal()
+const storeSucursal = useStoreSucursal();
 const { mutateAplicarCupon } = useCupones();
 const { datosEmpresa, datosEstablecimiento } = useDatosFel();
 const contingencia = ref(false);
@@ -767,6 +767,8 @@ const focusTarjeta = ref(null);
 const modalProductos2 = ref(false);
 const cantidadInputs = ref({}); // Referencias a los inputs de cantidad en el catálogo
 const buscadorProductoRef = ref(null);
+// Controla si el input de código puede auto-enfocarse
+const allowAutoFocusProduct = ref(true);
 const { mutateAnularPedidoPendiente } = usePedidosEnc();
 
 // Facturación - cálculos y validaciones
@@ -904,7 +906,7 @@ const aplicarCuponazo = () => {
       // });
       showErrorNotificationInside("Error", error.message);
       nextTick(() => {
-        refCupon.value?.setFocus();
+        refCupon.value?.focus();
         refCupon.value?.select();
         refetchObtenerPedidoID()
 
@@ -961,6 +963,7 @@ watch(pedidoData, () => {
 // Despues del cantidad volver al focus del input
 const volverAFocusInput = () => {
   setTimeout(() => {
+    if (!allowAutoFocusProduct.value) return;
     inputCodigo.value?.focus();
   }, 100);
 };
@@ -969,6 +972,7 @@ const volverAFocusInput = () => {
 const inputCodigo = ref(null);
 
 const enfocarCodigo = () => {
+  if (!allowAutoFocusProduct.value) return;
   inputCodigo.value?.focus();
 };
 
@@ -1071,7 +1075,6 @@ const limpiar = async () => {
       }
     );
     cleanAllStores();
-    focus.value.setFocus();
   }
 };
 
@@ -1189,9 +1192,8 @@ const formatearFecha = (fecha) => {
 
 const certificarFactura = async (id) => {
   const factura = await obtenerFacturaId3(id);
-  console.log("datos de factura:", factura);
 
-  await mutateCertificar(
+  mutateCertificar(
     {
       sucursal: storeSucursal.idSucursal,
       serie: factura.SERIE,
@@ -1200,8 +1202,6 @@ const certificarFactura = async (id) => {
     {
       onSuccess: async (data) => {
         const detalle = await obtenerDetalleFactura(id);
-
-        console.log("dataCertificados", data);
 
         if (!detalle || detalle.length === 0) return;
 
@@ -1221,8 +1221,6 @@ const certificarFactura = async (id) => {
             (subtotal, item) => subtotal + Number(item.subtotal),
             0
           );
-
-          console.log("Subtotal", Subtotal);
 
           const dataFactura = {
             encabezado: {
@@ -1258,9 +1256,6 @@ const certificarFactura = async (id) => {
           console.error("Error imprimiendo factura:", error);
           showErrorNotification("Error al imprimir factura", "Error");
         }
-      },
-      onError: (error) => {
-        console.error(" Error certificando factura:", error);
       },
     }
   );
@@ -1312,9 +1307,6 @@ const confirmarFactura = async () => {
 
       modalFacturacion.value = false;
 
-      // certificar factura
-      //await certificarFactura(respuesta.ID_FACTURA_ENC)
-
       // mandar a imprimir
       await certificarFactura(respuesta.ID_FACTURA_ENC, {
         onSuccess: () => {
@@ -1338,10 +1330,8 @@ const confirmarFactura = async () => {
 
       await showSuccessNotification("Factura", "Factura generada con éxito");
     },
-
     onError: (error) => {
       modalFacturacion.value = false;
-      showErrorNotification("Error", error.message);
     },
   });
 };
@@ -1645,7 +1635,7 @@ const agregarProductoAlPedido2 = async (producto) => {
         await refetchObtenerPedidoID(); // Refrescar datos del pedido primero
         relistaDet2();
         totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0);
-        enfocarCodigo();
+        if (allowAutoFocusProduct.value) enfocarCodigo();
 
         $q.notify({
           type: "success",
@@ -1665,7 +1655,7 @@ const agregarProductoAlPedido2 = async (producto) => {
           "No hay pedido",
           "Debe de crear un pedido primero"
         );
-        throw new Error(error)
+        throw new Error(error);
       },
       onSettled: () => {
         loadingAgregar.value = false;
@@ -1746,7 +1736,7 @@ watch(modalProductos2, async (val) => {
         }
       });
     } else {
-      enfocarCodigo();
+      if (allowAutoFocusProduct.value) enfocarCodigo();
       // Limpiar referencias de inputs cuando se cierre el modal
       if (cantidadInputs && cantidadInputs.value) {
         cantidadInputs.value = {};
@@ -1762,7 +1752,6 @@ defineExpose({
   totalPedido,
 });
 </script>
-
 
 <style scoped>
 .facturacion-card {

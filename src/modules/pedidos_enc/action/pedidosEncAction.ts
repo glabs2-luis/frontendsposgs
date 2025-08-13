@@ -51,7 +51,7 @@ export const AnularPedidosPendientesAction = async (
       `/pedidos-enc/anular/${id}`,
       { USUARIO: usuario }
     );
-    console.log("Pedido anulado:", data);
+
     return data;
   } catch (error) {
     console.error("Error al anular el pedido:", error);
