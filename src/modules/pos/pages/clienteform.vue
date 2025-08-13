@@ -760,7 +760,7 @@ const buscarClienteDPINIT2 = async () => {
     clienteTemp.value.NIT = doc;
     clienteTemp.value.DIRECCION = "Ciudad";
   } catch (err) {
-    console.error("Error en buscarClienteDPINIT2:", err);
+    showConfirmationDialog("Error:", err);
   }
 };
 
