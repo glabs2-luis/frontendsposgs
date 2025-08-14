@@ -426,14 +426,8 @@ watch(abrirModalCliente, async (isOpen, wasOpen) => {
   }
 });
 
-
-
 //crear pedido
 const crearPedidod2 = () => {
-
-
-
-
   crearPedido()
 }
 
@@ -785,12 +779,8 @@ const buscarClienteDPINIT2 = async () => {
     if (validador.value) {
       
       // Loadingsd
-      const result = await runWithLoading(
-      
-      () => DatosSat2(nit.value, tipoDocumento.value, validador.value, empresa.value),
-      
+      const result = await runWithLoading( () => DatosSat2(nit.value, tipoDocumento.value, validador.value, empresa.value),
         'Consultando datos en SAT…'
-      
       )
 
             // Consolar los resultados

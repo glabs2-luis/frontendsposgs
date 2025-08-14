@@ -71,7 +71,7 @@ export const useSync = () => {
     })
 
     // Reintentar enviar archivos con errores           
-    const { mutate: reintentarEnviarArchivos } = useMutation({
+    const { mutate: mutateReintentarEnviarArchivos } = useMutation({
         mutationFn: () => reintentarEnviarArchivosAction(),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sync/files/errors'] })
@@ -95,7 +95,7 @@ export const useSync = () => {
         archivosTransferidos,
         refetchArchivosTransferidos,
         refetchArchivosErrores,
-        reintentarEnviarArchivos, 
+        mutateReintentarEnviarArchivos, 
         archivosErrores
     }
 }

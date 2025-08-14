@@ -1348,7 +1348,7 @@ const confirmarFactura = async () => {
         onSuccess: () => {
           mutateCrearSincronizacion(respuesta.ID_FACTURA_ENC);
         },
-      });
+      })
 
       // limpiar stores
       cleanAllStores();
@@ -1364,7 +1364,7 @@ const confirmarFactura = async () => {
         queryKey: ["pedidos-pendientes"],
       });
 
-      await showSuccessNotification("Factura", "Factura generada con éxito");
+     // await showSuccessNotification("Factura", "Factura generada con éxito");
     },
     onError: (error) => {
       modalFacturacion.value = false;
