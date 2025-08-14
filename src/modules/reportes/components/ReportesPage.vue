@@ -38,8 +38,11 @@
           <q-separator></q-separator>
           
         </q-card-section>
-          <!-- calendario y otras opciones -->
+
+          <!-- Calendario y otras opciones -->
+        
           <q-card-section>
+
             <div class="text-h6">Rango de fechas: {{ `${formatearFechaGT(rangoFechas.from)} - ${formatearFechaGT(rangoFechas.to)}` }}</div>           
             <!-- Contenedor en fila -->
             <div class="row q-col-gutter-md q-mt-md items-start">
@@ -130,16 +133,6 @@
 
                 </div>
 
-                 <!-- Botón Imprimir 
-                  <div v-if="listaFacturas.length > 0"  class="col-auto q-ma-md">         
-
-                  <div class="text-center q-mb-md">
-                    <q-btn  class="boton-amarillo" label="Imprimir" color="black" @click="imprimirTicket" />
-                  </div>
-                
-                  </div>
-                -->
-
               </div>
   
           </q-card-section>
@@ -153,7 +146,7 @@
 
 <script setup lang="ts">
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, watchEffect } from 'vue'
 import { showErrorNotification, showErrorNotificationInside } from '@/common/helper/notification'
 import useSeries from '../../fel_establecimiento_series/composables/useSeries'
 import { date } from 'quasar'
@@ -167,6 +160,7 @@ const mostrarPassword = ref(false)
 const accesoPermitido = ref(false) 
 const mostrarModal = ref(false)
 const password = ref('')
+let fecha = ref<{ from: string; to?: string }>({ from: '' })
 const { data: series} = seriesSucursal(1)
 const serie = ref('')
 //const rangoFechas = ref({ from: '', to: ''})
@@ -187,6 +181,26 @@ const localeEspanol = {
 onMounted(() => {
   mostrarModal.value = true
 })
+
+watch(rangoFechas, (nuevo, viejo) => {
+  console.log('Este es el valor nuevo', nuevo)
+  console.log('Este es el valor viejo', viejo)
+
+  fecha.value = nuevo
+  console.log('guardando valor desde nuevo', fecha.value  )
+})
+
+const valorUnaFecha = ref(null)
+
+watchEffect(()=>{
+  console.log('Valor detectado: ', rangoFechas.value)
+  valorUnaFecha.value = rangoFechas.value
+})
+
+
+const unaFecha = () =>{
+
+}
 
 // Comparar clave para ingresar 
 const verificarPassword = async () => {
@@ -235,6 +249,8 @@ const buscarFacturas = async () => {
     console.log('fecha antes', rangoFechas.value.from)
     console.log('fecha despues', rangoFechas.value.to)
 
+    
+
     if (!rangoFechas.value.from || !rangoFechas.value.to) {
     showErrorNotification('Rango de Fechas', 'Debe seleccionar un rango de fechas válido')
     return
@@ -248,11 +264,16 @@ const buscarFacturas = async () => {
 
   console.log('buscar datos:', buscar)
 
+  if(buscar.fecha_final === undefined){
+    const facturas = await obtenerFacturasPorFecha(valorUnaFecha.value, valorUnaFecha.value, buscar.serie)
+    console.log('facturas desde un dia: ', facturas)
+  } else {
+
   const facturas = await obtenerFacturasPorFecha(buscar.fecha_inicial, buscar.fecha_final, buscar.serie)
   console.log('facturas: ', facturas)
 
   listaFacturas.value = (facturas as any[]) || []
-
+  }
   // Calcular total
   totalCorte = computed(() => {
   return listaFacturas.value.reduce((total, factura) => {
