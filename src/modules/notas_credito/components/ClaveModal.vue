@@ -115,10 +115,10 @@ async function aceptar() {
 
     if (!['AD', 'DE', 'SA'].includes(vendedor.TIPO_VENDEDOR)) {
       $q.notify({
-        type: 'warning',
+        type: 'negative',
         message: 'El usuario no tiene permisos para generar notas de credito.',
         position: 'top',
-        timeout: 3000
+        timeout: 5000
       });
       claveInputRef.value?.select();
       return;
@@ -134,7 +134,7 @@ async function aceptar() {
       type: 'negative',
       message: 'Hubo un error al obtener el vendedor. Por favor, intente nuevamente más tarde.',
       position: 'top',
-      timeout: 3000
+      timeout: 5000
     });
     claveInputRef.value?.select();
   }

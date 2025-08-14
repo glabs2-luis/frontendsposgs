@@ -67,7 +67,7 @@
               :loading="loading"
               no-data-label="No se encontraron notas de crédito."
               class="notes-table"
-              :pagination="{ rowsPerPage: 10 }"
+              :pagination="{ rowsPerPage: 20 }"
             >
               <template v-slot:loading>
                 <q-inner-loading showing color="primary" />
@@ -173,7 +173,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
-import { obtenerDevoluciones, obtenerDevolucionesEncDetalle, obtenerVendedor } from '../action/useNotaCreditoActions';
+import { obtenerDevoluciones, obtenerDevolucionesEncDetalle, obtenerVendedor, buscarFacturaConDetalle } from '../action/useNotaCreditoActions';
 import ClaveModal from '@/modules/notas_credito/components/ClaveModal.vue';
 import NotaCreditoView from '@/modules/notas_credito/components/NotaCreditoView.vue';
 import type { QTableColumn } from 'quasar';
@@ -207,7 +207,7 @@ const { mutateCertificarNc } = useCertification()
 const estadosDevolucion = {
   T: { label: 'Terminado', color: 'positive' },
   P: { label: 'Pendiente', color: 'warning' },
-  V: { label: 'Verificado', color: 'info' }
+  V: { label: 'Pend. Certificar', color: 'info' }
 };
 
 const columns: QTableColumn<DevolucionEnc>[] = [
@@ -403,11 +403,16 @@ async function certificarNota(nota: DevolucionEnc) {
   });
 }
 
+const truncateDosDecimales = (numero) => {
+  return Math.trunc(numero * 100) / 100;
+}
+
 const prepararDataNotaDeCredito = async (nota: DevolucionEnc, dtoCertificado: DtoCertificado): Promise<DataFactura> => {
   const formatCurrency = (value: number) => `Q.${value.toFixed(4)}`;
 
   const apiResponse = await obtenerDevolucionesEncDetalle(nota.NUMERO_DEVOLUCION);
   const vendedor = await obtenerVendedor(parseInt(apiResponse.DEVOLUCION_ENC.USUARIO_QUE_INGRESO))
+  const facturaEnc = await buscarFacturaConDetalle(nota.SERIE, nota.NUMERO_FACTURA)
 
   const enc = apiResponse.DEVOLUCION_ENC;
 
@@ -437,17 +442,16 @@ const prepararDataNotaDeCredito = async (nota: DevolucionEnc, dtoCertificado: Dt
     observacion: nota.OBSERVACIONES,
 
     cliente: {
-      nombre: "CLIENTE DE PRUEBA",
-      nit: String(enc.CODIGO_DE_CLIENTE ?? "CF"),
-      direccion: "CIUDAD",
+      nombre: facturaEnc.FACTURA.NOMBRE_CLI_A_FACTUAR,
+      nit: String(facturaEnc.FACTURA.NIT_CLIEN_A_FACTURAR ?? "CF"),
+      direccion: facturaEnc.FACTURA.DIRECCION_CLI_FACTUR,
     },
 
     items,
 
     resumen: {
       subtotal: formatCurrency(subtotal),
-      descuento: "Q.0.00",
-      totalPagar: formatCurrency(enc.TOTAL_DEVOLUCION),
+      totalPagar: `Q.${truncateDosDecimales(enc.TOTAL_DEVOLUCION).toFixed(2)}`,
       totalItems,
     },
     nombreVendedor: vendedor.NOMBRE_VENDEDOR,

@@ -23,6 +23,7 @@ export interface ProductoNotaCredito {
   id: number | null;
   producto: string;
   codigo: string;
+  nombreProducto: string;
   cantidad: number;
   precio: number;
   cantidadNC: number;
@@ -46,6 +47,7 @@ export interface FacturaDet {
   SERIE: string;
   NUMERO_FACTURA: number;
   PRODUCT0: string;
+  NOMBRE_PRODUCTO?: string,
   CODIGO_UNIDAD_VTA: string;
   CANTIDAD_VENDIDA: number;
   CANTIDAD_DEVUELTA?: number;
