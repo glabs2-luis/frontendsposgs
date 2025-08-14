@@ -1,6 +1,6 @@
 <template>
   <q-dialog v-model="visible" persistent style="z-index: auto;">
-    <q-card style="max-width: 1200px; width: 100%;">
+    <q-card style="max-width: 1400px; width: 100%;">
       <q-card-section class="title-card row items-center q-py-sm">
         <div class="text-h6 text-weight-bold text-dark">
           Nueva Nota de Crédito
@@ -33,16 +33,29 @@
           <q-step name="2" title="Seleccionar Productos" icon="inventory_2" :done="step > '2'">
             <div class="row q-col-gutter-lg">
               <div class="col-xs-12 col-md-9">
+
                 <q-card bordered class="q-mb-md shadow-2 bg-grey-2">
                   <q-card-section class="text-dark text-subtitle1 text-weight-bold q-py-sm">
-                    <div class="row items-center no-wrap">
-                      <q-icon name="info" class="q-mr-sm" size="sm" color="dark" />
-                      <div>Factura Original: <span class="text-weight-regular text-grey-8">{{ serie }} - {{ numeroFactura }}</span></div>
-                      <q-space />
-                      <div>Cliente: <span class="text-weight-regular text-grey-8">{{ factura?.FACTURA.NOMBRE_CLI_A_FACTUAR }}</span></div>
+                    <div class="row justify-between items-center no-wrap">
+                      <div class="row items-center">
+                        <q-icon name="info" class="q-mr-sm" size="sm" color="dark" />
+                        <div>
+                          Factura Original: <span class="text-weight-regular text-grey-8">{{ serie }} - {{ numeroFactura }}</span>
+                        </div>
+                      </div>
+
+                      <div class="row items-center q-gutter-x-lg">
+                        <div>
+                          Cliente: <span class="text-weight-regular text-grey-8">{{ factura?.FACTURA.NOMBRE_CLI_A_FACTUAR }}</span>
+                        </div>
+                        <div>
+                          NIT: <span class="text-weight-regular text-grey-8">{{ factura?.FACTURA.NIT_CLIEN_A_FACTURAR }}</span>
+                        </div>
+                      </div>
                     </div>
                   </q-card-section>
                 </q-card>
+
                 <div class="text-h6 text-dark q-mt-md q-mb-sm">
                   <q-icon name="add_shopping_cart" class="q-mr-sm" />
                   Agregar Productos a la Nota de Crédito
@@ -176,7 +189,7 @@
             </div>
             <q-stepper-navigation>
               <div class="row justify-between q-mt-md">
-                <q-btn flat label="Anterior" @click="step = '1'" color="dark" :disable="isEditing" />
+                <q-btn flat label="Anterior" @click="step = '1'" color="dark" disable />
                 <q-btn label="Siguiente" style="background: #FFD700; color: #333333; font-weight: bold;" push icon-right="arrow_forward" :disable="productosSeleccionados.length === 0 || totalNC === 0" @click="step = '3'" />
               </div>
             </q-stepper-navigation>
@@ -200,6 +213,13 @@
                   </q-card-section>
                   <q-separator />
                   <q-card-section class="q-pa-md bg-grey-1">
+                    <q-item dense>
+                      <q-item-section>
+                        <q-item-label caption class="text-grey-7">NIT</q-item-label>
+                        <q-item-label class="text-weight-bold text-dark">{{ factura?.FACTURA.NIT_CLIEN_A_FACTURAR }}</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-separator inset />
                     <q-item dense>
                       <q-item-section>
                         <q-item-label caption class="text-grey-7">Cliente</q-item-label>
@@ -241,6 +261,7 @@
                   rows="3"
                   placeholder="Ingrese cualquier observación relevante."
                   ref="observacionInputRef"
+                  :rules="[val => val.length > 9 || 'La observacion debe tener al menos 10 caracteres']"
                   @keyup.enter="emitirNota"
                 />
               </div>
@@ -258,7 +279,7 @@
                       <q-item v-for="prod in productosSeleccionados" :key="prod.id">
                         <q-item-section>
                           <q-item-label class="text-weight-medium text-dark">{{ prod.producto }}</q-item-label>
-                          <q-item-label caption class="text-grey-7">Código: {{ prod.codigo }}</q-item-label>
+                          <q-item-label caption class="text-grey-7">{{ prod.nombreProducto }}</q-item-label>
                         </q-item-section>
                         <q-item-section side class="text-right">
                           <q-item-label class="text-dark">{{ prod.cantidadNC }} x Q {{ prod.precio.toFixed(2) }}</q-item-label>
@@ -277,7 +298,7 @@
             <q-stepper-navigation>
               <div class="row justify-between q-mt-md">
                 <q-btn flat label="Anterior" @click="step = '2'" color="dark" />
-                <q-btn label="Emitir Nota de Crédito" style="background: #FFD700; color: #333333; font-weight: bold;" push icon-right="check_circle" :disable="productosSeleccionados.length === 0 || totalNC === 0" @click="emitirNota" />
+                <q-btn label="Emitir Nota de Crédito" style="background: #FFD700; color: #333333; font-weight: bold;" push icon-right="check_circle" :disable="productosSeleccionados.length === 0 || totalNC === 0 || observaciones.length < 10" @click="emitirNota" />
               </div>
             </q-stepper-navigation>
           </q-step>
@@ -292,6 +313,7 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useQuasar, QTableColumn } from 'quasar';
 import {
   buscarFactura as buscarFacturaAPI,
+  buscarFacturaConDetalle,
   crearDevolucionEnc,
   crearDevolucionDet,
   obtenerDevolucionesDet,
@@ -384,8 +406,8 @@ const totalNC = computed(() =>
 );
 
 const columns: QTableColumn<ProductoNotaCredito>[] = [
-  { name: 'nombre', label: 'Producto', field: 'producto', align: 'left', classes: 'text-weight-bold', headerClasses: 'bg-warning text-dark text-h6' },
-  { name: 'codigo', label: 'Código', field: 'codigo', align: 'left', headerClasses: 'bg-warning text-dark text-h6' },
+  { name: 'nombre', label: 'Codigo', field: 'producto', align: 'left', classes: 'text-weight-bold', headerClasses: 'bg-warning text-dark text-h6' },
+  { name: 'nombreProducto', label: 'Producto', field: 'nombreProducto', align: 'left', headerClasses: 'bg-warning text-dark text-h6' },
   { name: 'cantidad', label: 'Cant. Facturada', field: 'cantidad', align: 'center', headerClasses: 'bg-warning text-dark text-h6' },
   { name: 'cantidadNC', label: 'Cant. NC', field: 'cantidadNC', align: 'center', headerClasses: 'bg-warning text-dark text-h6' },
   { name: 'precio', label: 'Precio Unit.', field: 'precio', align: 'right', format: (val) => `Q ${val.toFixed(2)}`, headerClasses: 'bg-warning text-dark text-h6' },
@@ -441,7 +463,7 @@ async function loadNotaForEdit(nota: DevolucionEnc) {
     observaciones.value = encResult.OBSERVACIONES;
     isEditing.value = true;
 
-    const resFactura: ApiFacturaResponse | null = await buscarFacturaAPI(
+    const resFactura: ApiFacturaResponse | null = await buscarFacturaConDetalle(
       serie.value,
       numeroFactura.value as number
     );
@@ -455,6 +477,7 @@ async function loadNotaForEdit(nota: DevolucionEnc) {
       id: det.ID_FACTURA_DET,
       producto: det.PRODUCT0,
       codigo: det.CODIGO_UNIDAD_VTA,
+      nombreProducto: det.NOMBRE_PRODUCTO,
       cantidad: det.CANTIDAD_VENDIDA - (det.CANTIDAD_DEVUELTA || 0),
       precio: det.PRECIO_UNITARIO_VTA,
       cantidadNC: 0,
@@ -472,6 +495,7 @@ async function loadNotaForEdit(nota: DevolucionEnc) {
           id: det.ID,
           producto: det.PRODUCT0 || 'Producto Desconocido',
           codigo: originalProduct?.codigo || det.PRODUCT0 || '',
+          nombreProducto: det.NOMBRE_PRODUCTO,
           cantidad: originalProduct?.cantidad || 0,
           precio: det.PRECIO_DEVOLUCION || 0,
           cantidadNC: det.CANTIDAD_DEVUELTA || 0,
@@ -545,7 +569,7 @@ async function buscarFactura() {
 
   showLoading('Buscando factura...');
   try {
-    const res: ApiFacturaResponse | null = await buscarFacturaAPI(
+    const res: ApiFacturaResponse | null = await buscarFacturaConDetalle(
       serie.value,
       numeroFactura.value as number
     );
@@ -579,6 +603,7 @@ async function buscarFactura() {
     productosFactura.value = res.FACTURA.DETALLE.map(det => ({
       id: det.ID_FACTURA_DET,
       producto: det.PRODUCT0,
+      nombreProducto: det.NOMBRE_PRODUCTO,
       codigo: det.CODIGO_UNIDAD_VTA,
       cantidad: det.CANTIDAD_VENDIDA - (det.CANTIDAD_DEVUELTA || 0),
       precio: det.PRECIO_UNITARIO_VTA,
@@ -638,16 +663,15 @@ function getMaxCantidad(): number {
 }
 
 async function agregarProducto(event?: KeyboardEvent) {
+  if(!codigoInputManual.value) return
+
   let codigo = ''
   const codigoInput = codigoInputManual.value.trim();
   const codigoBarras = await obtenerCodigoProducto(codigoInput)
 
-  console.log(codigoBarras)
-
   if (codigoBarras) {
     codigo = codigoBarras.PRODUCT0.trim()
   } else {
-    console.log("Usando codigo producto")
     codigo = codigoInput
   }
 
@@ -760,7 +784,6 @@ function manejarEntradaCodigo(event: KeyboardEvent) {
 
   if (event.key === 'Enter') {
     if (timeDifference < 50) { // Umbral de 50ms para un lector de barras
-      console.log('Código de barras detectado y enviado automáticamente.');
       agregarProducto(event);
       return;
     }
@@ -904,6 +927,9 @@ async function emitirNota() {
     showLoading(isEditing.value ? 'Guardando cambios...' : 'Finalizando nota de crédito...');
 
     try {
+
+      console.log("Generar NC...")
+
       const updateEncPayload: Partial<DevolucionEnc> = {
         OBSERVACIONES: observaciones.value || 'Sin observaciones.',
       };
@@ -914,12 +940,14 @@ async function emitirNota() {
         throw new Error('Error al actualizar el encabezado de la nota de crédito. No se recibió una respuesta válida.');
       }
 
+      console.log(observaciones.value)
+
       const notaFinalizada: DevolucionEnc = {
         NUMERO_DEVOLUCION: numeroDevolucionNC.value,
         SERIE: factura.value?.FACTURA.SERIE?.trim() || '',
         NUMERO_FACTURA: factura.value?.FACTURA.NUMERO_FACTURA || 0,
         TOTAL_DEVOLUCION: totalNC.value,
-        OBSERVACIONES: observaciones.value || 'Sin observaciones.',
+        OBSERVACIONES: isEditing ? updateResult.OBSERVACIONES : observaciones.value,
         USUARIO_QUE_INGRESO: props.vendedor?.CODIGO_VENDEDOR.toString() || '',
         CODIGO_DE_CLIENTE: factura.value?.FACTURA.CODIGO_DE_CLIENTE || 0,
         FECHA_DEVOLUCION: updateResult.FECHA_DEVOLUCION || new Date(),
@@ -969,11 +997,16 @@ async function emitirNota() {
   });
 }
 
+const truncateDosDecimales = (numero) => {
+  return Math.trunc(numero * 100) / 100;
+}
+
 const prepararDataNotaDeCredito = async (nota: DevolucionEnc, dtoCertificado: DtoCertificado): Promise<DataFactura> => {
   const formatCurrency = (value: number) => `Q.${value.toFixed(4)}`;
 
   const apiResponse = await obtenerDevolucionesEncDetalle(nota.NUMERO_DEVOLUCION);
   const vendedor = await obtenerVendedor(parseInt(apiResponse.DEVOLUCION_ENC.USUARIO_QUE_INGRESO))
+  const facturaEnc = await buscarFacturaConDetalle(nota.SERIE, nota.NUMERO_FACTURA)
 
   const enc = apiResponse.DEVOLUCION_ENC;
 
@@ -1000,18 +1033,19 @@ const prepararDataNotaDeCredito = async (nota: DevolucionEnc, dtoCertificado: Dt
       fechaEmision: new Date().toISOString(),
     },
 
+    observacion: nota.OBSERVACIONES,
+
     cliente: {
-      nombre: "CLIENTE DE PRUEBA",
-      nit: String(enc.CODIGO_DE_CLIENTE ?? "CF"),
-      direccion: "CIUDAD",
+      nombre: facturaEnc.FACTURA.NOMBRE_CLI_A_FACTUAR,
+      nit: String(facturaEnc.FACTURA.NIT_CLIEN_A_FACTURAR ?? "CF"),
+      direccion: facturaEnc.FACTURA.DIRECCION_CLI_FACTUR,
     },
 
     items,
 
     resumen: {
       subtotal: formatCurrency(subtotal),
-      descuento: "Q.0.00",
-      totalPagar: formatCurrency(enc.TOTAL_DEVOLUCION),
+      totalPagar: `Q.${truncateDosDecimales(enc.TOTAL_DEVOLUCION).toFixed(2)}`,
       totalItems,
     },
     nombreVendedor: vendedor.NOMBRE_VENDEDOR,
@@ -1050,7 +1084,6 @@ const handleKeyDown = (event: KeyboardEvent) => {
   if (event.key === 'F10' && step.value === '2' && (productosSeleccionados.value.length !== 0 || totalNC.value !== 0)) {
     event.preventDefault();
 
-    console.log("F10 presionada...")    
     step.value = '3'
   }
 }

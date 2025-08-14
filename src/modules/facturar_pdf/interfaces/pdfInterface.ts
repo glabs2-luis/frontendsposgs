@@ -40,8 +40,8 @@ export interface ItemFactura {
 }
 
 export interface ResumenFactura {
-  subtotal: string;
-  descuento: string;
+  subtotal?: string;
+  descuento?: string;
   totalPagar: string;
   totalItems: number;
 }

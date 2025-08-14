@@ -389,18 +389,6 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
         // --- SECCIÓN: RESUMEN Y PIE DE PÁGINA ---
         {
           columns: [
-            {
-              text: "Subtotal:",
-              alignment: "right",
-              style: "smallText",
-              width: "*",
-            },
-            {
-              text: data.resumen.subtotal,
-              alignment: "right",
-              style: "smallText",
-              width: 60,
-            },
           ],
           margin: [0, 0, 0, 2],
         },
@@ -410,6 +398,18 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
             [
               {
                 columns: [
+                  {
+                    text: "Subtotal:",
+                    alignment: "right",
+                    style: "smallText",
+                    width: "*",
+                  },
+                  {
+                    text: data.resumen.subtotal,
+                    alignment: "right",
+                    style: "smallText",
+                    width: 60,
+                  },                  
                   {
                     text: "Descuento:",
                     alignment: "right",

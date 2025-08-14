@@ -20,6 +20,22 @@ export async function buscarFactura(serie: string, numero: number): Promise<ApiF
   }
 }
 
+// Buscar una factura con nombre de producto en detalle
+export async function buscarFacturaConDetalle(serie: string, numero: number): Promise<ApiFacturaResponse | null> {
+  try {
+    const response = await posApi.get(`/facturas-enc/detallesProducto/${serie}/${numero}`);
+
+    if (!response) throw new Error('Factura no encontrada');
+
+    return response.data
+  } catch (error) {
+    console.log(error.response.data.message);
+    return null;
+  }
+}
+
+
+
 // Obtener tipo de vendedor
 export const obtenerTipoVendedor = async (clave: string): Promise<Vendedor | null> => {
   try {
