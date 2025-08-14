@@ -784,6 +784,7 @@ const buscarClienteDPINIT2 = async () => {
     // 2) SEGUNDO: SAT (si el validador está activo)
     if (validador.value) {
       
+      // Loadingsd
       const result = await runWithLoading(
       
       () => DatosSat2(nit.value, tipoDocumento.value, validador.value, empresa.value),

@@ -192,7 +192,7 @@ export const showLoading = (message = 'Procesando…', insideModal = false) => {
 };
 
 /**
- * Cierra el overlay de carga si está abierto.
+ Cerrar el Loading
  */
 export const hideLoading = () => {
   try {
@@ -202,7 +202,7 @@ export const hideLoading = () => {
   }
 };
 
-/*    await runWithLoading(() => apiCall(), 'Mensaje de Carga') */
+// Loading
 export const runWithLoading = async <T>(
   fn: () => Promise<T>,
   message = 'Procesando…',

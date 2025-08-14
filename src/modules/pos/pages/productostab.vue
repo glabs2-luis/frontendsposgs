@@ -644,6 +644,7 @@
   </div>
 </template>
 
+
 <script setup>
 import { useQuasar } from "quasar";
 import { useQueryClient } from "@tanstack/vue-query";
@@ -665,6 +666,7 @@ import {
   showConfirmationInsideModal,
   showErrorNotificationInside,
   showSuccessNotificationInside,
+  runWithLoading,
 } from "@/common/helper/notification";
 import { usePedidoStore } from "@/stores/pedido";
 import usePedidosEnc from "../../pedidos_enc/composables/usePedidosEnc";
@@ -1328,6 +1330,10 @@ const confirmarFactura = async () => {
   // Capturar el cambio actual antes de que muten estados
   const cambioCapturado = cambioPago.value;
 
+
+  // Agregar el Loading aqui - 
+
+  await runWithLoading( () => 
   // Ejecutar la facturación
   mutateCrearFacturaEnc2(datos, {
     onSuccess: async (respuesta) => {
@@ -1363,58 +1369,9 @@ const confirmarFactura = async () => {
     onError: (error) => {
       modalFacturacion.value = false;
     },
-  });
-};
+  }, 'Facturando', ))
+}
 
-const columnasCatalogo2 = [
-  {
-    name: "codigo",
-    label: "Código",
-    align: "left",
-    field: "PRODUCT0",
-    sortable: true,
-  },
-  {
-    name: "producto",
-    label: "Producto",
-    align: "left",
-    field: "PRODUCTO",
-    sortable: true,
-  },
-  {
-    name: "marca",
-    label: "Marca",
-    align: "left",
-    field: "DESCRIPCION_MARCA",
-    sortable: true,
-  },
-  {
-    name: "cantidad",
-    label: "Cantidad",
-    align: "left",
-    field: "CANTIDAD_PEDIDA",
-    sortable: true,
-  },
-  {
-    name: "precio",
-    label: "Precio",
-    align: "left",
-    field: "PRECIO_SUGERIDO",
-    sortable: true,
-  },
-  {
-    name: "precioPromo",
-    label: "Precio Oferta",
-    align: "left",
-    field: "PRECIO_PROMOCION",
-  },
-  {
-    name: "niveles",
-    label: "Niveles de precio",
-    align: "left",
-    field: "SECUENCIA_PRECIO",
-  },
-];
 
 // Columnas para el catálogo de productos
 const columnasCatalogo = [
