@@ -195,6 +195,8 @@ const valorUnaFecha = ref(null)
 watchEffect(()=>{
   console.log('Valor detectado: ', rangoFechas.value)
   valorUnaFecha.value = rangoFechas.value
+  console.log('este es valor de rangoFechas en watchEffect', rangoFechas.value.from)
+  console.log('este es valor de rangoFechas en watchEffect', rangoFechas.value.to)
 })
 
 
@@ -249,31 +251,30 @@ const buscarFacturas = async () => {
     console.log('fecha antes', rangoFechas.value.from)
     console.log('fecha despues', rangoFechas.value.to)
 
-    
 
-    if (!rangoFechas.value.from || !rangoFechas.value.to) {
-    showErrorNotification('Rango de Fechas', 'Debe seleccionar un rango de fechas válido')
-    return
-  }
+ //   if (!rangoFechas.value.from && !rangoFechas.value.to) {
+ //   showErrorNotification('Rango de Fechas', 'Debe seleccionar un rango de fechas válido')
+ //   return
+ // }
+  
+    const buscar = {
+    fecha_inicial: new Date(rangoFechas.value.from),
+    fecha_final: new Date(rangoFechas.value.to),
+    serie: serie.value
+    }
 
-  const buscar = {
-  fecha_inicial: new Date(rangoFechas.value.from),
-  fecha_final: new Date(rangoFechas.value.to || rangoFechas.value.from),
-  serie: serie.value
-  }
+    if (rangoFechas.value.to === undefined){
+      buscar.fecha_inicial = new Date(valorUnaFecha.value+ 'T00:00:00'),
+      buscar.fecha_final = new Date(valorUnaFecha.value+ 'T23:59:59')
+    }
 
   console.log('buscar datos:', buscar)
-
-  if(buscar.fecha_final === undefined){
-    const facturas = await obtenerFacturasPorFecha(valorUnaFecha.value, valorUnaFecha.value, buscar.serie)
-    console.log('facturas desde un dia: ', facturas)
-  } else {
 
   const facturas = await obtenerFacturasPorFecha(buscar.fecha_inicial, buscar.fecha_final, buscar.serie)
   console.log('facturas: ', facturas)
 
   listaFacturas.value = (facturas as any[]) || []
-  }
+
   // Calcular total
   totalCorte = computed(() => {
   return listaFacturas.value.reduce((total, factura) => {
