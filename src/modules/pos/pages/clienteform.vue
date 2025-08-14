@@ -51,8 +51,12 @@
                       inline
                     />
 
+
+                    <!-- Rules:  :rules="[(val) => !!val || 'Requerido']"  -->
+
                     <!-- Campo de búsqueda de cliente -->
                     <div class="col-4">
+
                       <!-- DPI-->
                       <q-input
                         ref="focus"
@@ -61,7 +65,7 @@
                         dense
                         outlined
                         lazy-rules
-                        :rules="[(val) => !!val || 'Requerido']"
+                       
                         hide-bottom-space
                         style="font-size: 13px"
                         @keydown.enter.prevent="buscarClienteDPINIT2"
@@ -79,6 +83,7 @@
                             size="xs"
                           />
                         </template>
+
                       </q-input>
                     </div>
 
@@ -125,7 +130,19 @@
                         outlined
                         type="email"
                         style="font-size: 13px"
-                      />
+                     >
+                        <template v-slot:append>
+                          <q-btn
+                            flat
+                            dense
+                            icon="cleaning_services"
+                            color="yellow-10"
+                            @click="limpiarCliente"
+                            size="xs"
+                          />
+                        </template>
+
+                      </q-input>
                     </div>
                   </div>
                 </q-form>
@@ -318,6 +335,7 @@ import {
   showErrorNotification,
   showSuccessNotification,
   showConfirmationInsideModal,
+  showErrorNotificationInside,
 } from "@/common/helper/notification";
 import ModalEditarCliente from "@/modals/modalEditarCliente.vue";
 import type { Cliente } from "@/modules/clientes/interfaces/clientesInterface";
@@ -335,6 +353,7 @@ import useFormat from "@/common/composables/useFormat";
 import { useBodegas } from "@/modules/bodegas/composables/useBodegas";
 import { useStoreSucursal } from "@/stores/sucursal";
 import { useConfiguracionPos } from "@/modules/configuracion_pos/composables/useConfiguracionPos";
+import { runWithLoading } from "@/common/helper/notification";
 
 const { ObtenerBodegasId2 } = useBodegas();
 const storeSucursal = useStoreSucursal();
@@ -391,13 +410,35 @@ watch(() => clienteStore.documento,
   { immediate: true }
 );
 
+watch(abrirModalCliente, async (isOpen, wasOpen) => {
+  // Cuando pase de abierto -> cerrado
+  if (wasOpen && !isOpen) {
+    // Validamos que el store tenga datos mínimos
+    const nit = (clienteStore.documento || '').trim();
+    const nombre = (clienteStore.nombre || '').trim();
+    const direccion = (clienteStore.direccion || '').trim();
+
+    if (!nit || !nombre || !direccion) return;
+
+    // Crear pedido automáticamente al cerrar el modal
+    await nextTick();
+    crearPedido();
+  }
+});
+
 //crear pedido
 const crearPedidod2 = () => {
   crearPedido()
 }
 
+// Limpiar informaicon del form
+const limpiarCliente = async () => {
+  clienteStore.limpiarCliente()
+  resetCliente()
+}
+
 // si dpi o nit cambia, limpiar el store
-watch(tipoDocumento, async(nuevo) => {
+watch(tipoDocumento, async(nuevo) => {  enfocarCodigo()
   clienteStore.limpiarCliente()
 })
 
@@ -491,16 +532,16 @@ const usarMenos = (e) => {
     e.preventDefault();
     abrirModalPedidosPendientes();
   }
-};
+}
 
 // Crear Pedido con F3
 onMounted(() => {
   window.addEventListener("keydown", crearPedidoConF3);
-});
+})
 
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", crearPedidoConF3);
-});
+})
 
 const crearPedidoConF3 = (e: KeyboardEvent) => {
   if (e.key === "F3") {
@@ -508,7 +549,7 @@ const crearPedidoConF3 = (e: KeyboardEvent) => {
     crearPedido()
     expansion.value?.hide()
   }
-};
+}
 
 // Cerrar expansion cuando se crea un pedido
 watchEffect(() => {
@@ -529,7 +570,7 @@ watch(
       enfocarCodigo();
     }
   }
-);
+)
 
 // focus al ref
 const enfocarCodigo = () => {
@@ -696,7 +737,6 @@ const colocarCF = async () => {
 };
 
 // Datos para el validador
-
 const nit = ref("");
 const tipo2 = ref("nit");
 // Validador
@@ -707,11 +747,13 @@ const { data, DatosSat2 } = useValidation(
   tipoDocumento.value,
   validador.value,
   empresa.value
-);
+)
+
 
 const buscarClienteDPINIT2 = async () => {
   try {
-    // VAlor que se ingresa es doc
+
+    // Valor que se ingresa es doc
     const doc = (clienteStore.documento || "").trim();
     if (!doc) return;
 
@@ -735,24 +777,43 @@ const buscarClienteDPINIT2 = async () => {
 
     // 2) SEGUNDO: SAT (si el validador está activo)
     if (validador.value) {
-      const result: string = await DatosSat2(
-        nit.value,
-        tipoDocumento.value,
-        validador.value,
-        empresa.value
-      );
-      // result = texto
-      const nombreSat = result;
+      
+      // Loadingsd
+      const result = await runWithLoading( () => DatosSat2(nit.value, tipoDocumento.value, validador.value, empresa.value),
+        'Consultando datos en SAT…'
+      )
 
-      if (nombreSat) {
+            // Consolar los resultados
+      console.log('Tipo de documento:',tipoDocumento.value)
+      console.log('Este es el resultado de consultar datos en la sat: ', result.data)
+      console.log('valor booleano sat', result.isCertified)
+
+      const nombreSat = result.data.nombre; // Guardar el nombre retornado de sat
+
+      // result = texto
+      if(nombreSat==='Contribuyente no encontrado'){
+        showErrorNotification('No encontrado', 'Verificar el NIT ingresado')
+        return
+      } else { 
+
         // 3) No existe en BD pero SAT devolvió nombre -> abrir modal con datos prellenados
         abrirModalCliente.value = true
         clienteTemp.value.NIT = tipoDocumento.value ==='nit' ? doc : '',
         clienteTemp.value.DPI = tipoDocumento.value ==='dpi' ? doc : '',
         clienteTemp.value.NOMBRE = nombreSat
         clienteTemp.value.DIRECCION = "Ciudad"
-        return;
+
+        nextTick(async() => {
+
+          //await crearPedido() // Nuevo crear pedido - no lo esta creando miau miau miau
+        })
+        // Crear el pedido ahora
+        clienteStore.nombre = clienteTemp.value.NOMBRE
+        clienteStore.direccion = clienteTemp.value.DIRECCION
+        clienteStore.telefono = clienteTemp.value.TELEFONO
+        clienteStore.documento = clienteTemp.value.NIT ? clienteTemp.value.NIT : clienteTemp.value.DPI
       }
+    
     }
 
     // 4) Si no hay en BD y SAT no devolvió nombre -> abrir modal solo con NIT
@@ -760,7 +821,7 @@ const buscarClienteDPINIT2 = async () => {
     clienteTemp.value.NIT = doc;
     clienteTemp.value.DIRECCION = "Ciudad";
   } catch (err) {
-    console.error("Error en buscarClienteDPINIT2:", err);
+    showConfirmationDialog("Error:", err);
   }
 };
 

@@ -223,7 +223,7 @@
 
 import { ref, computed, onMounted } from 'vue'
 import useFacturasEnc from '../../facturas_enc/composables/useFacturasEnc'
-import { showErrorNotification } from '@/common/helper/notification'
+import { runWithLoading, showErrorNotification } from '@/common/helper/notification'
 import { usePdfFactura } from '@/modules/facturar_pdf/composables/usePdFactura'
 import { useDatosFel } from '../../fel_empresa_establecimiento/composables/useFelDatos'
 import { DatosEmpresa } from '../../facturar_pdf/interfaces/pdfInterface';
@@ -283,11 +283,12 @@ const reimprimirFactura = async (idFactura: number) => {
       return
     }
 
-    const datosFelCertificados = await obtenerDatosFel(factura.NUMERO_FACTURA)
+    const datosFelCertificados = await   obtenerDatosFel(factura.NUMERO_FACTURA)
 
     const datosEmpresa1 = await obtenerDatosEmpresa(1)
     const datosEstablecimiento1 = await obtenerDatosEstablecimiento(1)
 
+    
     const detalle = await obtenerDetalleFactura(idFactura)
     if (!detalle || detalle.length === 0) {
       return
@@ -337,14 +338,15 @@ const reimprimirFactura = async (idFactura: number) => {
     }
 
     // Generar impresion
-    await generarFacturaPDF(dataFactura)
+    await runWithLoading( async () =>  await generarFacturaPDF(dataFactura),
+    ' Generando Factura'
+    )
 
   } catch (error) {
     console.error('Error reimprimiendo factura:', error)
     showErrorNotification('Error al reimprimir factura', 'Error')
   }
 }
-
 
 </script>
 

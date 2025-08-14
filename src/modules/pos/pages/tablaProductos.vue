@@ -119,7 +119,8 @@
                       dense
                       autofocus
                       counter
-                      :maxlength="120"
+                      :maxlength="200"
+                      @focus="(e) => (e.target as HTMLInputElement).select()"
                       @keyup.enter.stop="onGuardarDescripcion(props.row, scope.value)"
                     />
                   </q-popup-edit>
@@ -311,14 +312,14 @@ const onGuardarDescripcion = (row: any, nuevaDescripcion: string) => {
     {
       onSuccess: async () => {
         await forzarActualizacionTabla();        // actualizar Tabla
-        $q.notify({ type: 'positive', message: 'Descripción actualizada' });
+        $q.notify({ type: 'positive', message: 'Descripción actualizada' })
       },
       onError: (e: any) => {
-        const message = e?.message || 'No se pudo actualizar la descripción';
-        showErrorNotification('Error', message);
+        const message = e?.message || 'No se pudo actualizar la descripción'
+        showErrorNotification('Error', message)
       },
       onSettled: () => {
-        savingDescId.value = null;
+        savingDescId.value = null
       }
     }
   );
@@ -409,6 +410,11 @@ defineExpose({
   forzarActualizacionTabla,
   eliminarProducto,
 });
+
+
+function emit(arg0: string) {
+  throw new Error("Function not implemented.");
+}
 </script>
 
 <style scoped>

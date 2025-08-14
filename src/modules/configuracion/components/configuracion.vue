@@ -36,7 +36,7 @@
         Última revisión: <strong>
         {{ new Date(archivosErrores?.timestamp).toLocaleString('es-GT') }} </strong>
         </q-banner>
-          <q-btn class="q-ma-md" color="primary" icon="sync" label="Sincronizar" @click="reintentarEnviarArchivos()"    />
+          <q-btn class="q-ma-md" color="primary" icon="sync" label="Sincronizar" @click="reintentar"    />
         <q-btn class="q-ma-md" color="secondary" icon="information" @click="mostrarConexion" />
 
     </q-expansion-item>
@@ -72,13 +72,13 @@
               <tbody>
 
                 <tr>
-                  <td><kbd><strong>F2</strong></kbd></td>
-                  <td>Consumidor Final (CF)</td>
+                  <td><kbd><strong>Delete</strong></kbd></td>
+                  <td>Limpiar pedido actual</td>
                 </tr>
 
                 <tr>
-                  <td><kbd><strong>Delete</strong></kbd></td>
-                  <td>Limpiar pedido actual</td>
+                  <td><kbd><strong>Enter</strong></kbd></td>
+                  <td>Confirmar cantidad y cerrar ventana</td>
                 </tr>
                 
                 <tr>
@@ -87,28 +87,28 @@
                 </tr>
 
                 <tr>
-                  <td><kbd><strong>Enter</strong></kbd></td>
-                  <td>Confirmar cantidad y cerrar ventana</td>
-                </tr>
-
-                <tr>
-                  <td><kbd><strong>F4</strong></kbd></td>
-                  <td>Facturar</td>
-                </tr>
-                
-                <tr>
                   <td><kbd><strong>-</strong></kbd></td>
                   <td>Pedidos Pendientes</td>
                 </tr>
+                
+                <tr>
+                  <td><kbd><strong>F1</strong></kbd></td>
+                  <td>Catalogo de Productos</td>
+                </tr>
 
+                <tr>
+                  <td><kbd><strong>F2</strong></kbd></td>
+                  <td>Consumidor Final (CF)</td>
+                </tr>
+                
                 <tr>
                   <td><kbd><strong>F3</strong></kbd></td>
                   <td>Crear Pedido</td>
                 </tr>
-
+                
                 <tr>
-                  <td><kbd><strong>F1</strong></kbd></td>
-                  <td>Abri Catalogo Productos</td>
+                  <td><kbd><strong>F4</strong></kbd></td>
+                  <td>Facturar</td>
                 </tr>
 
               </tbody>
@@ -116,9 +116,7 @@
           </q-expansion-item>
         </q-card>
 
-    
       <!-- Mas configuraciones -->
-
 
       <q-page class="q-mt-lg">
         <!--<q-btn label="Actualizar bodega" color="black" @click="actualizarBodega" /> -->
@@ -133,7 +131,7 @@
 import { ref, watch, computed } from 'vue'
 import useSeries from '../../fel_establecimiento_series/composables/useSeries'
 import { useConfiguracionStore } from '@/stores/serie'
-import { showConfirmationDialog } from '@/common/helper/notification'
+import { runWithLoading, showConfirmationDialog } from '@/common/helper/notification'
 
 import { DataFactura } from '@/modules/facturar_pdf/interfaces/pdfInterface'
 import { usePdfFactura } from '@/modules/facturar_pdf/composables/usePdFactura'
@@ -144,7 +142,7 @@ const { seriesSucursal } = useSeries()
 
 // sync
 import { useSync } from '@/modules/sync/composables/useSync'
-const { refetchArchivosCreados, archivosTransferidos, refetchArchivosTransferidos, refetchArchivosErrores, reintentarEnviarArchivos, archivosErrores, estadoConexion } = useSync()
+const { refetchArchivosCreados, archivosTransferidos, refetchArchivosTransferidos, refetchArchivosErrores, mutateReintentarEnviarArchivos, archivosErrores, estadoConexion } = useSync()
 
 // Parámetros
 const idSucursal = ref(1)
@@ -152,6 +150,12 @@ const serie = ref(configuracionStore.serieSeleccionada || '')
 const conexionMensaje = ref(false)
 
 const { data: series, isLoading, error } = seriesSucursal(idSucursal.value)
+
+// Funcion para enviar archivos
+const reintentar = async () => {
+
+  await runWithLoading ( async () => await mutateReintentarEnviarArchivos , 'Sincronizando Archivos')
+}
 
 
 const seriesOptions = computed(() => {
@@ -175,15 +179,10 @@ const mostrarConexion = () => {
   conexionMensaje.value = true
 }
 
-// probar impresion
-const actualizarBodega = () => {
-
-}
-
-
 function ListaDet1(idPedidoEnc: any): { data: any; isLoading: any; refetch: any } {
   throw new Error('Function not implemented.')
 }
+
 </script>
 
 
@@ -198,6 +197,5 @@ function ListaDet1(idPedidoEnc: any): { data: any; isLoading: any; refetch: any 
   margin-bottom: 0;
   padding: 0 0 0 0;
 }
-
 
 </style>

@@ -147,3 +147,71 @@ export const showConfirmationInsideModal = async (
 
   return result.isConfirmed;
 };
+
+// Loadings
+export const showLoading = (message = 'Procesando…', insideModal = false) => {
+  try {
+    // Cerrar cualquier loading previo
+    if (Swal.isVisible() && Swal.getIcon() === null && Swal.getTitle()?.textContent === message) {
+      // Ya hay un loading con el mismo mensaje
+      return;
+    }
+
+    Swal.fire({
+      title: message,
+      html: `
+        <div style="display:flex;align-items:center;justify-content:center;gap:.75rem;">
+          <div class="swal2-loader"></div>
+          <span style="font-size:14px;opacity:.9;">Por favor, espera…</span>
+        </div>
+      `,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      backdrop: true,
+      heightAuto: false,
+      didOpen: () => {
+        Swal.showLoading();
+        // Ajuste de z-index cuando se usa dentro de un modal propio
+        if (insideModal) {
+          const container = document.querySelector('.swal2-container') as HTMLElement;
+          if (container) container.style.zIndex = '9999';
+        }
+      },
+      willClose: () => {
+        // Limpieza 
+      },
+
+      customClass: {
+        popup: insideModal ? 'swal-popup-inside-modal' : ''
+      }
+    });
+  } catch (err) {
+    console.error('showLoading error:', err);
+  }
+};
+
+/**
+ Cerrar el Loading
+ */
+export const hideLoading = () => {
+  try {
+    if (Swal.isVisible()) Swal.close();
+  } catch (err) {
+    console.error('hideLoading error:', err);
+  }
+};
+
+// Loading
+export const runWithLoading = async <T>(
+  fn: () => Promise<T>,
+  message = 'Procesando…',
+  insideModal = false
+): Promise<T> => {
+  showLoading(message, insideModal);
+  try {
+    return await fn();
+  } finally {
+    hideLoading();
+  }
+};

@@ -1,17 +1,27 @@
-import posApi from '@/api/apiPos'
-import { getAxiosErrorMessage } from '@/common/helper/geterrordb'
-import posApiCertificador from '@/api/apiPosCertificacion'
+import posApi from "@/api/apiPos";
+import { getAxiosErrorMessage } from "@/common/helper/geterrordb";
+import posApiCertificador from "@/api/apiPosCertificacion";
+import { Validation } from "../interfaces/validationInterface";
 
 // Obtener Datos Sat
-export const validationAction = async (nit: string, tipo: string, validar: boolean, empresa: string ) : Promise<any> => {
-    try {
-        const { data } = await posApi.get<string>(`/validation`,  {params: {nit, tipo, validar, empresa}})
-        console.log('Validation data desde Action: ', data)
-        return data
-    } catch ( error ) {
-        const message = getAxiosErrorMessage(error, 'Hubo un error Validando')
-        console.log(message)
-        throw new Error(message)
-    }
-
-}
+export const validationAction = async (
+  nit: string,
+  tipo: string,
+  validar: boolean,
+  empresa: string
+): Promise<Validation> => {
+  try {
+    const { data } = await posApi.get<Validation>(`/validation`, {params: { nit, tipo, validar, empresa }, })
+    return data
+  } catch (error) {
+    console.log("Error en validationAction: ", error);
+    const err: any = error;
+    const respError = err?.response?.data?.error;
+    const personalizado = respError?.message_personalizado;
+    const fallbackMsg = respError?.message || "Hubo un error Validando";
+    const message =
+      personalizado + " | " + fallbackMsg ||
+      getAxiosErrorMessage(err, fallbackMsg);
+    throw new Error(message);
+  }
+};

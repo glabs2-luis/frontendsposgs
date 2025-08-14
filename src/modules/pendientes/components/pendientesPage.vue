@@ -75,7 +75,20 @@
               :rows-per-page-options="[10, 20, 50, 100]"
               style="height: 600px"
               virtual-scroll
-            />
+            >
+                <template v-slot:no-data>
+                <div class="full-width text-center" style="padding: 200px 20px;">
+                  <q-icon name="inventory_2" size="64px" color="grey-8" />
+                  <div class="text-subtitle1 q-mt-sm text-grey-7">
+                    Seleccione una Factura
+                  </div>
+                  <div class="text-caption text-grey-5">
+                    Para ver los errores
+                  </div>
+                </div>
+              </template>
+            </q-table>
+            
           </q-section>
         </q-card>
       </div>
@@ -89,8 +102,10 @@ import { ref, computed, watch, nextTick } from 'vue'
 import { QTableColumn } from 'quasar'
 import { useFacturasFel } from '../composables/useFelPendientes'
 import { useCertification } from '@/modules/certification/composables/useCertification'
-import { showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
+import { runWithLoading, showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
+import { useStoreSucursal } from '@/stores/sucursal'
 
+const storeSucursal = useStoreSucursal();
 const { mutateCertificar } = useCertification()
 const { facturasErrores, refetchFacturasErrores } = useFacturasFel()
 const facturaSeleccionadaArray = ref([])
@@ -139,25 +154,19 @@ const facturasConErrores = computed(() => {
   ) || []
 })
 
-// Intentar Certificar - Prueba
-const certificarAgain2 = async () => {
-    console.log('facturasErrores:', facturasErrores.value.filter(f => f.NUMERO_FACTURA === 114))
-
-     const [numero, serie] = facturaSeleccionada.value.split('-') 
-     console.log('numero', numero)
-     console.log('serie', serie)
-
-  console.log('datos:', facturaSeleccionada.value)
-}
-
 // Intentar certificar 
 const certificarAgain = async () => {
+
+    if(facturaSeleccionada.value === null){
+      showErrorNotification('Seleccione una Factura', 'Debe de seleccionar una factura')
+      return
+    }
 
     const [numero, serie] = facturaSeleccionada.value.split('-')  
     const numero2= Number(numero)
 
-    await mutateCertificar(
-  { sucursal:'1', serie: serie, numero: numero2 },
+    await runWithLoading( async () =>  await mutateCertificar(
+  { sucursal: storeSucursal.idSucursal, serie, numero: numero2 },
   {
     onSuccess: async (data) => {
 
@@ -168,14 +177,14 @@ const certificarAgain = async () => {
         await nextTick()
          await refetchFacturasErrores() 
     }
-    }
+  }
 
-  } )
+  } ), 'Certificando')
 }
 
 // Recargar el error
 const Refrescar = async () =>{
-    await refetchFacturasErrores()
+  await runWithLoading ( async () =>  await refetchFacturasErrores(), 'Refrescando Facturas' )
 }
 
 // tabla pendientes - izquierda
@@ -194,6 +203,7 @@ const columnasErrores: QTableColumn[] = [
 </script>
 
 <style scoped>
+
 .boton-amarillo {
   background: linear-gradient(90deg, #FFEB3B, #FBC02D);
   color: #070606;
@@ -208,4 +218,5 @@ const columnasErrores: QTableColumn[] = [
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   transform: scale(1.02);
 }
+
 </style>
