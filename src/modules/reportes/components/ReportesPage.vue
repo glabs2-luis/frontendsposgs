@@ -147,7 +147,7 @@
 <script setup lang="ts">
 
 import { ref, computed, onMounted, watch, watchEffect } from 'vue'
-import { showErrorNotification, showErrorNotificationInside } from '@/common/helper/notification'
+import { runWithLoading, showErrorNotification, showErrorNotificationInside } from '@/common/helper/notification'
 import useSeries from '../../fel_establecimiento_series/composables/useSeries'
 import { date } from 'quasar'
 import { useFacturasEnc } from '@/modules/facturas_enc/composables/useFacturasEnc'
@@ -163,7 +163,6 @@ const password = ref('')
 let fecha = ref<{ from: string; to?: string }>({ from: '' })
 const { data: series} = seriesSucursal(1)
 const serie = ref('')
-//const rangoFechas = ref({ from: '', to: ''})
 const rangoFechas = ref<{ from: string; to?: string }>({ from: '' })
 let totalCorte = ref(0) // Calcular total
 const ticketRef = ref<HTMLElement | null>(null) // Para impresion
@@ -198,11 +197,6 @@ watchEffect(()=>{
   console.log('este es valor de rangoFechas en watchEffect', rangoFechas.value.from)
   console.log('este es valor de rangoFechas en watchEffect', rangoFechas.value.to)
 })
-
-
-const unaFecha = () =>{
-
-}
 
 // Comparar clave para ingresar 
 const verificarPassword = async () => {
@@ -251,8 +245,8 @@ const buscarFacturas = async () => {
     console.log('fecha antes', rangoFechas.value.from)
     console.log('fecha despues', rangoFechas.value.to)
 
-
- //   if (!rangoFechas.value.from && !rangoFechas.value.to) {
+    // Validar is no hay fecha still pending
+ //   if (rangoFechas.value.from ===  && !rangoFechas.value.to) {
  //   showErrorNotification('Rango de Fechas', 'Debe seleccionar un rango de fechas válido')
  //   return
  // }
@@ -270,23 +264,24 @@ const buscarFacturas = async () => {
 
   console.log('buscar datos:', buscar)
 
-  const facturas = await obtenerFacturasPorFecha(buscar.fecha_inicial, buscar.fecha_final, buscar.serie)
+  const facturas = await runWithLoading(async () =>  await obtenerFacturasPorFecha(buscar.fecha_inicial, buscar.fecha_final, buscar.serie), 'Cargando Facturas')
   console.log('facturas: ', facturas)
 
   listaFacturas.value = (facturas as any[]) || []
 
   // Calcular total
+  } catch ( error ){
+    const message = error
+    showErrorNotification('Error', message)
+  }
+}
+
   totalCorte = computed(() => {
   return listaFacturas.value.reduce((total, factura) => {
     return total + (factura.TOTAL_GENERAL || 0)
   }, 0)
 })
 
-  } catch ( error ){
-    const message = error
-    showErrorNotification('Error', message)
-  }
-}
 
  // Imprimir nota
 const imprimirTicket = () => {
@@ -349,7 +344,6 @@ ventanaImpresion.document.write(`
     showErrorNotification('Impresión', 'No se pudo abrir la ventana de impresión')
   }
 }
-
 
 </script>
 

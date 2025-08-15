@@ -98,7 +98,7 @@
 
 <script setup lang="ts">
 
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, watchEffect } from 'vue'
 import { QTableColumn } from 'quasar'
 import { useFacturasFel } from '../composables/useFelPendientes'
 import { useCertification } from '@/modules/certification/composables/useCertification'
@@ -191,7 +191,7 @@ const Refrescar = async () =>{
 const columnasPendientes: QTableColumn[] = [
   { name: 'numero', label: 'Número', field: 'NUMERO_FACTURA', align: 'left' },
   { name: 'serie', label: 'Serie', field: 'SERIE', align: 'left' },
-  { name: 'Fecha', label: 'Fecha Facturación', field: 'FECHA_FACTURACION', align: 'left', format: formatearFecha }
+  { name: 'Fecha', label: 'Fecha Facturación', field: 'FECHA_ACCION', align: 'left', format:formatearFecha }
 ]
 
 // tabla  derecha

@@ -1,6 +1,6 @@
 import {
   crearCertificacionNcAction,
-  crearCertificationAction,
+  crearCertificationAction, certificacionPendientesAction
 } from "../actions/certificationAction";
 import {
   showErrorNotification,
@@ -9,6 +9,7 @@ import {
 import { useQuery, useQueryClient, useMutation } from "@tanstack/vue-query";
 
 export const useCertification = () => {
+
   const queryClient = useQueryClient();
 
   const { mutate: mutateCertificar, mutateAsync: certificarAsync } =
@@ -21,6 +22,16 @@ export const useCertification = () => {
         showErrorNotification("Error al certificar factura", error.message);
       },
     });
+
+  const { mutate: mutateFacturaContingencia } = useMutation({
+      mutationFn: certificacionPendientesAction,
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["certificar"] });
+      },
+      onError: (error: Error) => {
+        showErrorNotification("Error al Crear Factura en contingencia", error.message);
+      },
+  })
 
   const { mutate: mutateCertificarNc } = useMutation({
     mutationFn: crearCertificacionNcAction,
@@ -39,5 +50,6 @@ export const useCertification = () => {
     mutateCertificar,
     certificarAsync,
     mutateCertificarNc,
+    mutateFacturaContingencia
   };
 };

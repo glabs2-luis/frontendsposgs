@@ -4,30 +4,36 @@ import {
   DtoCertificado,
 } from "../interfaces/certificationInterface";
 import posApiCertificador from "@/api/apiPosCertificacion";
+import posApi from "@/api/apiPos";
 
-export const crearCertificationAction = async (datos: {
-  sucursal: string;
-  serie: string;
-  numero: number;
-}): Promise<Certification> => {
+export const crearCertificationAction = async (datos: {sucursal: string;serie: string; numero: number} ): Promise<Certification> => {
   try {
     // console.log("creando certification desde action");
-    const { data } = await posApiCertificador.post(`/certification`, {
-      idSucursal: datos.sucursal,
-      serie: datos.serie,
-      numeroFactura: datos.numero,
-    });
+    const { data } = await posApiCertificador.post(`/certification`, { idSucursal: datos.sucursal, serie: datos.serie, numeroFactura: datos.numero, } );
     console.log("retornando crear certificacion desde action: ", data);
     return data;
   } catch (error) {
-    console.log("Error:", error);
     const message = getAxiosErrorMessage(
       error,
       "Hubo un error creando la certification"
-    );
-    throw new Error(message);
+    )
+    console.log("Error:", message)
+    throw new Error(message)
   }
-};
+}
+
+// Facturas pendientes en Contingencia
+export const certificacionPendientesAction = async (datos: { sucursal: string; serie: string; numero: number; } ): Promise<any> => {
+  try {
+    const { data } = await posApiCertificador.post(`/certification/pendientes`, {idSucursal: datos.sucursal, serie: datos.serie, numeroFactura: datos.numero,})
+    console.log('devolviendo pendientes desde action', data)
+    return data 
+  } catch(error){
+    const message = getAxiosErrorMessage('Hubo un error creando un pendientes desde action', error)
+    console.log('error: ', message)
+    throw new Error(message)
+  }
+}
 
 export const crearCertificacionNcAction = async (datos: {
   sucursal: string;

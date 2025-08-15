@@ -396,7 +396,7 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
         ...(data.encabezado.tipoDocumento.toUpperCase() !== 'NOTA DE CREDITO'
           ?
             [
-              {
+                            {
                 columns: [
                   {
                     text: "Subtotal:",
@@ -410,6 +410,12 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
                     style: "smallText",
                     width: 60,
                   },                  
+
+                ],
+                margin: [0, 0, 0, 2],
+              },
+              {
+                columns: [               
                   {
                     text: "Descuento:",
                     alignment: "right",
