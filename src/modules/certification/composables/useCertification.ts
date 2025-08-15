@@ -11,15 +11,16 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/vue-query";
 export const useCertification = () => {
   const queryClient = useQueryClient();
 
-  const { mutate: mutateCertificar } = useMutation({
-    mutationFn: crearCertificationAction,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["certificar"] });
-    },
-    onError: (error: Error) => {
-      showErrorNotification("Error al certificar factura", error.message);
-    },
-  });
+  const { mutate: mutateCertificar, mutateAsync: certificarAsync } =
+    useMutation({
+      mutationFn: crearCertificationAction,
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["certificar"] });
+      },
+      onError: (error: Error) => {
+        showErrorNotification("Error al certificar factura", error.message);
+      },
+    });
 
   const { mutate: mutateCertificarNc } = useMutation({
     mutationFn: crearCertificacionNcAction,
@@ -36,6 +37,7 @@ export const useCertification = () => {
 
   return {
     mutateCertificar,
+    certificarAsync,
     mutateCertificarNc,
   };
 };

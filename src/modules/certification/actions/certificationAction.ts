@@ -11,7 +11,7 @@ export const crearCertificationAction = async (datos: {
   numero: number;
 }): Promise<Certification> => {
   try {
-    console.log("creando certification desde action");
+    // console.log("creando certification desde action");
     const { data } = await posApiCertificador.post(`/certification`, {
       idSucursal: datos.sucursal,
       serie: datos.serie,

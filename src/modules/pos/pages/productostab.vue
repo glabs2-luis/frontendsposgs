@@ -424,7 +424,7 @@
             </div>
 
             <div class="col-12 q-mt-sm">
-          <q-input
+              <q-input
                 ref="focusEfectivo"
                 v-model.number="montoEfectivo"
                 label="Efectivo"
@@ -644,7 +644,6 @@
   </div>
 </template>
 
-
 <script setup>
 import { useQuasar } from "quasar";
 import { useQueryClient } from "@tanstack/vue-query";
@@ -703,7 +702,7 @@ const storeSucursal = useStoreSucursal();
 const { mutateAplicarCupon } = useCupones();
 const { datosEmpresa, datosEstablecimiento } = useDatosFel();
 const contingencia = ref(false);
-const { mutateCertificar } = useCertification();
+const { mutateCertificar, certificarAsync } = useCertification();
 const { obtenerDetalleFactura, obtenerFacturasEnc, obtenerFacturaId3 } =
   useFacturasEnc();
 const { data: factura3 } = obtenerFacturaId3();
@@ -910,9 +909,7 @@ const aplicarCuponazo = () => {
       nextTick(() => {
         refCupon.value?.focus();
         refCupon.value?.select();
-        refetchObtenerPedidoID()
-
-
+        refetchObtenerPedidoID();
       });
     },
   });
@@ -984,14 +981,14 @@ const usarF4 = (e) => {
     e.preventDefault();
     terminarVenta();
   }
-}
+};
 
 const usarF1 = (e) => {
-  if(e.key === "F1") {
-    e.preventDefault()
-    abrirCatalogo2()
+  if (e.key === "F1") {
+    e.preventDefault();
+    abrirCatalogo2();
   }
-}
+};
 
 // limpiar pedido
 const usarDelete = (e) => {
@@ -1083,122 +1080,122 @@ const limpiar = async () => {
         },
       }
     );
-    cleanAllStores()
-    focus.value.setFocus()
+    cleanAllStores();
+    focus.value.setFocus();
   }
-}
+};
 
 // modal cuponazo
 const abrirCuponazo = async () => {
-  modalCuponazo.value = true
+  modalCuponazo.value = true;
 
-  await nextTick()
+  await nextTick();
 
-  refCupon.value?.focus()
-}
+  refCupon.value?.focus();
+};
 
 // nuevo catalogo
 const abrirCatalogo2 = async () => {
   try {
     // Asegurar que los productos estén cargados antes de abrir el modal
-    await refetchTodosProductos()
-    modalProductos2.value = true
+    await refetchTodosProductos();
+    modalProductos2.value = true;
   } catch (error) {
-    console.error("Error al cargar productos:", error)
-    showErrorNotification("Error", "No se pudieron cargar los productos")
+    console.error("Error al cargar productos:", error);
+    showErrorNotification("Error", "No se pudieron cargar los productos");
   }
-}
+};
 
 const abrirModalCantidad = () => {
-  modalCantidad.value = true
-}
+  modalCantidad.value = true;
+};
 
 // Multiplicador
 onMounted(() => {
-  window.addEventListener("keydown", usarMultiplicador)
-})
+  window.addEventListener("keydown", usarMultiplicador);
+});
 
 onBeforeUnmount(() => {
-  window.removeEventListener("keydown", usarMultiplicador)
-})
+  window.removeEventListener("keydown", usarMultiplicador);
+});
 
 // limpiar
 onMounted(() => {
-  window.addEventListener("keydown", usarDelete)
-})
+  window.addEventListener("keydown", usarDelete);
+});
 
 onBeforeUnmount(() => {
-  window.removeEventListener("keydown", usarDelete)
-})
+  window.removeEventListener("keydown", usarDelete);
+});
 
 // Abrir facturacion con F4
 onMounted(() => {
-  window.addEventListener("keydown", usarF4)
-})
+  window.addEventListener("keydown", usarF4);
+});
 
 onBeforeUnmount(() => {
-  window.removeEventListener("keydown", usarF4)
-})
+  window.removeEventListener("keydown", usarF4);
+});
 
 // Abrir Catalogo
 onMounted(() => {
-  window.addEventListener("keydown", usarF1)
-})
+  window.addEventListener("keydown", usarF1);
+});
 
 onBeforeUnmount(() => {
-  window.removeEventListener("keydown", usarF1)
-})
+  window.removeEventListener("keydown", usarF1);
+});
 
 // calcular cambio
 const calcularCambioModal = () => {
-  if (opcionesPago2 === "MIXTO") calcularCambio.value = 0
+  if (opcionesPago2 === "MIXTO") calcularCambio.value = 0;
   else {
-    calcularCambio.value = montoEfectivo.value - totalStore.totalGeneral
+    calcularCambio.value = montoEfectivo.value - totalStore.totalGeneral;
   }
-}
+};
 
 // si el efectivo cambia, calcular cambio
 watch(montoEfectivo, (nuevoValor) => {
   if (nuevoValor !== null && nuevoValor >= 0) {
-    calcularCambioModal()
+    calcularCambioModal();
   } else {
-    calcularCambio.value = 0
+    calcularCambio.value = 0;
   }
 });
 
 //focus a efectivo
 watch(tipoPago, async (nuevo) => {
   if (nuevo === "EFECTIVO") {
-    await nextTick()
-    focusEfectivo.value?.focus()
+    await nextTick();
+    focusEfectivo.value?.focus();
   }
 });
 
 // focus desde mixto
 watch(tipoPago, async (nuevo) => {
   if (nuevo === "MIXTO") {
-    await nextTick()
-    focusEfectivo.value?.focus()
+    await nextTick();
+    focusEfectivo.value?.focus();
   }
 });
 
 // focus a tarjeta
 watch(tipoPago, async (nuevo) => {
   if (nuevo === "TARJETA") {
-    await nextTick()
-    focusTarjeta.value?.focus()
+    await nextTick();
+    focusTarjeta.value?.focus();
   }
 });
 
 // limpiar campos de pago
 watch(tipoPago, (nuevo) => {
   if (nuevo === "EFECTIVO") {
-    montoTarjeta.value = null
+    montoTarjeta.value = null;
   } else if (nuevo === "TARJETA") {
-    montoEfectivo.value = null
+    montoEfectivo.value = null;
   } else if (nuevo === "MIXTO") {
-    montoEfectivo.value = null
-    montoTarjeta.value = null
+    montoEfectivo.value = null;
+    montoTarjeta.value = null;
   }
 });
 
@@ -1210,9 +1207,7 @@ const formatearFecha = (fecha) => {
 };
 
 const certificarFactura = async (id) => {
-
-  const factura = await obtenerFacturaId3(id)
-  //console.log("datos de factura:", factura)
+  const factura = await obtenerFacturaId3(id);
 
   mutateCertificar(
     {
@@ -1222,13 +1217,14 @@ const certificarFactura = async (id) => {
     },
     {
       onSuccess: async (data) => {
-        const detalle = await obtenerDetalleFactura(id)
-
-        console.log("dataCertificados", data)
-
-        if (!detalle || detalle.length === 0) return
-
         try {
+          // Si se certifica la factura, se debe de sincronizar
+          mutateCrearSincronizacion(id);
+
+          console.log("data certificada con exito: ", data);
+          const detalle = await obtenerDetalleFactura(id);
+          if (!detalle || detalle.length === 0) return;
+
           const itemsFactura = detalle.map((item) => ({
             cantidad: item.CANTIDAD_VENDIDA,
             descripcion: item.producto.DESCRIPCION_PROD,
@@ -1244,8 +1240,6 @@ const certificarFactura = async (id) => {
             (subtotal, item) => subtotal + Number(item.subtotal),
             0
           );
-
-          //console.log("Subtotal", Subtotal);
 
           const dataFactura = {
             encabezado: {
@@ -1276,21 +1270,40 @@ const certificarFactura = async (id) => {
             qrCodeData: data.Uuid,
           };
 
-          nextTick( async () => {
-            await generarFacturaPDF(dataFactura)
-          })
+          await nextTick();
+          await generarFacturaPDF(dataFactura);
 
+          // limpiar stores
+          cleanAllStores();
+
+          props.onNuevoPedido();
+          // limpiar campos de pago
+          montoEfectivo.value = null;
+          montoTarjeta.value = null;
+
+          // Invalidate pedidos pendientes y refetch
+
+          queryClient.invalidateQueries({
+            queryKey: ["pedidos-pendientes"],
+          });
+
+          $q.notify({
+            type: "success",
+            message: "Pedido facturado con éxito",
+            position: "top-right",
+            timeout: 3000,
+            icon: "check",
+          });
         } catch (error) {
-          console.error("Error imprimiendo factura:", error)
-          showErrorNotification("Error al imprimir factura", "Error")
+          showErrorNotification("Error", error.message);
         }
       },
       onError: (error) => {
-        console.error(" Error certificando factura:", error)
+        showErrorNotification("Error", "No se pudo certificar la factura");
       },
     }
-  )
-}
+  );
+};
 
 // modal factura
 const terminarVenta = async () => {
@@ -1309,7 +1322,6 @@ const terminarVenta = async () => {
 
 // Guarda factura enc y det
 const confirmarFactura = async () => {
-
   if (!configuracionStore.serieSeleccionada) {
     modalFacturacion.value = false;
     showErrorNotification(
@@ -1330,48 +1342,28 @@ const confirmarFactura = async () => {
   // Capturar el cambio actual antes de que muten estados
   const cambioCapturado = cambioPago.value;
 
+  // Agregar el Loading aqui -
 
-  // Agregar el Loading aqui - 
+  await runWithLoading(() =>
+    // Ejecutar la facturación
+    mutateCrearFacturaEnc2(
+      datos,
+      {
+        onSuccess: async (respuesta) => {
+          // Guardar último cambio para mostrarlo en clienteform luego de cerrar el modal
+          totalStore.setUltimoCambio(cambioCapturado);
 
-  await runWithLoading( () => 
-  // Ejecutar la facturación
-  mutateCrearFacturaEnc2(datos, {
-    onSuccess: async (respuesta) => {
-      // Guardar último cambio para mostrarlo en clienteform luego de cerrar el modal
-      totalStore.setUltimoCambio(cambioCapturado);
-
-      modalFacturacion.value = false;
-
-      // mandar a imprimir
-      await certificarFactura(respuesta.ID_FACTURA_ENC, {
-
-        onSuccess: () => {
-          mutateCrearSincronizacion(respuesta.ID_FACTURA_ENC);
+          modalFacturacion.value = false;
+          await certificarFactura(respuesta.ID_FACTURA_ENC);
         },
-      })
-
-      // limpiar stores
-      cleanAllStores();
-
-      props.onNuevoPedido();
-      // limpiar campos de pago
-      montoEfectivo.value = null;
-      montoTarjeta.value = null;
-
-      // Invalidate pedidos pendientes y refetch
-
-      await queryClient.invalidateQueries({
-        queryKey: ["pedidos-pendientes"],
-      });
-
-     // await showSuccessNotification("Factura", "Factura generada con éxito");
-    },
-    onError: (error) => {
-      modalFacturacion.value = false;
-    },
-  }, 'Facturando', ))
-}
-
+        onError: (error) => {
+          modalFacturacion.value = false;
+        },
+      },
+      "Facturando"
+    )
+  );
+};
 
 // Columnas para el catálogo de productos
 const columnasCatalogo = [
@@ -1532,8 +1524,8 @@ const buscarProductoEscaneado = async () => {
 
   //console.log('Este es el resultado',resultado)
 
-  console.log("Este es codigo PRoducto", codigoProducto.value);
-  console.log("Este es el resultado", resultado);
+  // console.log("Este es codigo PRoducto", codigoProducto.value);
+  // console.log("Este es el resultado", resultado);
 
   // 3. Insertar producto al pedido
   const detalle = {
@@ -1547,7 +1539,7 @@ const buscarProductoEscaneado = async () => {
     NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido,
   };
 
-  console.log("Este es el detalle: ", detalle);
+  // console.log("Este es el detalle: ", detalle);
 
   mutateCrearPedidoDet(detalle, {
     onSuccess: async (data) => {
