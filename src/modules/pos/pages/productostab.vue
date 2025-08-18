@@ -91,16 +91,20 @@
           />
 
           <div class="col-auto">
-                <div
-                  class="text-subtitle2 text-primary "
-                  style="font-size: 160%; border-radius: px; color: #1976d2; background-color: #e3f2fd; padding: 4px 8px; margin-top: 4px;"
-                >
-                  Items: {{ numPedido2 }}
-                </div>
-
+            <div
+              class="text-subtitle2 text-primary"
+              style="
+                font-size: 160%;
+                border-radius: px;
+                color: #1976d2;
+                background-color: #e3f2fd;
+                padding: 4px 8px;
+                margin-top: 4px;
+              "
+            >
+              Items: {{ numPedido2 }}
             </div>
-
-
+          </div>
         </div>
       </div>
     </q-card>
@@ -923,7 +927,6 @@ const confirmarContingencia = async () => {
   }
 };
 
-
 // Cupon
 const aplicarCuponazo = () => {
   const datosCupon = {
@@ -1261,72 +1264,50 @@ const formatearFecha = (fecha) => {
 const idFacturaEnc = ref("0");
 
 const certificarFactura = async (id) => {
-  try {
-    console.log("Iniciando certificación para factura:", id);
+  console.log("Iniciando certificacion de factura...");
 
-    // Obtener datos de la factura
-    const factura = await obtenerFacturaId3(id);
-    console.log("id Factura valor:", idFacturaEnc.value);
+  // Obtener datos de la factura
+  const factura = await obtenerFacturaId3(id);
+  // Mostrar loading para certificación
+  $q.loading.show({
+    message: "Certificando factura...",
+    spinnerColor: "green",
+    spinnerSize: 50,
+  });
 
-    // Mostrar loading para certificación
-    $q.loading.show({
-      message: "Certificando factura...",
-      spinnerColor: "green",
-      spinnerSize: 50,
-    });
+  // Usar Promise para manejar la mutación de certificación
+  mutateCertificar(
+    {
+      sucursal: storeSucursal.idSucursal,
+      serie: factura.SERIE,
+      numero: factura.NUMERO_FACTURA,
+    },
+    {
+      onSuccess: async (data) => {
+        console.log("Factura certificada exitosamente");
 
-    // Usar Promise para manejar la mutación de certificación
-    await new Promise((resolve, reject) => {
-      mutateCertificar(
-        {
-          sucursal: storeSucursal.idSucursal,
-          serie: factura.SERIE,
-          numero: factura.NUMERO_FACTURA,
-        },
-        {
-          onSuccess: async (data) => {
-            try {
-              console.log("Factura certificada exitosamente");
+        // Ocultar loading antes de imprimir
+        $q.loading.hide();
 
-              // Ocultar loading antes de imprimir
-              $q.loading.hide();
+        // Si se certifica la factura, se debe de sincronizar
+        mutateCrearSincronizacion(id);
 
-              // Si se certifica la factura, se debe de sincronizar
-              mutateCrearSincronizacion(id);
+        await imprimirFactura(data);
 
-              await imprimirFactura(data);
-              resolve(data);
-            } catch (error) {
-              console.error("Error en impresión:", error);
-
-              // En caso de error, marcar como contingencia
-              contingencia.value = true;
-
-              try {
-                await imprimirFactura(data);
-                resolve(data);
-              } catch (printError) {
-                console.error(
-                  "Error en impresión de contingencia:",
-                  printError
-                );
-                reject(printError);
-              }
-            }
-          },
-          onError: (error) => {
-            console.error("Error en certificación:", error);
-            $q.loading.hide();
-            reject(error);
-          },
-        }
-      );
-    });
-  } catch (error) {
-    console.error("Error en certificarFactura:", error);
-    $q.loading.hide();
-    throw error;
-  }
+        $q.notify({
+          type: "positive",
+          message: "Factura certificada con exito  " + data.Uuid,
+          position: "top-right",
+          timeout: 3000,
+          icon: "check",
+        });
+      },
+      onError: (error) => {
+        console.error("Error en certificación:", error);
+        $q.loading.hide();
+      },
+    }
+  );
 };
 
 // modal factura
@@ -1363,67 +1344,45 @@ const confirmarFactura = async () => {
     ES_CONTINGENCIA: contingencia.value,
   };
 
-  console.log("Datos de facturación:", datos)
   // Capturar el cambio actual antes de que muten estados
   const cambioCapturado = cambioPago.value;
 
-  try {
-    // Mostrar loading manualmente para evitar timeout
-    $q.loading.show({
-      message: "Facturando...",
-      spinnerColor: "primary",
-      spinnerSize: 50,
-    });
+  // Mostrar loading manualmente para evitar timeout
+  $q.loading.show({
+    message: "Facturando...",
+    spinnerColor: "primary",
+    spinnerSize: 50,
+  });
 
-    // Ejecutar la facturación usando Promise para manejar la mutación
-    await new Promise((resolve, reject) => {
-      mutateCrearFacturaEnc2(datos, {
-        onSuccess: async (respuesta) => {
-          try {
-            // Guardar último cambio para mostrarlo en clienteform luego de cerrar el modal
-            totalStore.setUltimoCambio(cambioCapturado);
-            modalFacturacion.value = false;
+  mutateCrearFacturaEnc2(datos, {
+    onSuccess: async (respuesta) => {
+      console.log("Pedido facturado correctamente");
+      modalFacturacion.value = false;
+      // Guardar último cambio para mostrarlo en clienteform luego de cerrar el modal
+      totalStore.setUltimoCambio(cambioCapturado);
 
-            // Ocultar loading antes de certificar
-            $q.loading.hide();
+      // Ocultar loading antes de certificar
+      $q.loading.hide();
 
-            console.log("Factura creada, iniciando certificación...");
+      // Ahora sí espera a que termine la certificación
+      await certificarFactura(respuesta.ID_FACTURA_ENC);
 
-            // Ahora sí espera a que termine la certificación
-            await certificarFactura(respuesta.ID_FACTURA_ENC);
+      idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
+    },
+    onError: (error) => {
+      console.error("Error creando factura:", error);
+      modalFacturacion.value = false;
+      $q.loading.hide();
+    },
+  });
 
-            idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
-            resolve(respuesta);
-          } catch (error) {
-            console.error("Error en certificación:", error);
-            reject(error);
-          }
-        },
-        onError: (error) => {
-          console.error("Error creando factura:", error);
-          modalFacturacion.value = false;
-          $q.loading.hide();
-          reject(error);
-        },
-      });
-    });
-
-    // LIMPIAR STORES DESPUÉS DE COMPLETAR EXITOSAMENTE
-    // Esto se ejecuta solo si todo el proceso de facturación fue exitoso
-    cleanAllStores();
-  } catch (error) {
-    console.error("Error general en confirmarFactura:", error);
-    modalFacturacion.value = false;
-    $q.loading.hide();
-
-    showErrorNotification(
-      "Error",
-      "Ocurrió un error durante la facturación. Intenta nuevamente."
-    );
-  }
+  // LIMPIAR STORES DESPUÉS DE COMPLETAR EXITOSAMENTE
+  // Esto se ejecuta solo si todo el proceso de facturación fue exitoso
+  cleanAllStores();
 };
 
 const imprimirFactura = async (data) => {
+  console.log("imprimiendo factura...");
   const factura2 = await obtenerFacturaId3(idFacturaEnc.value);
 
   //console.log("este es data:", data);
@@ -1505,14 +1464,6 @@ const imprimirFactura = async (data) => {
   // Invalidate pedidos pendientes y refetch
   queryClient.invalidateQueries({
     queryKey: ["pedidos-pendientes"],
-  });
-
-  $q.notify({
-    type: "success",
-    message: "Pedido facturado con éxito",
-    position: "top-right",
-    timeout: 3000,
-    icon: "check",
   });
 };
 
