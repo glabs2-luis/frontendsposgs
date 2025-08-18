@@ -147,7 +147,7 @@
 
     <q-footer>
       <div class="bg-yellow-8 text-black text-center q-pa-sm">
-        <strong> Made by Hugo Love Shady - 2025 </strong>
+        <strong> Libreria San Bartolome - 2025 </strong>
       </div>
     </q-footer>
 

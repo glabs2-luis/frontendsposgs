@@ -9,7 +9,7 @@ import posApi from "@/api/apiPos";
 export const crearCertificationAction = async (datos: {sucursal: string;serie: string; numero: number} ): Promise<Certification> => {
   try {
     // console.log("creando certification desde action");
-    const { data } = await posApiCertificador.post(`/certification`, { idSucursal: datos.sucursal, serie: datos.serie, numeroFactura: datos.numero, } );
+    const { data } = await posApi.post(`/certification`, { idSucursal: datos.sucursal, serie: datos.serie, numeroFactura: datos.numero, } );
     console.log("retornando crear certificacion desde action: ", data);
     return data;
   } catch (error) {
@@ -25,7 +25,7 @@ export const crearCertificationAction = async (datos: {sucursal: string;serie: s
 // Facturas pendientes en Contingencia
 export const certificacionPendientesAction = async (datos: { sucursal: string; serie: string; numero: number; } ): Promise<any> => {
   try {
-    const { data } = await posApiCertificador.post(`/certification/pendientes`, {idSucursal: datos.sucursal, serie: datos.serie, numeroFactura: datos.numero,})
+    const { data } = await posApi.post(`/certification/pendientes`, {idSucursal: datos.sucursal, serie: datos.serie, numeroFactura: datos.numero,})
     console.log('devolviendo pendientes desde action', data)
     return data 
   } catch(error){
