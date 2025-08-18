@@ -28,6 +28,7 @@
             color="yellow-10"
             keep-color
             class="toggle-brillante"
+            @click="confirmarContingencia"
           />
           <q-btn label="" icon="restart_alt" class="" @click="limpiar" />
           <q-btn
@@ -353,8 +354,10 @@
             <q-chip
               v-if="contingencia"
               color="red-6"
+              align-items="right"
               text-color="white"
               icon="warning"
+              size="20px"
               dense
             >
               Contingencia
@@ -874,6 +877,41 @@ const cantidadIngresada = (producto) => {
   }
 };
 
+// Confirmgar la contigencia
+const confirmarContingencia = async () => {
+  if (contingencia.value) {
+    const confirmado = await showConfirmationInsideModal(
+      "Confirmar Contingencia",
+      "¿Estás seguro de que deseas activar el modo de contingencia?"
+    );
+    if (!confirmado) {
+      contingencia.value = false;
+      return;
+    }
+  }
+
+  if (contingencia.value) {
+    $q.notify({
+      type: "warning",
+      message: "Modo de contingencia activado",
+      position: "top-right",
+      color: "red-6",
+      timeout: 3000,
+      icon: "warning",
+    });
+  } else {
+    $q.notify({
+      type: "info",
+      message: "Modo de contingencia desactivado",
+      position: "top-right",
+      color: "blue-6",
+      timeout: 3000,
+      icon: "info",
+    });
+  }
+};
+
+
 // Cupon
 const aplicarCuponazo = () => {
   const datosCupon = {
@@ -1313,6 +1351,7 @@ const confirmarFactura = async () => {
     ES_CONTINGENCIA: contingencia.value,
   };
 
+  console.log("Datos de facturación:", datos)
   // Capturar el cambio actual antes de que muten estados
   const cambioCapturado = cambioPago.value;
 

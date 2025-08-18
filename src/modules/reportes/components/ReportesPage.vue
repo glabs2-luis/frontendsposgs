@@ -182,20 +182,20 @@ onMounted(() => {
 })
 
 watch(rangoFechas, (nuevo, viejo) => {
-  console.log('Este es el valor nuevo', nuevo)
-  console.log('Este es el valor viejo', viejo)
+  //console.log('Este es el valor nuevo', nuevo)
+  //console.log('Este es el valor viejo', viejo)
 
   fecha.value = nuevo
-  console.log('guardando valor desde nuevo', fecha.value  )
+  //console.log('guardando valor desde nuevo', fecha.value  )
 })
 
 const valorUnaFecha = ref(null)
 
 watchEffect(()=>{
-  console.log('Valor detectado: ', rangoFechas.value)
+  //console.log('Valor detectado: ', rangoFechas.value)
   valorUnaFecha.value = rangoFechas.value
-  console.log('este es valor de rangoFechas en watchEffect', rangoFechas.value.from)
-  console.log('este es valor de rangoFechas en watchEffect', rangoFechas.value.to)
+  //console.log('este es valor de rangoFechas en watchEffect', rangoFechas.value.from)
+  //console.log('este es valor de rangoFechas en watchEffect', rangoFechas.value.to)
 })
 
 // Comparar clave para ingresar 
@@ -242,8 +242,8 @@ const buscarFacturas = async () => {
   
   try {
 
-    console.log('fecha antes', rangoFechas.value.from)
-    console.log('fecha despues', rangoFechas.value.to)
+    //console.log('fecha antes', rangoFechas.value.from)
+    //console.log('fecha despues', rangoFechas.value.to)
 
     // Validar is no hay fecha still pending
  //   if (rangoFechas.value.from ===  && !rangoFechas.value.to) {
@@ -262,10 +262,10 @@ const buscarFacturas = async () => {
       buscar.fecha_final = new Date(valorUnaFecha.value+ 'T23:59:59')
     }
 
-  console.log('buscar datos:', buscar)
+  //console.log('buscar datos:', buscar)
 
   const facturas = await runWithLoading(async () =>  await obtenerFacturasPorFecha(buscar.fecha_inicial, buscar.fecha_final, buscar.serie), 'Cargando Facturas')
-  console.log('facturas: ', facturas)
+  //console.log('facturas: ', facturas)
 
   listaFacturas.value = (facturas as any[]) || []
 

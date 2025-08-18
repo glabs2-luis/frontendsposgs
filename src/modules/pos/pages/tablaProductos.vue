@@ -54,7 +54,7 @@
                     </div>
                   </template>
                   <template v-else>
-                    <div class="text-weight-medium" style="font-size: 16px">
+                    <div class="text-weight-medium" style="font-size: 18px">
                       {{
                         formatCurrency(Number(props.row.PRECIO_UNIDAD_VENTA), 4)
                       }}
@@ -66,7 +66,7 @@
               <!-- Subtotal General -->
               <template v-else-if="col.name === 'SUBTOTAL_GENERAL'">
                 <div class="price-cell">
-                  <span class="text-weight-medium" style="font-size: 16px">
+                  <span class="text-weight-medium" style="font-size: 18px">
                     <!-- Calculo  manual-->
 
                     {{
@@ -438,6 +438,7 @@ function emit(arg0: string) {
   align-items: center;
   padding: 4px;
   margin: 0% auto;
+  font-size: 14px; /* tamaño de los headers */
 }
 
 .order-info {
@@ -501,6 +502,7 @@ function emit(arg0: string) {
 
 .table-row {
   transition: all 0.2s ease;
+  font-size: 16px;
 }
 
 .table-row:hover {
@@ -510,7 +512,7 @@ function emit(arg0: string) {
 }
 
 .body-cell {
-  font-size: 15px; /* tamaño de la letra */
+  font-size: 16px; /* tamaño de la letra */
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
@@ -643,12 +645,13 @@ function emit(arg0: string) {
 
 .align-cantidad {
   display: flex;
+  font-size: 18px;
   justify-content: center;
 }
 
 .descripcion-prod {
   font-weight: bold;
-  font-size: 15px; /* tamaño de descripcion */
+  font-size: 16px; /* tamaño de descripcion */
   color: #212121;
 }
 </style>
