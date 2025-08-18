@@ -10,7 +10,7 @@
         dense
         flat
         :loading="isLoadingQuery || isLoading"
-        :pagination="{ rowsPerPage: 20 }"
+        :pagination="{ rowsPerPage: 50 }"
         class="elegant-table h-full full-height-table"
       >
         <!-- Header -->

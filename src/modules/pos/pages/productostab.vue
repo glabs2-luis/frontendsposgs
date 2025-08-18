@@ -89,6 +89,18 @@
             class="col"
             outline
           />
+
+          <div class="col-auto">
+                <div
+                  class="text-subtitle2 text-primary "
+                  style="font-size: 160%; border-radius: 8px; color: #1976d2; background-color: #e3f2fd; padding: 4px 8px; margin-top: 4px;"
+                >
+                  Items: {{ numPedido2 }}
+                </div>
+
+            </div>
+
+
         </div>
       </div>
     </q-card>
@@ -310,7 +322,7 @@
                     @click="seleccionarProducto2(props.row, props.rowIndex)"
                     icon="add_shopping_cart"
                     label="Agregar"
-                    size="sm"
+                    size="md"
                     :loading="loadingAgregar"
                     class="btn-agregar-table"
                   />
@@ -1409,7 +1421,25 @@ const confirmarFactura = async () => {
       "Ocurrió un error durante la facturación. Intenta nuevamente."
     );
   }
-};
+}
+
+const detalleFacturas = await obtenerDetalleFactura(idPedidoEnc).value
+
+  const itemsFacturas = detalle.map((item) => ({
+    cantidad: item.CANTIDAD_VENDIDA,
+    descripcion: item.producto.DESCRIPCION_PROD,
+    precio: item.PRECIO_UNITARIO_VTA.toFixed(4),
+    subtotal: item.SUBTOTAL_GENERAL.toFixed(4),
+  }));
+
+  const totalItems = itemsFacturas.reduce(
+    (total, item) => total + Number(item.cantidad),
+    0
+  )
+
+  
+
+
 
 const imprimirFactura = async (data) => {
   const factura2 = await obtenerFacturaId3(idFacturaEnc.value);
@@ -1434,6 +1464,8 @@ const imprimirFactura = async (data) => {
     (total, item) => total + Number(item.cantidad),
     0
   );
+
+
   const Subtotal = itemsFactura.reduce(
     (subtotal, item) => subtotal + Number(item.subtotal),
     0

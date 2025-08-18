@@ -12,7 +12,7 @@ export const crearCertificationAction = async (datos: {
   numero: number;
 }): Promise<Certification> => {
   try {
-    const { data } = await posApiCertificador.post(`/certification`, {
+    const { data } = await posApi.post(`/certification`, {
       idSucursal: datos.sucursal,
       serie: datos.serie,
       numeroFactura: datos.numero,
@@ -35,7 +35,7 @@ export const certificacionPendientesAction = async (datos: {
   numero: number;
 }): Promise<any> => {
   try {
-    const { data } = await posApiCertificador.post(
+    const { data } = await posApi.post(
       `/certification/pendientes`,
       {
         idSucursal: datos.sucursal,
