@@ -703,7 +703,8 @@ const storeSucursal = useStoreSucursal();
 const { mutateAplicarCupon } = useCupones();
 const { datosEmpresa, datosEstablecimiento } = useDatosFel();
 const contingencia = ref(false);
-const { mutateCertificar, certificarAsync, mutateFacturaContingencia } = useCertification();
+const { mutateCertificar, certificarAsync, mutateFacturaContingencia } =
+  useCertification();
 const { obtenerDetalleFactura, obtenerFacturasEnc, obtenerFacturaId3 } =
   useFacturasEnc();
 const { data: factura3 } = obtenerFacturaId3();
@@ -1207,49 +1208,47 @@ const formatearFecha = (fecha) => {
   });
 };
 
-const idFacturaEnc = ref('0')
+const idFacturaEnc = ref("0");
 
 const certificarFactura = async (id) => {
-
-  const factura = await obtenerFacturaId3(id)
+  const factura = await obtenerFacturaId3(id);
 
   // console.log('imprimiendo factura aqui:', factura)
-   console.log('id Factura valor:', idFacturaEnc.value)
+  console.log("id Factura valor:", idFacturaEnc.value);
 
-  await runWithLoading( async () => await mutateCertificar(
-    {
-      sucursal: storeSucursal.idSucursal,
-      serie: factura.SERIE,
-      numero: factura.NUMERO_FACTURA,
-    },
-    {
+  await runWithLoading(
+    async () =>
+      await mutateCertificar(
+        {
+          sucursal: storeSucursal.idSucursal,
+          serie: factura.SERIE,
+          numero: factura.NUMERO_FACTURA,
+        },
+        {
+          onSuccess: async (data) => {
+            try {
+              // Si se certifica la factura, se debe de sincronizar
+              mutateCrearSincronizacion(id);
 
-      onSuccess: async (data) => {
-        try {
-          // Si se certifica la factura, se debe de sincronizar
-          mutateCrearSincronizacion(id);
+              await imprimirFactura(data);
+            } catch (error) {
+              contingencia.value = true;
 
-          await imprimirFactura(data)
+              await imprimirFactura(data);
 
-        } catch (error) {
+              showErrorNotification("Error", error.message);
+            }
+          },
 
-          contingencia.value = true
+          onError: (error) => {
+            console.log(error);
 
-          await imprimirFactura(data)
-
-          showErrorNotification("Error", error.message)
+            //showErrorNotification("Error", "No se pudo certificar la factura");
+          },
         }
-      },
-
-      onError: (error) => {
-        console.log(error)
-
-
-
-        //showErrorNotification("Error", "No se pudo certificar la factura");
-      },
-    }
-  ), 'Facturando')
+      ),
+    "Facturando"
+  );
 };
 
 // modal factura
@@ -1291,11 +1290,10 @@ const confirmarFactura = async () => {
 
   // Agregar el Loading aqui -
 
-  await runWithLoading(() =>
-    // Ejecutar la facturación
-    mutateCrearFacturaEnc2(
-      datos,
-      {
+  await runWithLoading(
+    () =>
+      // Ejecutar la facturación
+      mutateCrearFacturaEnc2(datos, {
         onSuccess: async (respuesta) => {
           // Guardar último cambio para mostrarlo en clienteform luego de cerrar el modal
           totalStore.setUltimoCambio(cambioCapturado);
@@ -1303,119 +1301,118 @@ const confirmarFactura = async () => {
           modalFacturacion.value = false;
           await certificarFactura(respuesta.ID_FACTURA_ENC);
 
-          console.log('Respuesta',respuesta)
-          console.log('yo soy factura id Factura enc: ', respuesta.ID_FACTURA_ENC)
+          console.log("Respuesta", respuesta);
+          console.log(
+            "yo soy factura id Factura enc: ",
+            respuesta.ID_FACTURA_ENC
+          );
 
-          idFacturaEnc.value = respuesta.ID_FACTURA_ENC
-          console.log('mandando idFacturaEnc', idFacturaEnc.value)
-
+          idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
+          console.log("mandando idFacturaEnc", idFacturaEnc.value);
         },
         onError: (error) => {
-          const message = error
-          console.log(message)
+          const message = error;
+          console.log(message);
           modalFacturacion.value = false;
         },
-      }
-    ),
-      'Facturando'
-  )
-}
+      }),
+    "Facturando"
+  );
+};
 
 const imprimirFactura = async (data) => {
+  const factura2 = await obtenerFacturaId3(idFacturaEnc.value);
 
-      const factura2 = await obtenerFacturaId3(idFacturaEnc.value)
+  console.log("este es data:", data);
+  //console.log('imprimir factura2:', factura2)
 
-        console.log('este es data:', data)
-        //console.log('imprimir factura2:', factura2)
+  //console.log('yo soy contingencia xd:', contingencia.value)
+  //console.log("data certificada con exito: ", data)
 
-        //console.log('yo soy contingencia xd:', contingencia.value)
-        //console.log("data certificada con exito: ", data)
+  const detalle = await obtenerDetalleFactura(idFacturaEnc.value);
+  if (!detalle || detalle.length === 0) return;
 
+  const itemsFactura = detalle.map((item) => ({
+    cantidad: item.CANTIDAD_VENDIDA,
+    descripcion: item.producto.DESCRIPCION_PROD,
+    precio: item.PRECIO_UNITARIO_VTA.toFixed(4),
+    subtotal: item.SUBTOTAL_GENERAL.toFixed(4),
+  }));
 
-          const detalle = await obtenerDetalleFactura(idFacturaEnc.value)
-          if (!detalle || detalle.length === 0) return
+  const totalItems = itemsFactura.reduce(
+    (total, item) => total + Number(item.cantidad),
+    0
+  );
+  const Subtotal = itemsFactura.reduce(
+    (subtotal, item) => subtotal + Number(item.subtotal),
+    0
+  );
 
-          const itemsFactura = detalle.map((item) => ({
-            cantidad: item.CANTIDAD_VENDIDA,
-            descripcion: item.producto.DESCRIPCION_PROD,
-            precio: item.PRECIO_UNITARIO_VTA.toFixed(4),
-            subtotal: item.SUBTOTAL_GENERAL.toFixed(4),
-          }));
+  if (contingencia.value === true) {
+    console.log("factura serie:", factura2.SERIE);
+    console.log("factura numero:", factura2.NUMERO_FACTURA);
+    await mutateFacturaContingencia({
+      sucursal: storeSucursal.idSucursal,
+      serie: factura2.SERIE,
+      numero: factura2.NUMERO_FACTURA,
+    });
+  }
 
-          const totalItems = itemsFactura.reduce(
-            (total, item) => total + Number(item.cantidad),
-            0
-          );
-          const Subtotal = itemsFactura.reduce(
-            (subtotal, item) => subtotal + Number(item.subtotal),
-            0
-          );
+  const dataFactura = {
+    encabezado: {
+      serie: data.SerieFacturaFel,
+      numero: contingencia.value
+        ? factura2.CORR_CONTINGENCIA
+        : data.NumeroFacturaFel,
+      uuid: data.Uuid,
+      fechaEmision: formatearFecha(data.FechaAccion),
+      numeroInterno: `${factura2.SERIE} | ${factura2.NUMERO_FACTURA}`,
+      tipoDocumento: contingencia.value
+        ? "FACTURA EN CONTINGENCIA"
+        : "FACTURA ELECTRONICA",
+    },
+    cliente: {
+      nombre: factura2.NOMBRE_CLI_A_FACTUAR,
+      nit: factura2.NIT_CLIEN_A_FACTURAR,
+      direccion: factura2.DIRECCION_CLI_FACTUR,
+    },
+    items: itemsFactura,
+    resumen: {
+      subtotal: `Q. ${Subtotal.toFixed(2)}`,
+      descuento: `Q. ${factura2.MONTO_DESCUENTO_FACT.toFixed(2)}`,
+      totalPagar: `Q. ${factura2.TOTAL_GENERAL.toFixed(2)}`,
+      totalItems,
+    },
+    nombreVendedor: factura2.USUARIO_QUE_FACTURA,
+    qrCodeData: data.Uuid,
+  };
 
-          if(contingencia.value===true){
-            console.log('factura serie:', factura2.SERIE)
-            console.log('factura numero:', factura2.NUMERO_FACTURA)
-            await mutateFacturaContingencia({
-            sucursal: storeSucursal.idSucursal,
-            serie: factura2.SERIE,
-            numero: factura2.NUMERO_FACTURA,
-             }, )
-          }
+  console.log(" yo soy data xd:", dataFactura);
+  await nextTick();
+  await generarFacturaPDF(dataFactura);
 
-          const dataFactura = {
-            encabezado: {
-              serie: data.SerieFacturaFel,
-              numero: contingencia.value
-                ? factura2.CORR_CONTINGENCIA
-                : data.NumeroFacturaFel,
-              uuid: data.Uuid,
-              fechaEmision: formatearFecha(data.FechaAccion),
-              numeroInterno: `${factura2.SERIE} | ${factura2.NUMERO_FACTURA}`,
-              tipoDocumento: contingencia.value
-                ? "FACTURA EN CONTINGENCIA"
-                : "FACTURA ELECTRONICA",
-            },
-            cliente: {
-              nombre: factura2.NOMBRE_CLI_A_FACTUAR,
-              nit: factura2.NIT_CLIEN_A_FACTURAR,
-              direccion: factura2.DIRECCION_CLI_FACTUR,
-            },
-            items: itemsFactura,
-            resumen: {
-              subtotal: `Q. ${Subtotal.toFixed(2)}`,
-              descuento: `Q. ${factura2.MONTO_DESCUENTO_FACT.toFixed(2)}`,
-              totalPagar: `Q. ${factura2.TOTAL_GENERAL.toFixed(2)}`,
-              totalItems,
-            },
-            nombreVendedor: factura2.USUARIO_QUE_FACTURA,
-            qrCodeData: data.Uuid,
-          };
+  // limpiar stores
+  cleanAllStores();
 
-          console.log (' yo soy data xd:', dataFactura)
-          await nextTick();
-          await generarFacturaPDF(dataFactura);
+  props.onNuevoPedido();
+  // limpiar campos de pago
+  montoEfectivo.value = null;
+  montoTarjeta.value = null;
 
-          // limpiar stores
-          cleanAllStores();
+  // Invalidate pedidos pendientes y refetch
 
-          props.onNuevoPedido();
-          // limpiar campos de pago
-          montoEfectivo.value = null;
-          montoTarjeta.value = null;
+  queryClient.invalidateQueries({
+    queryKey: ["pedidos-pendientes"],
+  });
 
-          // Invalidate pedidos pendientes y refetch
-
-          queryClient.invalidateQueries({
-            queryKey: ["pedidos-pendientes"],
-          });
-
-          $q.notify({
-            type: "success",
-            message: "Pedido facturado con éxito",
-            position: "top-right",
-            timeout: 3000,
-            icon: "check",
-          });
-}
+  $q.notify({
+    type: "success",
+    message: "Pedido facturado con éxito",
+    position: "top-right",
+    timeout: 3000,
+    icon: "check",
+  });
+};
 
 // Columnas para el catálogo de productos
 const columnasCatalogo = [
