@@ -498,6 +498,8 @@ async function printNota(nota: DevolucionEnc) {
       type: 'negative',
       message: `Error al imprimir la nota de credito con numero: ${nota.NUMERO_DEVOLUCION}.`
     });
+  } finally {
+    $q.loading.hide()
   }
 }
 

@@ -105,7 +105,7 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
 
     const paperWidthInInches = 3.14;
     const paperWidthInPoints = paperWidthInInches * 72;
-    const marginHorizontal = 8;
+    const marginHorizontal = 10;
     const marginVertical = 10;
     const rightMargin = 17;
     const contentWidth = paperWidthInPoints - 2 * marginHorizontal;
