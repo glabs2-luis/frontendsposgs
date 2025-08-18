@@ -47,7 +47,7 @@ export const obtenerDetalleFacturaPorIdAction = async (
       error,
       "Hubo un error obteniendo los detalles de la factura"
     );
-    console.log(message);
+    // console.log(message);
   }
 };
 

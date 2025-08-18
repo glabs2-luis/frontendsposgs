@@ -1211,14 +1211,23 @@ const formatearFecha = (fecha) => {
 const idFacturaEnc = ref("0");
 
 const certificarFactura = async (id) => {
-  const factura = await obtenerFacturaId3(id);
+  try {
+    console.log("Iniciando certificación para factura:", id);
 
-  // console.log('imprimiendo factura aqui:', factura)
-  console.log("id Factura valor:", idFacturaEnc.value);
+    // Obtener datos de la factura
+    const factura = await obtenerFacturaId3(id);
+    console.log("id Factura valor:", idFacturaEnc.value);
 
-  await runWithLoading(
-    async () =>
-      await mutateCertificar(
+    // Mostrar loading para certificación
+    $q.loading.show({
+      message: "Certificando factura...",
+      spinnerColor: "green",
+      spinnerSize: 50,
+    });
+
+    // Usar Promise para manejar la mutación de certificación
+    await new Promise((resolve, reject) => {
+      mutateCertificar(
         {
           sucursal: storeSucursal.idSucursal,
           serie: factura.SERIE,
@@ -1227,28 +1236,47 @@ const certificarFactura = async (id) => {
         {
           onSuccess: async (data) => {
             try {
+              console.log("Factura certificada exitosamente");
+
+              // Ocultar loading antes de imprimir
+              $q.loading.hide();
+
               // Si se certifica la factura, se debe de sincronizar
               mutateCrearSincronizacion(id);
 
               await imprimirFactura(data);
+              resolve(data);
             } catch (error) {
+              console.error("Error en impresión:", error);
+
+              // En caso de error, marcar como contingencia
               contingencia.value = true;
 
-              await imprimirFactura(data);
-
-              showErrorNotification("Error", error.message);
+              try {
+                await imprimirFactura(data);
+                resolve(data);
+              } catch (printError) {
+                console.error(
+                  "Error en impresión de contingencia:",
+                  printError
+                );
+                reject(printError);
+              }
             }
           },
-
           onError: (error) => {
-            console.log(error);
-
-            //showErrorNotification("Error", "No se pudo certificar la factura");
+            console.error("Error en certificación:", error);
+            $q.loading.hide();
+            reject(error);
           },
         }
-      ),
-    "Facturando"
-  );
+      );
+    });
+  } catch (error) {
+    console.error("Error en certificarFactura:", error);
+    $q.loading.hide();
+    throw error;
+  }
 };
 
 // modal factura
@@ -1288,42 +1316,66 @@ const confirmarFactura = async () => {
   // Capturar el cambio actual antes de que muten estados
   const cambioCapturado = cambioPago.value;
 
-  // Agregar el Loading aqui -
+  try {
+    // Mostrar loading manualmente para evitar timeout
+    $q.loading.show({
+      message: "Facturando...",
+      spinnerColor: "primary",
+      spinnerSize: 50,
+    });
 
-  await runWithLoading(
-    () =>
-      // Ejecutar la facturación
+    // Ejecutar la facturación usando Promise para manejar la mutación
+    await new Promise((resolve, reject) => {
       mutateCrearFacturaEnc2(datos, {
         onSuccess: async (respuesta) => {
-          // Guardar último cambio para mostrarlo en clienteform luego de cerrar el modal
-          totalStore.setUltimoCambio(cambioCapturado);
+          try {
+            // Guardar último cambio para mostrarlo en clienteform luego de cerrar el modal
+            totalStore.setUltimoCambio(cambioCapturado);
+            modalFacturacion.value = false;
 
-          modalFacturacion.value = false;
-          await certificarFactura(respuesta.ID_FACTURA_ENC);
+            // Ocultar loading antes de certificar
+            $q.loading.hide();
 
-          console.log("Respuesta", respuesta);
-          console.log(
-            "yo soy factura id Factura enc: ",
-            respuesta.ID_FACTURA_ENC
-          );
+            console.log("Factura creada, iniciando certificación...");
 
-          idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
-          console.log("mandando idFacturaEnc", idFacturaEnc.value);
+            // Ahora sí espera a que termine la certificación
+            await certificarFactura(respuesta.ID_FACTURA_ENC);
+
+            idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
+            resolve(respuesta);
+          } catch (error) {
+            console.error("Error en certificación:", error);
+            reject(error);
+          }
         },
         onError: (error) => {
-          const message = error;
-          console.log(message);
+          console.error("Error creando factura:", error);
           modalFacturacion.value = false;
+          $q.loading.hide();
+          reject(error);
         },
-      }),
-    "Facturando"
-  );
+      });
+    });
+
+    // LIMPIAR STORES DESPUÉS DE COMPLETAR EXITOSAMENTE
+    // Esto se ejecuta solo si todo el proceso de facturación fue exitoso
+    cleanAllStores();
+  } catch (error) {
+    console.error("Error general en confirmarFactura:", error);
+    modalFacturacion.value = false;
+    $q.loading.hide();
+
+    showErrorNotification(
+      "Error",
+      "Ocurrió un error durante la facturación. Intenta nuevamente."
+    );
+  }
 };
 
 const imprimirFactura = async (data) => {
   const factura2 = await obtenerFacturaId3(idFacturaEnc.value);
 
-  console.log("este es data:", data);
+  //console.log("este es data:", data);
   //console.log('imprimir factura2:', factura2)
 
   //console.log('yo soy contingencia xd:', contingencia.value)
@@ -1372,7 +1424,7 @@ const imprimirFactura = async (data) => {
         : "FACTURA ELECTRONICA",
     },
     cliente: {
-      nombre: factura2.NOMBRE_CLI_A_FACTUAR,
+      nombre: factura2.NOMBRE_CLI_A_FACTURAR,
       nit: factura2.NIT_CLIEN_A_FACTURAR,
       direccion: factura2.DIRECCION_CLI_FACTUR,
     },
@@ -1387,12 +1439,12 @@ const imprimirFactura = async (data) => {
     qrCodeData: data.Uuid,
   };
 
-  console.log(" yo soy data xd:", dataFactura);
+  // console.log(" yo soy data xd:", dataFactura);
   await nextTick();
   await generarFacturaPDF(dataFactura);
 
-  // limpiar stores
-  cleanAllStores();
+  // NOTA: cleanAllStores() se ejecutará DESPUÉS de que todo esté completo
+  // para evitar perder datos antes de tiempo
 
   props.onNuevoPedido();
   // limpiar campos de pago
@@ -1400,7 +1452,6 @@ const imprimirFactura = async (data) => {
   montoTarjeta.value = null;
 
   // Invalidate pedidos pendientes y refetch
-
   queryClient.invalidateQueries({
     queryKey: ["pedidos-pendientes"],
   });
