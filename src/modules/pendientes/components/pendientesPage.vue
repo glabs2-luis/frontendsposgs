@@ -550,13 +550,8 @@ const columnasPendientes: QTableColumn[] = [
 
 // Tabla que muestra errores
 const columnasErrores: QTableColumn[] = [
-  {
-    name: "error",
-    label: "Mensaje de Error",
-    field: "ERROR",
-    align: "left",
-    style: "width: 400px; min-width: 350px;",
-  },
+  { name: "numero", label: "No. Factura", field: "NUMERO_FACTURA", align: "left" },
+  { name: "error", label: "Mensaje de Error", field: "ERROR", align: "left" },
 ];
 </script>
 
