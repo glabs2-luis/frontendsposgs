@@ -30,7 +30,7 @@
             class="toggle-brillante"
             @click="confirmarContingencia"
           />
-          <q-btn label="" icon="restart_alt" class="" @click="limpiarPedido" />
+          <q-btn label="" icon="restart_alt" color="amber-9" class="" @click="limpiarPedido" />
           <q-btn label="Anular" color="red-5" text-color="black" style="color: black; "  @click="limpiar" />
 
           <q-btn
@@ -96,6 +96,7 @@
             <div
               class="text-subtitle2 text-black"
               style="
+                background-color: #F2F28A;
                 font-size: 180%;
                 border-radius: 4px;
                 color: #000;
@@ -1865,6 +1866,7 @@ defineExpose({
 </script>
 
 <style scoped>
+
 .facturacion-card {
   width: min(500px, 96vw);
   max-width: 96vw;

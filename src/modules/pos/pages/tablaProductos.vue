@@ -230,7 +230,7 @@ watchEffect(() => {
   }, 0);
   items.value = total;
   totalStore.setItems(items.value);
-  console.log('Total store items: ', totalStore.totalItems); 
+  //console.log('Total store items: ', totalStore.totalItems); 
 });
 
 // calcular total
