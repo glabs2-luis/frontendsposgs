@@ -30,7 +30,9 @@
             class="toggle-brillante"
             @click="confirmarContingencia"
           />
-          <q-btn label="" icon="restart_alt" class="" @click="limpiar" />
+          <q-btn label="" icon="restart_alt" class="" @click="limpiarPedido" />
+          <q-btn label="Anular" color="red-5" text-color="black" style="color: black; "  @click="limpiar" />
+
           <q-btn
             label="Terminar Venta (F4)"
             icon="point_of_sale"
@@ -1101,6 +1103,23 @@ watch(modalProductos, async (val) => {
   }
 });
 
+const limpiarPedido = async() => {
+    if (!pedidoStore.idPedidoEnc) {
+    showErrorNotification("Error", "No hay un pedido seleccionado");
+    return;
+  }
+
+    const confirmado = await showConfirmationDialog(
+    "Limpiar Pedido",
+    "¿Estás seguro de que deseas limpiar el pedido?"
+  );
+
+  if (confirmado) {
+    cleanAllStores()
+  }
+
+}
+
 // anular pedido
 const limpiar = async () => {
   if (!pedidoStore.idPedidoEnc) {
@@ -1270,6 +1289,8 @@ const certificarFactura = async (id) => {
     spinnerColor: "green",
     spinnerSize: 50,
   });
+        console.log('yo soy id"', id)
+
 
   // Usar Promise para manejar la mutación de certificación
   mutateCertificar(
@@ -1286,7 +1307,8 @@ const certificarFactura = async (id) => {
         $q.loading.hide();
 
         // Si se certifica la factura, se debe de sincronizar
-        mutateCrearSincronizacion(id);
+        console.log('yo soy id"', id)
+        await mutateCrearSincronizacion(id);
 
         await imprimirFactura(data);
 

@@ -3,6 +3,7 @@ import { getAxiosErrorMessage } from "@/common/helper/geterrordb";
 import { FacturaEnc } from "../interfaces/facturaEncInterface";
 import { FacturaEnc2 } from "../interfaces/facturaEnc2Interface";
 import { DatosFel } from "../interfaces/datosFelInterface";
+import { FacturaEnc3 } from "../interfaces/facturaEnc3Interface";
 
 // Obtener todas las Facturas enc
 export const obtenerFacturasEncAction = async (): Promise<FacturaEnc[]> => {
@@ -124,3 +125,17 @@ export const obtenerFacturasFechaAction = async (
     throw new Error(message);
   }
 };
+
+export const obtenerFacturaNumeroSerieAction = async (serie: string, numero: number) : Promise<FacturaEnc3> => {
+  try {
+    const { data } = await posApi.get(`/facturas-enc/factura2/${serie}/${numero}`);
+    return data
+    } catch (error) {
+    const message = getAxiosErrorMessage(
+      error,
+      "Hubo un error obteniendo facturas por numero y serie"
+    );
+    console.log(message);
+    throw new Error(message);}
+
+  }

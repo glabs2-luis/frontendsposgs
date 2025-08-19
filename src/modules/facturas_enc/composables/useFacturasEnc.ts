@@ -7,6 +7,7 @@ import {
   crearFacturaEncAction2,
   obtenerDatosFelAction,
   obtenerFacturasFechaAction,
+  obtenerFacturaNumeroSerieAction
 } from "../action/facturasEncAction";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
 import { showErrorNotification } from "@/common/helper/notification";
@@ -81,6 +82,13 @@ export const useFacturasEnc = () => {
     return await obtenerFacturasFechaAction(fecha_inicial, fecha_final, serie);
   };
 
+  const obtenerFacturasPorNumeroSerie = async (
+    numero: number,
+    serie: string,
+  ) => {
+    return await obtenerFacturaNumeroSerieAction(serie, numero);
+  }
+
   return {
     obtenerFacturasEnc,
     obtenerDetalleFactura,
@@ -90,6 +98,7 @@ export const useFacturasEnc = () => {
     obtenerFacturaId3,
     obtenerDatosFel,
     obtenerFacturasPorFecha,
+    obtenerFacturasPorNumeroSerie
   };
 };
 

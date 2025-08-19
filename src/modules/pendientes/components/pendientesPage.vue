@@ -104,12 +104,17 @@ import { useFacturasFel } from '../composables/useFelPendientes'
 import { useCertification } from '@/modules/certification/composables/useCertification'
 import { runWithLoading, showErrorNotification, showSuccessNotification } from '@/common/helper/notification'
 import { useStoreSucursal } from '@/stores/sucursal'
+import { useSync } from '@/modules/sync/composables/useSync'
+import { useFacturasEnc} from '@/modules/facturas_enc/composables/useFacturasEnc'
+import { Factura } from '../../notas_credito/interfaces/NotaCredito';
 
+const { obtenerFacturasPorNumeroSerie } = useFacturasEnc()
 const storeSucursal = useStoreSucursal();
 const { mutateCertificar } = useCertification()
 const { facturasErrores, refetchFacturasErrores } = useFacturasFel()
 const facturaSeleccionadaArray = ref([])
 const facturaSeleccionada = ref<string | null>(null)
+const { mutateCrearSincronizacion } = useSync();
 
 // Observa la factura seleccionada
 watch(facturaSeleccionadaArray, (newSelection) => {
@@ -165,10 +170,19 @@ const certificarAgain = async () => {
     const [numero, serie] = facturaSeleccionada.value.split('-')  
     const numero2= Number(numero)
 
+    // Obtener el ID_FACTURA_ENC
+    const datosFac = await obtenerFacturasPorNumeroSerie(numero2, serie)
+
+    const idFacturaEnc = datosFac[0].ID_FACTURA_ENC;
+    //console.log("idFacturaEnc", idFacturaEnc);
+
     await runWithLoading( async () =>  await mutateCertificar(
   { sucursal: storeSucursal.idSucursal, serie, numero: numero2 },
   {
     onSuccess: async (data) => {
+
+    // Sincronizar si se certifica 
+    await mutateCrearSincronizacion(idFacturaEnc);
 
     if(data.CertificadoFel === false) {
         showErrorNotification('Error', 'La factura no pudo ser certificada')
