@@ -35,14 +35,11 @@ export const certificacionPendientesAction = async (datos: {
   numero: number;
 }): Promise<any> => {
   try {
-    const { data } = await posApi.post(
-      `/certification/pendientes`,
-      {
-        idSucursal: datos.sucursal,
-        serie: datos.serie,
-        numeroFactura: datos.numero,
-      }
-    );
+    const { data } = await posApi.post(`/certification/pendientes`, {
+      idSucursal: datos.sucursal,
+      serie: datos.serie,
+      numeroFactura: datos.numero,
+    });
     console.log("devolviendo pendientes desde action", data);
     return data;
   } catch (error) {

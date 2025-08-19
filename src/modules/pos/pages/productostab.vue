@@ -91,15 +91,19 @@
           />
 
           <div class="col-auto">
-                <div
-                  class="text-subtitle2 text-black"
-                  style="font-size: 180%; border-radius: 4px; color: #000; padding: 4px 4px; margin-top: px;"
-                >
-                   {{ `Productos: ${totalStore.totalItems}` }}
-                </div>
-
+            <div
+              class="text-subtitle2 text-black"
+              style="
+                font-size: 180%;
+                border-radius: 4px;
+                color: #000;
+                padding: 4px 4px;
+                margin-top: px;
+              "
+            >
+              {{ `Productos: ${totalStore.totalItems}` }}
             </div>
-
+          </div>
         </div>
       </div>
     </q-card>
@@ -1362,6 +1366,12 @@ const confirmarFactura = async () => {
       $q.loading.hide();
 
       // Ahora sí espera a que termine la certificación
+
+      if (contingencia.value === true) {
+        await imprimirFactura(respuesta);
+        return;
+      }
+
       await certificarFactura(respuesta.ID_FACTURA_ENC);
 
       idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
@@ -1377,8 +1387,6 @@ const confirmarFactura = async () => {
   // Esto se ejecuta solo si todo el proceso de facturación fue exitoso
   cleanAllStores();
 };
-
-
 
 const imprimirFactura = async (data) => {
   console.log("imprimiendo factura...");
@@ -1409,16 +1417,15 @@ const imprimirFactura = async (data) => {
     0
   );
 
+  //En mensaje en manual para insertar en fel errores que se habilito la contingencia manualmente
   if (contingencia.value === true) {
-    console.log("factura serie:", factura2.SERIE);
-    console.log("factura numero:", factura2.NUMERO_FACTURA);
-    await mutateFacturaContingencia({
+    mutateFacturaContingencia({
       sucursal: storeSucursal.idSucursal,
       serie: factura2.SERIE,
       numero: factura2.NUMERO_FACTURA,
     });
   }
-
+  console.log("Imprimiendo 2...");
   const dataFactura = {
     encabezado: {
       serie: data.SerieFacturaFel,
@@ -1450,6 +1457,7 @@ const imprimirFactura = async (data) => {
 
   // console.log(" yo soy data xd:", dataFactura);
   await nextTick();
+  console.log("Imprimiendo 3...");
   await generarFacturaPDF(dataFactura);
 
   // NOTA: cleanAllStores() se ejecutará DESPUÉS de que todo esté completo
@@ -1459,11 +1467,12 @@ const imprimirFactura = async (data) => {
   // limpiar campos de pago
   montoEfectivo.value = null;
   montoTarjeta.value = null;
-
+  console.log("Imprimiendo 4...");
   // Invalidate pedidos pendientes y refetch
   queryClient.invalidateQueries({
     queryKey: ["pedidos-pendientes"],
   });
+  console.log("Finalizando impresion de factura");
 };
 
 // Columnas para el catálogo de productos
