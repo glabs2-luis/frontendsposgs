@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 
 export const useTotalStore = defineStore("total", () => {
   const totalGeneral = ref(0);
+  const totalItems = ref(0);
   const ultimoCambio = ref<number>(
     Number(localStorage.getItem("ultimoCambio") || 0)
   );
@@ -12,6 +13,12 @@ export const useTotalStore = defineStore("total", () => {
     totalGeneral.value = nuevoTotal;
   };
 
+  // Actualizar la cantidad de items
+  const setItems = (total: number) => {
+    totalItems.value = total;
+  }
+
+  // Actualizar el último cambio
   const setUltimoCambio = (cambio: number) => {
     const valor = Number(cambio) || 0;
     ultimoCambio.value = valor;
@@ -23,6 +30,7 @@ export const useTotalStore = defineStore("total", () => {
   // Resetear el total
   const resetStore = () => {
     totalGeneral.value = 0;
+    totalItems.value = 0;
   };
 
   return {
@@ -31,5 +39,7 @@ export const useTotalStore = defineStore("total", () => {
     ultimoCambio,
     setUltimoCambio,
     resetStore,
+    setItems,
+    totalItems
   };
 });

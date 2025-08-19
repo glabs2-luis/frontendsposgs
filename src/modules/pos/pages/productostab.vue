@@ -92,14 +92,13 @@
 
           <div class="col-auto">
                 <div
-                  class="text-subtitle2 text-primary "
-                  style="font-size: 160%; border-radius: px; color: #1976d2; background-color: #e3f2fd; padding: 4px 8px; margin-top: 4px;"
+                  class="text-subtitle2 text-black"
+                  style="font-size: 180%; border-radius: 4px; color: #000; padding: 4px 4px; margin-top: px;"
                 >
-                  Items: {{ numPedido2 }}
+                   {{ `Productos: ${totalStore.totalItems}` }}
                 </div>
 
             </div>
-
 
         </div>
       </div>
@@ -788,6 +787,7 @@ const buscadorProductoRef = ref(null);
 // Controla si el input de código puede auto-enfocarse
 const allowAutoFocusProduct = ref(true);
 const { mutateAnularPedidoPendiente } = usePedidosEnc();
+const { totalItems } = useTotalStore();
 
 // Facturación - cálculos y validaciones
 const totalAPagar = computed(() =>
@@ -1422,6 +1422,8 @@ const confirmarFactura = async () => {
     );
   }
 };
+
+
 
 const imprimirFactura = async (data) => {
   const factura2 = await obtenerFacturaId3(idFacturaEnc.value);

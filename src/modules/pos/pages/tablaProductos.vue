@@ -197,8 +197,8 @@ const $q = useQuasar();
 // Props
 const props = defineProps<{
   onProductoEliminado?: () => void;
-}>();
-
+}>()
+const items = ref(0);
 const totalStore = useTotalStore();
 const pedidoStore = usePedidoStore();
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc);
@@ -221,6 +221,16 @@ const rows = computed(() => data.value || []);
 
 watchEffect(() => {
  // console.log("Esto es rows:", rows.value);
+});
+
+// Almacenar cantidad de items
+watchEffect(() => {
+  const total = rows.value.reduce((acc, row) => {
+    return acc + (row.CANTIDAD_PEDIDA || 0);
+  }, 0);
+  items.value = total;
+  totalStore.setItems(items.value);
+  console.log('Total store items: ', totalStore.totalItems); 
 });
 
 // calcular total
