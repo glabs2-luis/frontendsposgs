@@ -1301,6 +1301,7 @@ const certificarFactura = async (id) => {
       onError: (error) => {
         console.error("Error en certificación:", error);
         $q.loading.hide();
+        //TODO: Implementar factura en contingencia en el caso que hay algun error en certificacion, lanzar un mensaje de que no se certificó
       },
     }
   );
