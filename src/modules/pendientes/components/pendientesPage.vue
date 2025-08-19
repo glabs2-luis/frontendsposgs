@@ -54,6 +54,10 @@
         </q-card>
       </div>
 
+    </div>
+    
+    <div class="row q-col-gutter-md">
+      
       <!-- Tabla de errores -->
       <div class="col">
         <q-card class="q-pa-md q-pt-xs">
@@ -87,7 +91,9 @@
           </q-card-section>
         </q-card>
       </div>
+
     </div>
+
   </q-page>
 </template>
 
@@ -238,18 +244,15 @@ const Refrescar = async () => {
 const columnasPendientes: QTableColumn[] = [
   { name: "numero", label: "Número", field: "NUMERO_FACTURA", align: "left" },
   { name: "serie", label: "Serie", field: "SERIE", align: "left" },
-  {
-    name: "Fecha",
-    label: "Fecha Facturación",
-    field: "FECHA_ACCION",
-    align: "left",
-    format: formatearFecha,
-  },
+  { name: "Correlativo", label: "No. Correlativo", field: "CORR_CONTINGENCIA", align: "left"},
+  { name: "nombre", label: "Nit", field: "NIT", align: "left"},
+  { name: "Nit", label: "Nombre", field: "NOMBRE", align: "left"},
+  { name: "Fecha", label: "Fecha Facturación", field: "FECHA_ACCION", align: "left", format: formatearFecha},
 ];
 
 // tabla  derecha
 const columnasErrores: QTableColumn[] = [
-  { name: "numero", label: "No.", field: "NUMERO_FACTURA", align: "left" },
+  { name: "numero", label: "No. Factura", field: "NUMERO_FACTURA", align: "left" },
   { name: "error", label: "Mensaje de Error", field: "ERROR", align: "left" },
 ];
 </script>
