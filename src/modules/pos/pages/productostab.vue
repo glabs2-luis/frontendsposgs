@@ -877,76 +877,49 @@ const {
 } = usePedidoDet();
 const configuracionStore = useConfiguracionStore();
 const { mutateCrearFacturaEnc2 } = useFacturasEnc();
-const { obtenerPedidoPorId } = usePedidosEnc();
-const { todosProductos, refetchTodosProductos, precioReal } = useProductos();
-
-const pedidoStore = usePedidoStore();
-const totalStore = useTotalStore();
-const userStore = useUserStore();
-const queryClient = useQueryClient();
-const { consultarCodigoM } = useCodigo();
+const { obtenerPedidoPorId, obtenerPedidosPendientes } = usePedidosEnc();
+const {
+  todosProductos,
+  refetchTodosProductos,
+  obtenerProductosId,
+  precioReal,
+} = useProductos();
+const { obtenerPorCodigo } = useCodigo();
 const $q = useQuasar();
-const { mutateAnularPedidoPendiente } = usePedidosEnc();
-const { generarCotizacionPDF } = usePdfCotizacion()
-const clienteStore = useClienteStore();
-const { nombreVendedor } = useUserStore();
-
-//USE COMPOSABLES
-const { data: pedidoData, refetchObtenerPedidoID } =
-  obtenerPedidoPorId(idPedidoEnc);
-const { refetch: refetchObtenerPedidoDetID } =
-  useListaProductosPedidoDet(idPedidoEnc);
-
-const modalFacturacion = ref(false);
-const modalCuponazo = ref(false);
-
-/*
-==========================================================
-                VARIABLES GENERALES
-==========================================================
-*/
-const allowAutoFocusProduct = ref(true); // Controla si el input de código puede auto-enfocarse
-const btnConfirmarFactura = ref(null);
-const calcularCambio = ref(0);
+const detallesPedido = ref([]);
+const codigoProducto = ref("");
 const cantidad = ref(1); // Cantidad en el boton
 const cantidad2 = ref(1); // para modal cantidad
-const cantidadInputs = ref({}); // Referencias a los inputs de cantidad en el catálogo
-const clave = ref("");
-const codigoProducto = ref("");
-const cupon = ref("");
-const detallesPedido = ref([]);
-const filtroProductos = ref("");
-const focusCantidad = ref(null); // focus modal cantidad
-const focusEfectivo = ref(null); // focus efectivo
-const focusTarjeta = ref(null);
-const idFacturaEnc = ref(null); // ID de la factura creada
-const inputCodigo = ref(null);
-const loadingAgregar = ref(false);
-const loadingDetalle = ref(false);
-const loadingPorCodigo = ref(false);
-const loadingProductos = ref(false);
-const modalCantidad = ref(false);
-const modalProductos = ref(false);
-const modalProductos2 = ref(false);
 const montoEfectivo = ref(null);
 const montoTarjeta = ref(null);
 const opcionesPago2 = ["EFECTIVO", "TARJETA", "MIXTO"];
-const refCupon = ref();
 const tipoPago = ref("EFECTIVO");
-
-// Paginación del catálogo
-const paginacionCatalogo = ref({
-  sortBy: "PRODUCTO",
-  descending: false,
-  page: 1,
-  rowsPerPage: 50,
-});
-
-/*
-==========================================================
-                    REFERENCIAS (FORMS)
-==========================================================
-*/
+const calcularCambio = ref(0);
+const refCupon = ref();
+const cupon = ref("");
+const clave = ref("");
+const modalCantidad = ref(false);
+const modalProductos = ref(false);
+const filtroProductos = ref("");
+const loadingProductos = ref(false);
+const loadingPorCodigo = ref(false);
+const loadingDetalle = ref(false);
+const loadingAgregar = ref(false);
+const pedidoStore = usePedidoStore();
+const { consultarCodigo, consultarCodigoM } = useCodigo();
+const totalStore = useTotalStore();
+const modalFacturacion = ref(false);
+const userStore = useUserStore();
+const modalCuponazo = ref(false);
+const queryClient = useQueryClient();
+const { data: pedidoData, refetchObtenerPedidoID } =
+  obtenerPedidoPorId(idPedidoEnc);
+const focusCantidad = ref(null); // focus modal cantidad
+const { refetch: relistaDet2 } = ListaDet2(idPedidoEnc);
+const focusEfectivo = ref(null); // focus efectivo
+const focusTarjeta = ref(null);
+const modalProductos2 = ref(false);
+const cantidadInputs = ref({}); // Referencias a los inputs de cantidad en el catálogo
 const buscadorProductoRef = ref(null);
 const totalAnterior = ref(0);
 
@@ -957,9 +930,7 @@ const totalAnterior = ref(0);
 */
 
 // Facturación - cálculos y validaciones
-const totalAPagar = computed(() =>
-  Number(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0)
-);
+const totalAPagar = computed(() => Number(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0));
 const montoEfectivoNum = computed(() => Number(montoEfectivo.value) || 0);
 const montoTarjetaNum = computed(() => Number(montoTarjeta.value) || 0);
 
@@ -990,7 +961,7 @@ const focusBtnConfirmar = async () => {
 ==========================================================
                 WATCHS Y WATCH EFFECTS
 ==========================================================
-*/
+*/ 
 // focus en modal cupon
 watch(modalCuponazo, (val) => {
   if (val)
@@ -1027,6 +998,19 @@ watch(pedidoData, () => {
   refetchObtenerPedidoID();
 });
 
+watch(modalProductos, async (val) => {
+  if (val) {
+    try {
+      loadingProductos.value = true;
+      await refetchTodosProductos();
+    } catch (error) {
+      $q.notify({ type: "negative", message: "Error al cargar productos" });
+    } finally {
+      loadingProductos.value = false;
+    }
+  }
+});
+
 // si el efectivo cambia, calcular cambio
 watch(montoEfectivo, (nuevoValor) => {
   if (nuevoValor !== null && nuevoValor >= 0) {
@@ -1050,46 +1034,52 @@ watch(tipoPago, async (nuevo) => {
   }
 });
 // limpiar campos de pago
-watch(tipoPago, (nuevo) => {
-  if (nuevo === "EFECTIVO") {
-    montoTarjeta.value = null;
-  } else if (nuevo === "TARJETA") {
-    montoEfectivo.value = null;
-  } else if (nuevo === "MIXTO") {
-    montoEfectivo.value = null;
-    montoTarjeta.value = null;
-  }
-});
-// mantener focus y limpiar referencias cuando se cierre el modal
-watch(modalProductos2, async (val) => {
-  try {
-    if (val) {
-      // Cuando se abre el modal, asegurar que los productos estén cargados
-      await refetchTodosProductos();
-      // Reinicializar cantidadInputs cuando se abre el modal
-      if (cantidadInputs && cantidadInputs.value) {
-        cantidadInputs.value = {};
-      }
-
-      // Enfocar el buscador después de que el modal esté completamente renderizado
-      await nextTick();
-      nextTick(() => {
-        if (buscadorProductoRef.value) {
-          buscadorProductoRef.value.focus();
-          buscadorProductoRef.value.select();
-        }
-      });
-    } else {
-      if (allowAutoFocusProduct.value) enfocarCodigo();
-      // Limpiar referencias de inputs cuando se cierre el modal
-      if (cantidadInputs && cantidadInputs.value) {
-        cantidadInputs.value = {};
-      }
+watch(
+  tipoPago, 
+  (nuevo) => {
+    if (nuevo === "EFECTIVO") {
+      montoTarjeta.value = null;
+    } else if (nuevo === "TARJETA") {
+      montoEfectivo.value = null;
+    } else if (nuevo === "MIXTO") {
+      montoEfectivo.value = null;
+      montoTarjeta.value = null;
     }
-  } catch (error) {
-    console.error("Error in modalProductos2 watch:", error);
   }
-});
+);
+// mantener focus y limpiar referencias cuando se cierre el modal
+watch(
+  modalProductos2, 
+  async (val) => {
+    try {
+      if (val) {
+        // Cuando se abre el modal, asegurar que los productos estén cargados
+        await refetchTodosProductos();
+        // Reinicializar cantidadInputs cuando se abre el modal
+        if (cantidadInputs && cantidadInputs.value) {
+          cantidadInputs.value = {};
+        }
+
+        // Enfocar el buscador después de que el modal esté completamente renderizado
+        await nextTick();
+        nextTick(() => {
+          if (buscadorProductoRef.value) {
+            buscadorProductoRef.value.focus();
+            buscadorProductoRef.value.select();
+          }
+        });
+      } else {
+        if (allowAutoFocusProduct.value) enfocarCodigo();
+        // Limpiar referencias de inputs cuando se cierre el modal
+        if (cantidadInputs && cantidadInputs.value) {
+          cantidadInputs.value = {};
+        }
+      }
+    } catch (error) {
+      console.error("Error in modalProductos2 watch:", error);
+    }
+  }
+);
 
 // filtro del catalogo
 const productosFiltrados2 = computed(() => {
@@ -1254,62 +1244,6 @@ const enfocarEfectivo = async () => {
   focusEfectivo.value?.focus();
 };
 
-// focus en modal cupon
-watch(modalCuponazo, (val) => {
-  if (val)
-    nextTick(() => {
-      refCupon.value?.$el.querySelector("input")?.select();
-    });
-});
-
-//focus al modal cantidad
-watch(modalCantidad, (val) => {
-  if (val) {
-    nextTick(() => {
-      focusCantidad.value?.$el.querySelector("input")?.select();
-    });
-  }
-});
-
-//cargar productos en factura
-watch(modalFacturacion, (val) => {
-  if (val) {
-    refetchProductosFactura();
-  }
-});
-
-// cargar nuevos productos
-watch(idPedidoEnc, (nuevo) => {
-  if (nuevo && nuevo > 0) {
-    refetchObtenerPedidoID();
-  }
-});
-
-// actualizar cliente en facturacion
-watch(pedidoData, () => {
-  refetchObtenerPedidoID();
-});
-
-watch(modalProductos, async (val) => {
-  if (val) {
-    try {
-      loadingProductos.value = true;
-      await refetchTodosProductos();
-    } catch (error) {
-      $q.notify({ type: "negative", message: "Error al cargar productos" });
-    } finally {
-      loadingProductos.value = false;
-    }
-  }
-});
-
-// si el efectivo cambia, calcular cambio
-const calcularCambioModal = () => {
-  if (opcionesPago2 === "MIXTO") calcularCambio.value = 0;
-  else {
-    calcularCambio.value = montoEfectivo.value - totalStore.totalGeneral;
-  }
-};
 
 // Despues del cantidad volver al focus del input
 const volverAFocusInput = () => {
@@ -1320,6 +1254,7 @@ const volverAFocusInput = () => {
 };
 
 // focus
+
 const enfocarCodigo = () => {
   if (!allowAutoFocusProduct.value) return;
   inputCodigo.value?.focus();
@@ -2111,6 +2046,7 @@ onBeforeUnmount(() => {
     cantidadInputs.value = {};
   }
 });
+
 
 defineExpose({
   enfocarCodigo,
