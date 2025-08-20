@@ -415,12 +415,14 @@
   <ProductosTab
     ref="productosTabRef"
     :pedidoId="idPedidoEnc"
+    :pedidoId="idPedidoEnc"
     :onNuevoPedido="nuevoPedido"
     :tipoPedido="estadoPedido"
     @update-estado="handleActualizarPedido"
   />
   <TablaProductos
     ref="tablaProductosRef"
+    :-pedido-id="idPedidoEnc"
     :-pedido-id="idPedidoEnc"
     :onProductoEliminado="enfocarInputCodigo"
   />
@@ -514,8 +516,8 @@ const {
   obtenerPedidoPorId,
   mutateAnularPedidoPendiente,
 } = usePedidosEnc();
-const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc || 0); // Aseguramos que sea un número
-const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
+const idPedidoEnc =  computed(() => pedidoStore.idPedidoEnc||0); // Aseguramos que sea un número
+const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);  
 const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
 const estadoPedido = computed(() => pedidoStore.estadoPedido === 'P' ? 'Pedido' : 'Cotización');
@@ -856,11 +858,7 @@ watchEffect(() => {
   }
 });
 
-const {
-  data: pedidosPendientes,
-  isLoading,
-  refetch: refetchPedidosPendientes,
-} = obtenerPedidosPendientes(
+const { data: pedidosPendientes, isLoading, refetch:refetchPedidosPendientes } = obtenerPedidosPendientes(
   Number(storeSucursal.idSucursal), // Convertido a numero
   userStore.codigoVendedor
 );
