@@ -1247,6 +1247,43 @@ const enfocarEfectivo = async () => {
   focusEfectivo.value?.focus();
 };
 
+// focus en modal cupon
+watch(modalCuponazo, (val) => {
+  if (val)
+    nextTick(() => {
+      refCupon.value?.$el.querySelector("input")?.select();
+    });
+});
+
+//focus al modal cantidad
+watch(modalCantidad, (val) => {
+  if (val) {
+    nextTick(() => {
+      focusCantidad.value?.$el.querySelector("input")?.select();
+    });
+  }
+});
+
+//cargar productos en factura
+watch(modalFacturacion, (val) => {
+  if (val) {
+    refetchProductosFactura();
+  }
+});
+
+// cargar nuevos productos
+watch(idPedidoEnc, (nuevo) => {
+  if (nuevo && nuevo > 0) {
+    refetchObtenerPedidoID();
+    // Resetear totalAnterior cuando se crea un nuevo pedido
+    totalAnterior.value = 0;
+  }
+});
+
+// actualizar cliente en facturacion
+watch(pedidoData, () => {
+  refetchObtenerPedidoID();
+});
 
 // Despues del cantidad volver al focus del input
 const volverAFocusInput = () => {
