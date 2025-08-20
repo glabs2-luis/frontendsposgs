@@ -254,7 +254,7 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
           ? // Si el tipo de documento es "Documento en contingencia", solo muestra el número.
             [
               {
-                text: `NÚMERO: ${data.encabezado.numero || ""}`,
+                text: `NÚMERO DE CONTINGENCIA: ${data.encabezado.numero || ""}`,
                 style: "caption",
                 alignment: "center",
               },

@@ -30,7 +30,7 @@
             class="toggle-brillante"
             @click="confirmarContingencia"
           />
-          <q-btn label="" icon="restart_alt" color="amber-9" class="" @click="limpiarPedido" />
+          <q-btn icon="restart_alt" color="amber-9" class="color: black" @click="limpiarPedido" />
           <q-btn label="Anular" color="red-5" text-color="black" style="color: black; "  @click="limpiar" />
 
           <q-btn

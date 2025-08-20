@@ -28,10 +28,11 @@
               :rows="facturasPendientes"
               :columns="columnasPendientes"
               :row-key="(row) => `${row.NUMERO_FACTURA}-${row.SERIE}`"
+              class="tabla-estilo"
               flat
               bordered
               dense
-              :pagination="{ rowsPerPage: 20 }"
+              :pagination="{ rowsPerPage: 25 }"
               :rows-per-page-options="[10, 20, 50, 100]"
               style="height: 600px"
               virtual-scroll
@@ -112,6 +113,7 @@ import { useStoreSucursal } from "@/stores/sucursal";
 import { useSync } from "@/modules/sync/composables/useSync";
 import { useFacturasEnc } from "@/modules/facturas_enc/composables/useFacturasEnc";
 import { Factura } from "../../notas_credito/interfaces/NotaCredito";
+import { usePdfFactura } from "@/modules/facturar_pdf/composables/usePdFactura";
 
 const { obtenerFacturasPorNumeroSerie } = useFacturasEnc();
 const storeSucursal = useStoreSucursal();
@@ -120,7 +122,11 @@ const { facturasErrores, refetchFacturasErrores } = useFacturasFel();
 const facturaSeleccionadaArray = ref([]);
 const facturaSeleccionada = ref<string | null>(null);
 const { mutateCrearSincronizacion } = useSync();
-const $q = useQuasar();
+const $q = useQuasar()
+const { generarFacturaPDF } = usePdfFactura()
+const { obtenerDatosFel } = useFacturasEnc()
+const { obtenerFacturasEnc, obtenerDetalleFactura } = useFacturasEnc()
+const { data: facturasData, isLoading } = obtenerFacturasEnc()
 
 // Observa la factura seleccionada
 watch(facturaSeleccionadaArray, (newSelection) => {
@@ -168,6 +174,76 @@ const facturasConErrores = computed(() => {
   );
 });
 
+
+    const imprimirFactura = async (idFactura: number) => {
+    
+    try {
+      const factura = facturasData.value.find(f => f.ID_FACTURA_ENC === idFactura)
+      if (!factura) {
+        showErrorNotification('Factura no encontrada','No existe esta factura' )
+        return
+      }
+    
+      const datosFelCertificados = await  obtenerDatosFel(factura.NUMERO_FACTURA)
+      
+      const detalle = await obtenerDetalleFactura(idFactura)
+      if (!detalle || detalle.length === 0) {
+        return
+      }
+    
+      // Armar los items 
+      const itemsFactura = detalle.map((item: any) => ({
+        cantidad: item.CANTIDAD_VENDIDA,
+        descripcion: item.producto.DESCRIPCION_PROD,
+        precio: item.PRECIO_UNITARIO_VTA.toFixed(4),
+        subtotal: item.SUBTOTAL_GENERAL.toFixed(4)
+      }))
+    
+      // Calcular total de items
+      const totalItems = itemsFactura.reduce((total, item) => total + Number(item.cantidad), 0)
+      const Subtotal = itemsFactura.reduce((subtotal, item) => subtotal + Number(item.subtotal), 0)
+    
+      //fecha de emision
+      const fecha = new Date(datosFelCertificados?.FECHA_ACCION)
+      const fechaEmisionValida = !isNaN(fecha.getTime()) ? fecha.toLocaleString() : ''
+    
+      // Armar el objeto dataFactura 
+      const dataFactura = {
+      
+        encabezado: {
+          serie: datosFelCertificados?.SERIE_FACTURA_FEL ?? '',
+          numero: datosFelCertificados?.NUMERO_FACTURA_FEL ?? '',
+          uuid: datosFelCertificados?.UUID ?? '',
+          numeroInterno: `${factura?.SERIE ?? ''} | ${factura?.NUMERO_FACTURA ?? ''}`,
+          fechaEmision: fechaEmisionValida,
+          tipoDocumento: 'FACTURA ELECTRONICA'
+        },
+        cliente: {
+          nombre: factura.NOMBRE_CLI_A_FACTUAR,
+          nit: factura.NIT_CLIEN_A_FACTURAR,
+          direccion: factura.DIRECCION_CLI_FACTUR
+        },
+        items: itemsFactura,
+        resumen: {
+          subtotal: `Q. ${Subtotal.toFixed(2)}`,
+          descuento: `Q ${factura.MONTO_DESCUENTO_FACT.toFixed(2)}`,
+          totalPagar: `Q. ${factura.TOTAL_GENERAL.toFixed(2)}`,
+          totalItems: totalItems
+        },
+        nombreVendedor: factura.USUARIO_QUE_FACTURA,
+        qrCodeData: datosFelCertificados?.UUID ?? '',
+      }
+    
+      // Generar impresion
+       await generarFacturaPDF(dataFactura)
+       $q.loading.hide()
+    
+    } catch (error) {
+      console.error('Error reimprimiendo factura:', error)
+      showErrorNotification('Error al reimprimir factura', 'Error')
+    }
+}
+
 // Intentar certificar
 const certificarAgain = async () => {
   if (facturaSeleccionada.value === null) {
@@ -198,6 +274,7 @@ const certificarAgain = async () => {
     { sucursal: storeSucursal.idSucursal, serie, numero: numero2 },
     {
       onSuccess: async (data) => {
+
         // Ocultar loading antes de continuar, por que nos aseguramos que se haya certificado
         $q.loading.hide();
 
@@ -215,11 +292,17 @@ const certificarAgain = async () => {
         );
 
         if (confirmar) {
-          //TODO: lUIS favor de implementar la impresion de la factura
-          showSuccessNotification(
-            "Factura certificada con exito",
-            "Imprimiendo factura... pendiente de implementar"
-          );
+          
+          // Mostrar loading para certificación
+          $q.loading.show({
+            message: "Imprimiendo Factura",
+            spinnerColor: "green",
+            spinnerSize: 50,
+          });
+          
+          // imprimir 
+          imprimirFactura(idFacturaEnc)
+        
         }
         facturaSeleccionada.value = null;
       },
@@ -240,24 +323,28 @@ const Refrescar = async () => {
   );
 };
 
-// tabla pendientes - izquierda
+// tabla pendientes - 
 const columnasPendientes: QTableColumn[] = [
   { name: "numero", label: "Número", field: "NUMERO_FACTURA", align: "left" },
   { name: "serie", label: "Serie", field: "SERIE", align: "left" },
   { name: "Correlativo", label: "No. Correlativo", field: "CORR_CONTINGENCIA", align: "left"},
   { name: "nombre", label: "Nit", field: "NIT", align: "left"},
   { name: "Nit", label: "Nombre", field: "NOMBRE", align: "left"},
+  { name: "Total", label: "Total ", field: "TOTAL_GENERAL", align: "left", format: (val: number) => `Q  ${val.toFixed(2)}` },
   { name: "Fecha", label: "Fecha Facturación", field: "FECHA_ACCION", align: "left", format: formatearFecha},
 ];
 
-// tabla  derecha
+// Tabla que muestra errores
 const columnasErrores: QTableColumn[] = [
   { name: "numero", label: "No. Factura", field: "NUMERO_FACTURA", align: "left" },
   { name: "error", label: "Mensaje de Error", field: "ERROR", align: "left" },
 ];
+
+
 </script>
 
 <style scoped>
+
 .boton-amarillo {
   background: linear-gradient(90deg, #ffeb3b, #fbc02d);
   color: #070606;
@@ -271,5 +358,12 @@ const columnasErrores: QTableColumn[] = [
   background: linear-gradient(90deg, #fbc02d, #f9a825);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   transform: scale(1.02);
+}
+
+.tabla-estilo thead th {
+  background: linear-gradient(to right, #1976d2, #2196f3); /* degradado */
+  color: white;
+  font-weight: bold;
+  text-align: center;
 }
 </style>
