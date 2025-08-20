@@ -3,6 +3,7 @@
     <div class="col-12">
       <!-- informacion mas pedido y cantidad-->
       <div class="row items-start q-gutter-sm">
+
         <!-- Boton para Cotizacion y pedido -->
         <div class="tipo-transaccion-container">
           <div class="q-gutter-y-md">
@@ -15,8 +16,8 @@
               color="grey-1"
               text-color="black"
               :options="[
-                { label: 'Pedido', value: 'pedido' },
-                { label: 'Cotizacion', value: 'cotización' },
+                {label: 'Pedido', value: 'pedido'},
+                {label: 'Cotizacion', value: 'cotización'}
               ]"
               class="tipo-transaccion-toggle"
               :disable="!!mostrarNumPedido"
@@ -354,7 +355,9 @@
         </div>
 
         <!-- Boton para modal pedidos/cotizaciones pendientes -->
-        <div class="btn-pendientes-container">
+        <div
+          class="btn-pendientes-container"
+        >
           <q-btn
             icon="assignment"
             color="red"
@@ -379,7 +382,9 @@
               </div>
 
               <!-- Total de Venta -->
-              <div class="row items-center q-gutter-xs q-pa-xs">
+              <div
+                class="row items-center q-gutter-xs total-card q-pa-xs ellipsis"
+              >
                 <div
                   class="text-body1 text-amber-10 text-weight-bold"
                   style="font-size: 400%"
@@ -424,7 +429,9 @@
   <q-footer class="z-max">
     <div class="bg-yellow-8 text-black q-pa-sm row items-center justify-center">
       <div class="q-pr-md">
-        <div class="text-weight-bold">Libreria San Bartolome - 2025</div>
+        <div class="text-weight-bold">
+          Libreria San Bartolome - 2025
+        </div>
       </div>
 
       <div class="cambio row items-center q-gutter-xs">
@@ -435,6 +442,7 @@
       </div>
     </div>
   </q-footer>
+
 </template>
 
 <script setup lang="ts">
@@ -515,9 +523,9 @@ const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc || 0); // Aseguramos 
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
 const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
-const estadoPedido = computed(() => (!pedidoStore.estadoPedido || pedidoStore.estadoPedido === "P") ? "Pedido" : "Cotización");
-const focus2 = ref<HTMLInputElement | null>(null);
-let espera: ReturnType<typeof setTimeout> | null = null; // Para la busqueda automatica
+const estadoPedido = computed(() => pedidoStore.estadoPedido === 'P' ? 'Pedido' : 'Cotización');
+const focus2 = ref<HTMLInputElement | null>(null)
+let espera: ReturnType<typeof setTimeout> | null = null // Para la busqueda automatica
 const tipoTransaccion = ref(pedidoStore.tipoPedido); // Valor inicial
 const tab = ref('pedidos')
 const { generarCotizacionPDF } = usePdfCotizacion()
@@ -557,7 +565,9 @@ watch(abrirModalCliente, async (isOpen, wasOpen) => {
   }
 });
 
-watch(mostrarNumPedido, async () => [(pedidoStore.estadoPedido = "P")]);
+watch(mostrarNumPedido, async () => [
+  pedidoStore.estadoPedido = 'P'
+])
 
 //crear pedido
 const crearPedidod2 = () => {
