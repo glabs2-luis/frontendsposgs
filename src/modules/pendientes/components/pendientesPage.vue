@@ -488,10 +488,17 @@ const certificarAgain = async () => {
 
 // Recargar el error
 const Refrescar = async () => {
-  // Limpiar caches antes de refrescar
-  limpiarCaches();
 
-  await runWithLoading(() => refetchFacturasErrores(), "Refrescando Facturas");
+  $q.loading.show({
+    message: "Refrescando Facturas",
+    spinnerColor: "green",
+    spinnerSize: 50,
+  })
+
+  await refetchFacturasErrores(),
+    "Refrescando Facturas"
+
+  $q.loading.hide();
 };
 
 // tabla pendientes -
