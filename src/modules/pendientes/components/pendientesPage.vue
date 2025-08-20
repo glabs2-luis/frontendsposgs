@@ -446,6 +446,7 @@ const certificarAgain = async () => {
     { sucursal: storeSucursal.idSucursal, serie, numero: numero2 },
     {
       onSuccess: async (data) => {
+
         // Ocultar loading antes de continuar, por que nos aseguramos que se haya certificado
         $q.loading.hide();
 
@@ -553,6 +554,8 @@ const columnasErrores: QTableColumn[] = [
   { name: "numero", label: "No. Factura", field: "NUMERO_FACTURA", align: "left" },
   { name: "error", label: "Mensaje de Error", field: "ERROR", align: "left" },
 ];
+
+
 </script>
 
 <style scoped>
@@ -802,5 +805,12 @@ const columnasErrores: QTableColumn[] = [
 .splitter-personalizado .q-splitter__separator {
   min-width: 12px !important;
   width: 12px !important;
+}
+
+.tabla-estilo thead th {
+  background: linear-gradient(to right, #1976d2, #2196f3); /* degradado */
+  color: white;
+  font-weight: bold;
+  text-align: center;
 }
 </style>
