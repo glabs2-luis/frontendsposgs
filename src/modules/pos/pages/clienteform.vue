@@ -492,7 +492,6 @@ const pedidoStore = usePedidoStore();
 const userStore = useUserStore();
 const abrirModalCliente = ref(false);
 const mostrarCardPedidoCreado = ref(false);
-const mostrarNumPedido = ref(false);
 const mostrarCardTotal = ref(false);
 const expansion = ref<any>(null);
 const numPedido = ref(0);
@@ -512,8 +511,9 @@ const {
   obtenerPedidoPorId,
   mutateAnularPedidoPendiente,
 } = usePedidosEnc();
-const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc || 0); // Aseguramos que sea un número
-const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
+const idPedidoEnc =  computed(() => pedidoStore.idPedidoEnc||0); // Aseguramos que sea un número
+const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);  
+const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
 const focus2 = ref<HTMLInputElement | null>(null);
 let espera: ReturnType<typeof setTimeout> | null = null; // Para la busqueda automatica

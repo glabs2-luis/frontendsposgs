@@ -1275,8 +1275,6 @@ watch(modalFacturacion, (val) => {
 watch(idPedidoEnc, (nuevo) => {
   if (nuevo && nuevo > 0) {
     refetchObtenerPedidoID();
-    // Resetear totalAnterior cuando se crea un nuevo pedido
-    totalAnterior.value = 0;
   }
 });
 
@@ -1948,7 +1946,6 @@ const agregarProductoAlPedido2 = async (producto) => {
         producto.CANTIDAD_PEDIDA = 1;
         await refetchObtenerPedidoID(); // Refrescar datos del pedido primero
         await refetchObtenerPedidoDetID();
-        console.log("Producto agregado con éxito:", data);
         // relistaDet2();
         totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0);
         if (allowAutoFocusProduct.value) enfocarCodigo();
