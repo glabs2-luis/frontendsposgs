@@ -1540,16 +1540,18 @@ const confirmarFactura = async () => {
       // Ocultar loading antes de certificar
       $q.loading.hide();
 
+      // Asignar este valor para llenar la factura
+      idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
       // Ahora sí espera a que termine la certificación
-
+      
       if (contingencia.value === true) {
         await imprimirFactura(respuesta);
         return;
+      } else {
+      
+       await certificarFactura(respuesta.ID_FACTURA_ENC);
       }
 
-      await certificarFactura(respuesta.ID_FACTURA_ENC);
-
-      idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
     },
     onError: (error) => {
       console.error("Error creando factura:", error);
@@ -1564,14 +1566,15 @@ const confirmarFactura = async () => {
 };
 
 const imprimirFactura = async (data) => {
+
   console.log("imprimiendo factura...");
   const factura2 = await obtenerFacturaId3(idFacturaEnc.value);
 
-  //console.log("este es data:", data);
-  //console.log('imprimir factura2:', factura2)
+  // console.log("este es data:", data);
+  console.log('imprimir factura2:', factura2)
 
-  //console.log('yo soy contingencia xd:', contingencia.value)
-  //console.log("data certificada con exito: ", data)
+  // console.log('yo soy contingencia xd:', contingencia.value)
+  // console.log("data certificada con exito: ", data)
 
   const detalle = await obtenerDetalleFactura(idFacturaEnc.value);
   if (!detalle || detalle.length === 0) return;
@@ -1609,13 +1612,14 @@ const imprimirFactura = async (data) => {
         : data.NumeroFacturaFel,
       uuid: data.Uuid,
       fechaEmision: formatearFecha(data.FechaAccion),
-      numeroInterno: `${factura2.SERIE} | ${factura2.NUMERO_FACTURA}`,
+      serieInterna: factura2.SERIE,
+      numeroInterno: factura2.NUMERO_FACTURA,
       tipoDocumento: contingencia.value
         ? "FACTURA EN CONTINGENCIA"
         : "FACTURA ELECTRONICA",
     },
     cliente: {
-      nombre: factura2.NOMBRE_CLI_A_FACTURAR,
+      nombre: factura2.NOMBRE_CLI_A_FACTUAR,
       nit: factura2.NIT_CLIEN_A_FACTURAR,
       direccion: factura2.DIRECCION_CLI_FACTUR,
     },
