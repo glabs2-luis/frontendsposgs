@@ -7,7 +7,6 @@ export const obtenerFacturasErroresAction = async (): Promise<
 > => {
   try {
     const { data } = await posApi.get<ErrorFacturas[]>(`/fel-pendientes`);
-    console.log(data);
     return data;
   } catch (error) {
     const message = getAxiosErrorMessage(
