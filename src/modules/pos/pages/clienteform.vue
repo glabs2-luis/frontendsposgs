@@ -3,8 +3,29 @@
     <div class="col-12">
       <!-- informacion mas pedido y cantidad-->
       <div class="row items-start q-gutter-sm">
+
+        <!-- Boton para Cotizacion y pedido -->
+        <div class="tipo-transaccion-container">
+          <div class="q-gutter-y-md">
+            <q-btn-toggle
+              v-model="tipoTransaccion"
+              unelevated
+              spread
+              no-caps
+              toggle-color="green"
+              color="grey-1"
+              text-color="black"
+              :options="[
+                {label: 'Pedido', value: 'pedido'},
+                {label: 'Cotizacion', value: 'cotización'}
+              ]"
+              class="tipo-transaccion-toggle"
+            />
+          </div>
+        </div>
+
         <!-- ExpansionItem -->
-        <div class="col-12 col-md">
+        <div class="col-9 col-md">
           <q-expansion-item
             ref="expansion"
             v-model="expansionCliente"
@@ -151,18 +172,9 @@
           </q-expansion-item>
         </div>
 
-        <!-- Validado Nit-->
-        <!-- <div class="col-auto q-ml-sm">
-           <q-card flat bordered class="q-pa-sm bg-white shadow-3" >
-              <q-btn label="" icon="assignment" size="sm" color="deep-orange-5" class="text-caption" unelevated rounded  style="min-height: 38px" @click="abrirModalPedidosPendientes"
-              />
-            </q-card>
-
-        </div> 
-
-        <!-- Ver Pedidos Pendientes -->
-        <div class="col-auto q-ml-sm">
-          <q-card flat bordered class="q-pa-sm bg-white shadow-3">
+        <!-- Validar NIT -->
+        <div class="col-auto q-mt-md">
+          <q-card flat class="bg-white shadow-3">
             <q-toggle
               v-model="validador"
               label="Validar"
@@ -175,18 +187,6 @@
               style="min-height: 38px"
             ></q-toggle>
             <q-tooltip> Validador de Nit</q-tooltip>
-
-            <q-btn
-              label="Pendientes"
-              icon="assignment"
-              size="sm"
-              color="deep-orange-5"
-              class="text-caption q-ml-sm"
-              unelevated
-              rounded
-              style="min-height: 38px"
-              @click="abrirModalPedidosPendientes"
-            />
           </q-card>
 
           <!-- Modal de Pedidos Pendientes -->
@@ -256,9 +256,26 @@
           </q-dialog>
         </div>
 
+        <!-- Boton para modal pedidos/cotizaciones pendientes -->
+        <div
+          class="btn-pendientes-container"
+        >
+          <q-btn
+            flat
+            dense
+            icon="assignment"
+            size="xl"
+            color="red"
+            class="text-caption"
+            unelevated
+            rounded
+            @click="abrirModalPedidosPendientes"
+          />
+        </div>
+
         <!-- Botones al lado derecho -->
         <div class="col-auto q-ml-sm">
-          <q-card flat bordered class="q-pa-sm bg-white shadow-3">
+          <q-card flat class="q-pa-sm bg-white shadow-3">
             <div class="row items-center q-gutter-sm no-wrap">
               <!-- Número de Pedido -->
               <div v-if="mostrarNumPedido" class="row items-center q-gutter-xs">
@@ -267,30 +284,28 @@
                   class="text-subtitle2 text-primary"
                   style="font-size: 160%"
                 >
-                  Pedido #{{ numPedido2 }}
+                  {{ estadoPedido }} #{{ numPedido2 }}
                 </div>
               </div>
 
-              <q-separator vertical class="q-mx-sm" />
-
               <!-- Total de Venta -->
               <div
-                class="row items-center q-gutter-xs total-card q-pa-xs ellipsis"
+                class="row items-center q-gutter-xs q-pa-xs"
               >
                 <div
                   class="text-body1 text-amber-10 text-weight-bold"
-                  style="font-size: 280%"
+                  style="font-size: 400%"
                 >
                   Total: {{ formatCurrency(totalStore.totalGeneral, 2) }}
                 </div>
               </div>
               <!-- Último cambio (vuelto) -->
-              <div class="row items-center q-gutter-xs q-mt-xs q-ml-md">
+              <!-- <div class="row items-center q-gutter-xs q-mt-xs q-ml-md">
                 <q-icon name="undo" size="sm" class="text-green-7" />
                 <div class="text-positive text-weight-bold">
                   Cambio: {{ formatCurrency(totalStore.ultimoCambio, 2) }}
                 </div>
-              </div>
+              </div> -->
             </div>
           </q-card>
         </div>
@@ -315,6 +330,23 @@
     ref="tablaProductosRef"
     :onProductoEliminado="enfocarInputCodigo"
   />
+  <q-footer class="z-max">
+    <div class="bg-yellow-8 text-black q-pa-sm row items-center justify-center">
+      <div class="q-pr-md">
+        <div class="text-weight-bold">
+          Libreria San Bartolome - 2025
+        </div>
+      </div>
+
+      <div class="cambio row items-center q-gutter-xs">
+        <q-icon name="undo" size="sm" class="" />
+        <div class="text-balance text-weight-bold">
+          Cambio: {{ formatCurrency(totalStore.ultimoCambio, 2) }}
+        </div>
+      </div>
+    </div>
+  </q-footer>
+
 </template>
 
 <script setup lang="ts">
@@ -390,9 +422,12 @@ const {
 } = usePedidosEnc();
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc);
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
+const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
+const estadoPedido = computed(() => pedidoStore.estadoPedido === 'P' ? 'Pedido' : 'Cotización');
 const focus2 = ref<HTMLInputElement | null>(null)
 let espera: ReturnType<typeof setTimeout> | null = null // Para la busqueda automatica
+const tipoTransaccion = ref(pedidoStore.tipoPedido); // Valor inicial
 
 // abrir expansion item y focus a nit
 watch(() => clienteStore.documento,
@@ -425,6 +460,10 @@ watch(abrirModalCliente, async (isOpen, wasOpen) => {
     crearPedido();
   }
 });
+
+watch(mostrarNumPedido, async () => [
+  pedidoStore.estadoPedido = 'P'
+])
 
 //crear pedido
 const crearPedidod2 = () => {
@@ -465,9 +504,10 @@ const busquedaAutomatica = () => {
 
 // Anular pedido pendiente
 const anularPedido = async (pedido) => {
+  console.log(tipoTransaccion.value)
   const confirmado = await showConfirmationInsideModal(
-    "Anular Pedido",
-    `¿Está seguro que desea anular el pedido #${pedido.NUMERO_DE_PEDIDO}?`
+    `Anular ${estadoPedido.value}`,
+    `¿Está seguro que desea anular ${estadoPedido.value === 'Pedido' ? 'el' : 'la'} ${estadoPedido.value} #${pedido.NUMERO_DE_PEDIDO}?`
   );
 
   if (!confirmado) return;
@@ -476,6 +516,8 @@ const anularPedido = async (pedido) => {
     id: pedido.ID_PEDIDO_ENC,
     usuario: userStore.nombreVendedor,
   });
+
+  tipoTransaccion.value = 'pedido'
 };
 
 // continuar pedido pendiente
@@ -498,7 +540,8 @@ const continuarPedido = async (pedido) => {
   pedidoStore.setPedidoEncabezado(
     pedido.ID_PEDIDO_ENC,
     pedido.NUMERO_DE_PEDIDO,
-    pedido.CODIGO_VENDEDOR
+    pedido.CODIGO_VENDEDOR,
+    pedido.ESTADO_PEDIDO
   );
 
   // set cliente
@@ -610,8 +653,6 @@ const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
   userStore.codigoVendedor
 );
 
-const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
-
 const abrirModalPedidosPendientes = () => {
   modalPendientes.value = true;
 };
@@ -674,6 +715,7 @@ const crearPedido = () => {
     USUARIO_INGRESO_PEDI: userStore.nombreVendedor.substring(0, 10),
     CODIGO_VENDEDOR: userStore.codigoVendedor,
     CODIGO_DE_CLIENTE: obtenerConfiguracionPos.value.CODIGO_CLIENTE_CF, // Cliente Ticket
+    ESTADO_PEDIDO: tipoTransaccion.value === 'pedido' ? 'P' : 'C'
   };
 
   mutateCrearPedidoEnc(pedidoEnc, {
@@ -687,7 +729,8 @@ const crearPedido = () => {
       pedidoStore.setPedidoEncabezado(
         data.ID_PEDIDO_ENC,
         data.NUMERO_DE_PEDIDO,
-        data.CODIGO_VENDEDOR
+        data.CODIGO_VENDEDOR,
+        data.ESTADO_PEDIDO
       );
 
       mostrarCardPedidoCreado.value = true;
@@ -696,7 +739,7 @@ const crearPedido = () => {
       // notificaccion de creado
       $q.notify({
         type: "success",
-        message: `Pedido N° ${data.NUMERO_DE_PEDIDO} creado con éxito`,
+        message: `${estadoPedido.value} N° ${data.NUMERO_DE_PEDIDO} creado con éxito`,
         position: "top",
         color: "green",
         timeout: 2000,
@@ -710,7 +753,7 @@ const crearPedido = () => {
     onError: (error: any) => {
       showErrorNotification(
         "Error al crear",
-        error.message || "No se pudo registrar el pedido"
+        error.message || `No se pudo registrar ${estadoPedido.value === 'Pedido' ? 'el' : 'la'} ${estadoPedido.value}`
       );
     },
   });
@@ -963,4 +1006,25 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.cambio {
+  position: absolute;
+  right: 0;
+  font-size: 18px;
+  margin-right: 60px; 
+}
+
+.tipo-transaccion-container {
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.tipo-transaccion-toggle {
+  border-radius: 50px;
+}
+
+.btn-pendientes-container {
+  margin: 8px 0px 0px;
+}
+
 </style>
