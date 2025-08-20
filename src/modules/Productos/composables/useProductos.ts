@@ -29,10 +29,10 @@ export const useProductos = () => {
     const precioReal = async (codigo: string, cantidad: number): Promise<Productos> => {
         try {
             const productoPrecio = await ObtenerProductosPrecioAction(codigo, cantidad)
-            console.log('composable: ', productoPrecio)
+            //console.log('composable: ', productoPrecio)
             return productoPrecio
         } catch (error) {
-            console.log('Error obteniendo precio del producto', error)
+            //console.log('Error obteniendo precio del producto', error)
             showErrorNotification('Error', 'Error obteniendo precio del producto')
         }
     }
