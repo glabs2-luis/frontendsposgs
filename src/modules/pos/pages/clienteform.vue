@@ -863,11 +863,7 @@ watchEffect(() => {
   }
 });
 
-const {
-  data: pedidosPendientes,
-  isLoading,
-  refetch: refetchPedidosPendientes,
-} = obtenerPedidosPendientes(
+const { data: pedidosPendientes, isLoading, refetch:refetchPedidosPendientes } = obtenerPedidosPendientes(
   Number(storeSucursal.idSucursal), // Convertido a numero
   userStore.codigoVendedor
 );
