@@ -933,9 +933,7 @@ const totalAnterior = ref(0);
 */
 
 // Facturación - cálculos y validaciones
-const totalAPagar = computed(() =>
-  Number(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0)
-);
+const totalAPagar = computed(() => Number(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0));
 const montoEfectivoNum = computed(() => Number(montoEfectivo.value) || 0);
 const montoTarjetaNum = computed(() => Number(montoTarjeta.value) || 0);
 
@@ -1261,8 +1259,6 @@ watch(modalFacturacion, (val) => {
 watch(idPedidoEnc, (nuevo) => {
   if (nuevo && nuevo > 0) {
     refetchObtenerPedidoID();
-    // Resetear totalAnterior cuando se crea un nuevo pedido
-    totalAnterior.value = 0;
   }
 });
 
@@ -1324,42 +1320,6 @@ const actualizarCantidad = () => {
     return;
   }
 };
-
-// Filtro antiguo - not in use
-const productosFil = computed(() => {
-  if (!filtroProductos.value) return todosProductos.value;
-
-  const palabras = filtroProductos.value
-    .toLowerCase()
-    .split(" ")
-    .filter((p) => p.trim() !== "");
-
-  return todosProductos.value.filter((prod) => {
-    const texto = (
-      (prod.PRODUCT0 || "") +
-      " " +
-      (prod.DESCRIPCION_MARCA || "") +
-      " " +
-      (prod.DESCRIPCION_PROD || "")
-    ).toLowerCase();
-
-    return palabras.every((palabra) => texto.includes(palabra));
-  });
-});
-
-// productos modal
-watch(modalProductos, async (val) => {
-  if (val) {
-    try {
-      loadingProductos.value = true;
-      await refetchTodosProductos();
-    } catch (error) {
-      $q.notify({ type: "negative", message: "Error al cargar productos" });
-    } finally {
-      loadingProductos.value = false;
-    }
-  }
-});
 
 const limpiarPedido = async() => {
     if (!pedidoStore.idPedidoEnc) {
@@ -2000,6 +1960,7 @@ onBeforeUnmount(() => {
     cantidadInputs.value = {};
   }
 });
+
 
 defineExpose({
   enfocarCodigo,
