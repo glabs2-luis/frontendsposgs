@@ -1281,6 +1281,8 @@ watch(modalFacturacion, (val) => {
 watch(idPedidoEnc, (nuevo) => {
   if (nuevo && nuevo > 0) {
     refetchObtenerPedidoID();
+    // Resetear totalAnterior cuando se crea un nuevo pedido
+    totalAnterior.value = 0;
   }
 });
 
@@ -1362,139 +1364,6 @@ const actualizarCantidad = () => {
     return;
   }
 };
-
-const truncateDosDecimales = (numero) => {
-  return Math.trunc(numero * 100) / 100;
-}
-
-// Preparar actualizacion para pedido
-const prepararDataCotizacion = async (idPedido) => {
-  const apiResponseDetallePedido = await obtenerDetallePedido(idPedido);
-  const pedidoEnc = await obtenerPedidoEncPorIdAction(idPedido)
-
-  const items = apiResponseDetallePedido.map((item) => {
-    return {
-      cantidad: item.CANTIDAD_PEDIDA,
-      descripcion: item.DESCRIPCION_PROD,
-      precio: formatCurrency(item.PRECIO_UNIDAD_VENTA, 2),
-      subtotal: formatCurrency(item.SUBTOTAL_VENTAS + item.MONTO_IVA, 2),
-    };
-  });
-
-  const totalItems = items.reduce((acc, item) => acc + item.cantidad, 0);
-  const subtotal = items.reduce((acc, item) => acc + parseFloat(item.subtotal.replace("Q.", "")), 0);
-
-  const dataCotizacion = {
-    encabezado: {
-      numeroInterno: `${pedidoStore.numeroDePedido}`,
-      tipoDocumento: "COTIZACION",
-      fechaEmision: formatearFecha(pedidoEnc.FECHA_PEDIDO),
-    },
-
-    observacion: '',
-
-    cliente: {
-      nombre: clienteStore.nombre,
-      nit: String(clienteStore.documento ?? "CF"),
-      direccion: clienteStore.direccion,
-    },
-
-    items,
-
-    resumen: {
-      subtotal: formatCurrency(subtotal, 2),
-      totalPagar: `Q.${truncateDosDecimales(totalStore.totalGeneral).toFixed(2)}`,
-      totalItems,
-    },
-    nombreVendedor: nombreVendedor,
-  };
-
-  return dataCotizacion;
-}
-
-const imprimirCotizacion = async () => {
-  if (pedidoStore.numeroDePedido <= 0) {
-    $q.notify({
-      type: 'warning',
-      message: 'Crear una cotización para imprimir.',
-      position: 'top',
-      timeout: 3000
-    });
-    return;
-  }
-
-  if (!totalStore) {
-    $q.notify({
-      type: 'warning',
-      message: 'Agregue un producto antes de imprimir la cotización.',
-      position: 'top',
-      timeout: 3000
-    });
-    return;
-  }
-
-  try {
-    $q.loading.show({
-      message: 'Imprimiendo cotización',
-      boxClass: 'bg-grey-2 text-grey-9',
-      spinnerColor: 'primary'
-    });
-
-    const datosCotizacion = await prepararDataCotizacion(pedidoStore.idPedidoEnc)
-
-    const success = await generarCotizacionPDF(datosCotizacion);
-
-    if (success) {
-      console.log("Cotización generada con exito.")
-    } else {
-      console.log("Fallo al genera cotización.")
-    }
-    
-    $q.loading.hide();
-  } catch (error) {
-    console.log('Error al imprimir la cotización: ', error)
-  } finally {
-    $q.loading.hide()
-  }
-}
-
-
-
-// Filtro antiguo - not in use
-const productosFil = computed(() => {
-  if (!filtroProductos.value) return todosProductos.value;
-
-  const palabras = filtroProductos.value
-    .toLowerCase()
-    .split(" ")
-    .filter((p) => p.trim() !== "");
-
-  return todosProductos.value.filter((prod) => {
-    const texto = (
-      (prod.PRODUCT0 || "") +
-      " " +
-      (prod.DESCRIPCION_MARCA || "") +
-      " " +
-      (prod.DESCRIPCION_PROD || "")
-    ).toLowerCase();
-
-    return palabras.every((palabra) => texto.includes(palabra));
-  });
-});
-
-// productos modal
-watch(modalProductos, async (val) => {
-  if (val) {
-    try {
-      loadingProductos.value = true;
-      await refetchTodosProductos();
-    } catch (error) {
-      $q.notify({ type: "negative", message: "Error al cargar productos" });
-    } finally {
-      loadingProductos.value = false;
-    }
-  }
-});
 
 const limpiarPedido = async() => {
     if (!pedidoStore.idPedidoEnc) {
