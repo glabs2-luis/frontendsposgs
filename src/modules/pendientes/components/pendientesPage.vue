@@ -446,7 +446,6 @@ const certificarAgain = async () => {
     { sucursal: storeSucursal.idSucursal, serie, numero: numero2 },
     {
       onSuccess: async (data) => {
-
         // Ocultar loading antes de continuar, por que nos aseguramos que se haya certificado
         $q.loading.hide();
 
@@ -488,17 +487,10 @@ const certificarAgain = async () => {
 
 // Recargar el error
 const Refrescar = async () => {
+  // Limpiar caches antes de refrescar
+  limpiarCaches();
 
-  $q.loading.show({
-    message: "Refrescando Facturas",
-    spinnerColor: "green",
-    spinnerSize: 50,
-  })
-
-  await refetchFacturasErrores(),
-    "Refrescando Facturas"
-
-  $q.loading.hide();
+  await runWithLoading(() => refetchFacturasErrores(), "Refrescando Facturas");
 };
 
 // tabla pendientes -
@@ -558,11 +550,14 @@ const columnasPendientes: QTableColumn[] = [
 
 // Tabla que muestra errores
 const columnasErrores: QTableColumn[] = [
-  { name: "numero", label: "No. Factura", field: "NUMERO_FACTURA", align: "left" },
-  { name: "error", label: "Mensaje de Error", field: "ERROR", align: "left" },
+  {
+    name: "error",
+    label: "Mensaje de Error",
+    field: "ERROR",
+    align: "left",
+    style: "width: 400px; min-width: 350px;",
+  },
 ];
-
-
 </script>
 
 <style scoped>
@@ -819,5 +814,246 @@ const columnasErrores: QTableColumn[] = [
   color: white;
   font-weight: bold;
   text-align: center;
+  padding: 8px 4px !important;
+  font-size: 0.85rem;
+}
+
+/* Tabla más compacta */
+.tabla-estilo tbody td {
+  padding: 6px 4px !important;
+  font-size: 0.9rem;
+}
+
+/* Reducir espaciado entre columnas */
+.tabla-estilo .q-table__container {
+  border-spacing: 0;
+}
+
+/* Hacer la tabla más densa */
+.tabla-estilo .q-table__top,
+.tabla-estilo .q-table__bottom {
+  padding: 8px 16px;
+}
+
+/* Estilos para la tabla de errores también */
+.fill-table thead th {
+  padding: 8px 4px !important;
+  font-size: 0.85rem;
+}
+
+.fill-table tbody td {
+  padding: 6px 4px !important;
+  font-size: 0.9rem;
+}
+
+/* Hacer las tablas más compactas globalmente */
+.q-table {
+  font-size: 0.9rem;
+}
+
+.q-table .q-table__top {
+  padding: 8px 16px;
+}
+
+.q-table .q-table__bottom {
+  padding: 8px 16px;
+}
+
+/* Reducir el espaciado entre filas */
+.q-table tbody tr {
+  height: 40px;
+}
+
+/* Hacer los separadores más sutiles */
+.q-table .q-table__separator {
+  background: #e0e0e0;
+}
+
+/* Estilos específicos para la tabla de errores */
+.fill-table {
+  min-height: 300px;
+}
+
+.fill-table .q-table__container {
+  height: 100%;
+}
+
+/* Hacer que la tabla de pendientes sea más compacta */
+.tabla-estilo {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Responsive para pantallas pequeñas */
+@media (max-width: 1200px) {
+  .tabla-estilo .q-table__container {
+    font-size: 0.8rem;
+  }
+
+  .fill-table .q-table__container {
+    font-size: 0.85rem;
+  }
+}
+
+/* Estilos personalizados para el splitter */
+.splitter-personalizado {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.splitter-personalizado .q-splitter__separator {
+  background: linear-gradient(to bottom, #1976d2, #2196f3) !important;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.splitter-personalizado .q-splitter__separator:hover {
+  background: linear-gradient(to bottom, #1565c0, #1976d2) !important;
+  transform: scaleX(1.2);
+  box-shadow: 0 0 10px rgba(25, 118, 210, 0.5);
+}
+
+.splitter-personalizado .q-splitter__separator::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 1px;
+}
+
+/* Estilos para los panes del splitter */
+.splitter-personalizado .q-splitter__before,
+.splitter-personalizado .q-splitter__after {
+  transition: all 0.3s ease;
+}
+
+/* Indicador visual del splitter */
+.splitter-personalizado .q-splitter__separator::after {
+  content: "⋮";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Animación de carga para el splitter */
+.splitter-personalizado .q-splitter__separator {
+  animation: splitterGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes splitterGlow {
+  0% {
+    box-shadow: 0 0 5px rgba(25, 118, 210, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(25, 118, 210, 0.6);
+  }
+}
+
+/* Estilos para el contenedor principal */
+.full-page {
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+/* Mejorar las tarjetas dentro del splitter */
+.splitter-personalizado .q-card {
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  background: #ffffff;
+}
+
+.splitter-personalizado .q-card:hover {
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilos para los botones de acción */
+.btn-accion {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-accion:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-accion:active {
+  transform: translateY(0);
+}
+
+/* Mejorar el header de la página */
+.text-h6 {
+  color: #1976d2;
+  font-weight: 700;
+}
+
+/* Estilos para el botón único del splitter */
+.splitter-controls {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  will-change: transform;
+}
+
+/* Optimizaciones de rendimiento para la tabla */
+.tabla-estilo {
+  contain: layout style paint;
+  will-change: scroll-position;
+}
+
+.fill-table {
+  contain: layout style paint;
+  will-change: scroll-position;
+}
+
+.splitter-btn {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #1976d2, #2196f3) !important;
+}
+
+/* Transición suave para el cambio de icono */
+.splitter-btn .q-icon {
+  transition: transform 0.3s ease;
+  font-size: 18px !important;
+}
+
+.splitter-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.splitter-btn:hover .q-icon {
+  transform: rotate(180deg);
+}
+
+.splitter-btn:active {
+  transform: scale(0.95);
+}
+
+/* Ajustar el separador para acomodar el botón bidireccional */
+.splitter-personalizado .q-splitter__separator {
+  min-width: 12px !important;
+  width: 12px !important;
 }
 </style>
