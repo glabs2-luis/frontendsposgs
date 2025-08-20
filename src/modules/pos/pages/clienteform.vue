@@ -158,7 +158,7 @@
               />
             </q-card>
 
-        </div> 
+        </div>  -->
 
         <!-- Ver Pedidos Pendientes -->
         <div class="col-auto q-ml-sm">
@@ -308,11 +308,12 @@
 
   <ProductosTab
     ref="productosTabRef"
-    :pedidoId="pedidoStore.idPedidoEnc"
+    :pedidoId="idPedidoEnc"
     :onNuevoPedido="nuevoPedido"
   />
   <TablaProductos
     ref="tablaProductosRef"
+    :-pedido-id="idPedidoEnc"
     :onProductoEliminado="enfocarInputCodigo"
   />
 </template>
@@ -388,8 +389,8 @@ const {
   obtenerPedidoPorId,
   mutateAnularPedidoPendiente,
 } = usePedidosEnc();
-const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc);
-const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
+const idPedidoEnc =  computed(() => pedidoStore.idPedidoEnc||0); // Aseguramos que sea un número
+const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);  
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
 const focus2 = ref<HTMLInputElement | null>(null)
 let espera: ReturnType<typeof setTimeout> | null = null // Para la busqueda automatica
@@ -487,7 +488,7 @@ const continuarPedido = async (pedido) => {
 
   if (!confirmado) return;
 
-  cleanAllStores();
+  // cleanAllStores();
   await nextTick();
 
   await formRef.value?.resetValidation();
@@ -605,7 +606,7 @@ watchEffect(() => {
   }
 });
 
-const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
+const { data: pedidosPendientes, isLoading, refetch:refetchPedidosPendientes } = obtenerPedidosPendientes(
   Number(storeSucursal.idSucursal), // Convertido a numero
   userStore.codigoVendedor
 );
@@ -613,6 +614,7 @@ const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
 const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 
 const abrirModalPedidosPendientes = () => {
+  refetchPedidosPendientes();
   modalPendientes.value = true;
 };
 

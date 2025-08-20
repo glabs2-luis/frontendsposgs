@@ -69,30 +69,33 @@ export const usePedidoDet = () => {
   });
 
   // obtener lista pedidos det
-  const ListaDet1 = (idPedidoEnc: Ref<number | null>) => {
-    return useQuery({
-      // este es el que falla
-      queryKey: computed(() => ["pedido-det", idPedidoEnc.value]),
-      queryFn: () => obtenerListaPedidosDet(idPedidoEnc.value),
-      enabled: computed(() => !!idPedidoEnc.value && idPedidoEnc.value > 0),
-    });
-  };
+  // const ListaDet1 = (idPedidoEnc: Ref<number | null>) => {
+  //   console.log("ListaDet1 - idPedidoEnc:", idPedidoEnc.value);
+    
+  //   return useQuery({
+  //     // este es el que falla
+  //     queryKey: computed(() => ["pedido-det", idPedidoEnc.value]),
+  //     queryFn: () => obtenerListaPedidosDet(idPedidoEnc.value),
+  //     enabled: computed(() => !!idPedidoEnc.value && idPedidoEnc.value > 0),
+  //   });
+  // };
 
-  const ListaDet2 = (idPedidoEnc: Ref<number | null>) => {
-    return useQuery({
-      queryKey: computed(() => ["pedido-det", idPedidoEnc.value]),
-      queryFn: () => obtenerListaPedidosDet(idPedidoEnc.value),
-      enabled: computed(() => !!idPedidoEnc.value && idPedidoEnc.value > 0),
-      refetchOnWindowFocus: false,
-    });
-  };
+  // const ListaDet2 = (idPedidoEnc: Ref<number | null>) => {    
+  //   console.log("ListaDet2 - idPedidoEnc:", idPedidoEnc.value);
+  //   return useQuery({
+  //     queryKey: computed(() => ["pedido-det", idPedidoEnc.value]),
+  //     queryFn: () => obtenerListaPedidosDet(idPedidoEnc.value),
+  //     enabled: computed(() => !!idPedidoEnc.value && idPedidoEnc.value > 0),
+  //     refetchOnWindowFocus: false,
+  //   });
+  // };
 
-  const useListaProductosPedidoDet = (idPedidoEnc: number) => {
+  const useListaProductosPedidoDet = (idPedidoEnc: Ref<number, number>) => {
     return useQuery({
-      // this also fails
-      queryKey: ["pedidoDet", idPedidoEnc],
-      queryFn: () => obtenerListaPedidosDet(idPedidoEnc),
-      enabled: !!idPedidoEnc,
+      queryKey: computed(() => ["pedidoDet", idPedidoEnc.value]),
+      queryFn: () => obtenerListaPedidosDet(idPedidoEnc.value),
+      enabled: computed(() => !!idPedidoEnc && idPedidoEnc.value > 0),
+      // enabled: !!idPedidoEnc,
       refetchOnWindowFocus: false,
     });
   };
@@ -102,8 +105,8 @@ export const usePedidoDet = () => {
     obtenerPedidosDetID,
     mutateActualizarPedidoDetId,
     mutateEliminarPedidoDetID,
-    ListaDet1,
+    // ListaDet1,
     useListaProductosPedidoDet,
-    ListaDet2,
+    // ListaDet2,
   };
 };

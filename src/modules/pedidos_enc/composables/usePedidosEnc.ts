@@ -13,7 +13,7 @@ import {
   showConfirmationDialog,
   showErrorNotification,
 } from "@/common/helper/notification";
-import { Ref } from "vue";
+import { computed, Ref } from "vue";
 
 export const usePedidosEnc = () => {
   const queryClient = useQueryClient();
@@ -30,6 +30,8 @@ export const usePedidosEnc = () => {
       queryFn: () =>
         obtenerPedidosPendientesAction(id_sucursal, codigo_vendedor),
       enabled: !!id_sucursal && !!codigo_vendedor,
+      staleTime: 0,
+      refetchOnWindowFocus: false,
     });
   };
 
@@ -55,12 +57,11 @@ export const usePedidosEnc = () => {
   });
 
   // Obtener pedido por ID
-  const obtenerPedidoPorId = (id: Ref<number | null>) => {
+  const obtenerPedidoPorId = (idPedidoEnc: Ref<number, number> ) => {
     const { data, refetch: refetchObtenerPedidoID } = useQuery({
-      queryKey: ["pedido", id.value],
-      queryFn: () => obtenerPedidoEncPorIdAction(id.value),
-      enabled: !!id.value,
-      refetchInterval: 1000,
+      queryKey: computed(() => ["pedidoEnc", idPedidoEnc.value]),
+      queryFn: () => obtenerPedidoEncPorIdAction(idPedidoEnc.value),
+      enabled: !!idPedidoEnc.value,
       refetchOnWindowFocus: false,
     });
 

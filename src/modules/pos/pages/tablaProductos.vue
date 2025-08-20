@@ -1,10 +1,41 @@
 <template>
   <q-card flat bordered class="productos-table-card">
     <q-separator />
-
+    <!-- FLOATIN ACTION BUTTONS PARA ASIGAR TAMAÑO DE LETRA Y RECARGAR LOS DETALLES DEL PEDIDO -->
+    <q-fab 
+      color="orange" 
+      icon="add" 
+      direction="up" 
+      class="q-mb-md fixed-bottom-right"
+      style="bottom:30px; right: 30px;" 
+      >
+      <q-fab-action 
+        color="orange" 
+        @click="forzarActualizacionTabla" 
+        icon="sync" 
+      >
+        <q-tooltip anchor="center left" self="bottom middle" transition-show="scale" transition-hide="scale">
+          Actualizar tabla de detalles del pedido actual 
+        </q-tooltip>
+      </q-fab-action>
+      <div class="q-pa-sm bg-white q-rounded shadow-2">
+          <q-input
+            v-model.number="tamanioLetra"
+            type="number"
+            label="Cantidad"
+            dense
+            outlined
+            style="width: 100px"
+          >
+            <q-tooltip anchor="center left" self="bottom middle" transition-show="scale" transition-hide="scale">
+              Modificar tamaño de letra
+            </q-tooltip>
+          </q-input>
+        </div>
+    </q-fab>
     <q-card-section class="table-section">
       <q-table
-        :rows="rows"
+        :rows="listaProductosPedido||[]"
         :columns="columnas"
         row-key="ID_PEDIDO_DET"
         dense
@@ -20,8 +51,8 @@
          -->
         <!-- Filas  -->
         <!-- Descripción editable con  (AUX -> PROD) -->
-        <template v-slot:body-cell-DESCRIPCION_PROD="props">
-            <q-td :props="props" >
+        <template v-slot:body-cell-DESCRIPCION_PROD="props" >
+            <q-td :props="props" :style="'font-size:' + tamanioLetra + 'px;'">
               
               {{ descMostrar(props.row) }}
                 <q-tooltip anchor="bottom middle" self="bottom middle" transition-show="scale" transition-hide="scale">
@@ -42,10 +73,10 @@
                   v-slot="scope"
                 >
                     <q-input
-                      type="textarea"
+                      type="text"
                       v-model="scope.value"
                       clearable
-
+                      autogrow
                       dense
                       autofocus
                       counter
@@ -57,24 +88,33 @@
 
             </q-td>
           </template>
-          <!-- ELIMINAR PRODUCTO -->
-          <template v-slot:body-cell-acciones="props">
-            <q-td :props="props">
-              <q-btn
-                color="negative"
-                icon="delete"
-                round
-                dense
-                flat
-                class="delete-btn"
-                @click.stop="eliminarProducto(props.row)"
-              />
-            </q-td>
-          </template>
-
-
-
-        <!-- Loading -->
+        <!-- PRECIO UNITARIO -->
+        <template v-slot:body-cell-PRECIO_UNIDAD_VENTA="props">
+          <q-td :props="props" :style="'font-size:' + tamanioLetra + 'px;'">
+            {{ formatCurrency(Number(props.row.PRECIO_UNIDAD_VENTA), 4) }}
+          </q-td>
+        </template>
+        <!-- SUBTOTAL -->
+        <template v-slot:body-cell-SUBTOTAL_GENERAL="props">
+          <q-td :props="props" :style="'font-size:' + tamanioLetra + 'px;'">
+            {{ formatCurrency(props.row.SUBTOTAL_VENTAS + props.row.MONTO_IVA, 2) }}
+          </q-td>
+        </template>
+        <!-- ELIMINAR PRODUCTO -->
+        <template v-slot:body-cell-acciones="props">
+          <q-td :props="props">
+            <q-btn
+              color="negative"
+              icon="delete"
+              round
+              dense
+              flat
+              class="delete-btn"
+              @click.stop="eliminarProducto(props.row)"
+            />
+          </q-td>
+        </template>
+        <!-- LOADING -->
         <template v-slot:loading>
           <q-inner-loading showing class="custom-loading">
             <q-spinner-dots color="primary" />
@@ -83,7 +123,7 @@
             </div>
           </q-inner-loading>
         </template>
-
+        <!-- NO HAY DATOS -->
         <template v-slot:no-data>
           <div
             class="full-width full-height flex flex-center"
@@ -108,73 +148,116 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, watchEffect, ref } from "vue";
+import { nextTick, computed, watch, watchEffect, ref, toRef, onMounted } from "vue";
 import { useQuasar } from "quasar";
-import { usePedidoDet } from "@/modules/pedidos_det/composables/usePedidosDet";
-import { usePedidoStore } from "@/stores/pedido";
 import type { QTableColumn } from "quasar";
+
+import { usePedidoDet } from "@/modules/pedidos_det/composables/usePedidosDet";
 import { usePedidosEnc } from "../../pedidos_enc/composables/usePedidosEnc";
+import { usePedidoStore } from "@/stores/pedido";
 import { useTotalStore } from "@/stores/total";
-import {
-  showConfirmationDialog,
-  showErrorNotification,
-} from "@/common/helper/notification";
-import { nextTick } from "vue";
 import useFormat from "@/common/composables/useFormat";
 
-const { formatCurrency, formatNumber } = useFormat();
-const $q = useQuasar();
+import { showConfirmationDialog, showErrorNotification, } from "@/common/helper/notification";
 
-// Props
-const props = defineProps<{
+// PROPS
+interface Props {
   onProductoEliminado?: () => void;
-}>()
+  PedidoId?: number;
+}
+const props = defineProps<Props>()
+const pedidoId = toRef(props, 'PedidoId')
+const tamanioLetra = ref(16);                                 // Tamaño de letra para la descripción, precio y subtotal
+
+// COLUMNAS PARA LA TABLA
+const columnas: QTableColumn[] = [
+  { 
+    name:"PRODUCT0", 
+    label: "Código", 
+    field: "PRODUCT0", 
+    align: "center" ,
+    style: 'width: 100px; min-width: 100px; max-width: 100px;',
+  },
+  {
+    name: "DESCRIPCION_PROD",
+    label: "Descripción",
+    field: (row) => (row?.DESCRIPCION_PROD_AUX?.trim() || row?.DESCRIPCION_PROD), 
+    style: 'max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+    align: "left",
+  },
+  {
+    name: "CANTIDAD_PEDIDA",
+    label: "Cantidad",
+    field: "CANTIDAD_PEDIDA",
+    align: "center",
+    style: 'width: 80px; min-width: 80px; max-width: 80px;',
+  },
+  {
+    name: "PRECIO_UNIDAD_VENTA",
+    label: "Precio Unitario",
+    field: "PRECIO_UNIDAD_VENTA",
+    format: (val, row) => formatCurrency(Number(row.PRECIO_UNIDAD_VENTA), 4),
+    align: "center",
+    style: 'width: 120px; min-width: 120px; max-width: 120px;',
+  },
+  {
+    name: "SUBTOTAL_GENERAL",
+    label: "Subtotal",
+    field: "SUBTOTAL_GENERAL",
+    format: (val, row) => formatCurrency(row.SUBTOTAL_VENTAS + row.MONTO_IVA, 2),
+    align: "center",
+    style: 'width: 120px; min-width: 120px; max-width: 120px;',
+  },
+  { 
+    name: "acciones", 
+    label: "Eliminar", 
+    field: "", 
+    align: "center",
+    style: 'width: 50px; min-width: 50px; max-width: 50px;', 
+  },
+];
+
+// GENERALES 
+const $q = useQuasar();
+const isLoading = ref(false);
 const items = ref(0);
+const savingDescId = ref<number | null>(null);                // estado de guardado por fila
+
+// COMPOSABLES FUNCTIONS
 const totalStore = useTotalStore();
 const pedidoStore = usePedidoStore();
-const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc);
-const { ListaDet1, useListaProductosPedidoDet, mutateEliminarPedidoDetID, mutateActualizarPedidoDetId } =
-  usePedidoDet();
-const { data, isLoading: isLoadingQuery, refetch } = ListaDet1(idPedidoEnc);
+const { formatCurrency } = useFormat();
+const { useListaProductosPedidoDet, mutateEliminarPedidoDetID, mutateActualizarPedidoDetId } = usePedidoDet();
+const { obtenerPedidoPorId } = usePedidosEnc();
 
-// Variable local para controlar el loading de eliminación
-const isLoading = ref(false);
-const { obtenerPedidoPorId, obtenerPedido2, refetchPedidoPorId } =
-  usePedidosEnc();
-const { data: pedidoData, refetchObtenerPedidoID } =
-  obtenerPedidoPorId(idPedidoEnc);
-// refetch
-const { data: listaProductosPedido, refetch: refetchListaProductosPedidoDet } =
-  useListaProductosPedidoDet(idPedidoEnc.value);
 
-// procesar filas
-const rows = computed(() => data.value || []);
+// USE COMPOSABLES
+const {  data: listaProductosPedido, refetch:refetchListaProductosPedidoDet, isLoading:isLoadingQuery } = useListaProductosPedidoDet(pedidoId);
+const { data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(pedidoId);
 
-watchEffect(() => {
- // console.log("Esto es rows:", rows.value);
-});
-
-// Almacenar cantidad de items
-watchEffect(() => {
-  const total = rows.value.reduce((acc, row) => {
-    return acc + (row.CANTIDAD_PEDIDA || 0);
-  }, 0);
-  items.value = total;
-  totalStore.setItems(items.value);
-  //console.log('Total store items: ', totalStore.totalItems); 
-});
-
-// calcular total
-const idTotal = computed(() => pedidoStore.idPedidoEnc);
-
-const { data: dataPedido } = obtenerPedidoPorId(idTotal);
+// Computed para el total general del pedido
 
 const totalGeneral = computed(() => {
-  if (!dataPedido.value) return 0;
-  return Number(dataPedido.value.TOTAL_GENERAL_PEDIDO) || 0;
+  if (!pedidoData.value) return 0;
+  return Number(pedidoData.value.TOTAL_GENERAL_PEDIDO) || 0;
 });
 
-// Watch para actualizar el store
+// WATCHS Y WATCH EFFECTS
+
+// Watch para actualizar el tamaño de letra en la tabla
+watch(tamanioLetra, (nuevoTamanio) => {
+  if (nuevoTamanio < 8 || nuevoTamanio > 100) {
+    $q.notify({
+      type: 'negative',
+      message: 'El tamaño de letra debe estar entre 8 y 100',
+    });
+    return;
+  }
+  // Actualizar el tamaño de letra en el store o en la tabla si es necesario
+  localStorage.setItem('tamanioLetra', nuevoTamanio.toString());
+});
+
+// Watch para actualizar el store del total general
 watch(
   totalGeneral,
   (nuevoTotal) => {
@@ -184,57 +267,54 @@ watch(
   { immediate: true }
 );
 
+// actualización cuando cambia el id
+watch(
+  pedidoId,
+  async (nuevo, anterior) => {
+    if (nuevo && nuevo > 0) {
+      await forzarActualizacionTabla()
+    }
+  }
+);
+
+// Watch para actualizar total cuando cambian los datos del pedido
+watch(
+  pedidoData,
+  (nuevoPedido) => {
+    if (nuevoPedido) {
+      const nuevoTotal = Number(nuevoPedido.TOTAL_GENERAL_PEDIDO) || 0;
+      totalStore.setTotal(nuevoTotal);
+      //console.log("Total actualizado desde watch pedidoData:", nuevoTotal);
+    }
+  },
+  { immediate: true }
+);
+
+// Almacenar cantidad de items
+watchEffect(() => {
+  if (!listaProductosPedido.value) return;
+  if (listaProductosPedido.value.length === 0) {
+    items.value = 0;
+    totalStore.setItems(0);
+    return;
+  }  
+  const total = listaProductosPedido.value.reduce((acc, row) => {
+    return acc + (row.CANTIDAD_PEDIDA || 0);
+  }, 0);
+  items.value = total;
+  totalStore.setItems(items.value);
+  //console.log('Total store items: ', totalStore.totalItems); 
+});
+
 // Mostrar la descripcion del producto o descripcion actualizada
 const descMostrar = (row: any) => {
   const aux = (row?.DESCRIPCION_PROD_AUX ?? '').trim();
   return aux.length ? aux : row?.DESCRIPCION_PROD;
 };
 
-// Columnas para la tabla
-const columnas: QTableColumn[] = [
-  { 
-    name:"PRODUCT0", 
-    label: "Código", 
-    field: "PRODUCT0", 
-    align: "center" 
-  },
-  {
-    name: "DESCRIPCION_PROD",
-    label: "Descripción",
-    field: (row) => (row?.DESCRIPCION_PROD_AUX?.trim() || row?.DESCRIPCION_PROD), 
-    style: "max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
-    align: "left",
-  },
-  {
-    name: "CANTIDAD_PEDIDA",
-    label: "Cantidad",
-    field: "CANTIDAD_PEDIDA",
-    align: "center",
-  },
-  {
-    name: "PRECIO_UNIDAD_VENTA",
-    label: "Precio Unitario",
-    field: "PRECIO_UNIDAD_VENTA",
-    format: (val, row) => formatCurrency(Number(row.PRECIO_UNIDAD_VENTA), 4),
-    align: "center",
-  },
-  {
-    name: "SUBTOTAL_GENERAL",
-    label: "Subtotal",
-    field: "SUBTOTAL_GENERAL",
-    format: (val, row) => formatCurrency(row.SUBTOTAL_VENTAS + row.MONTO_IVA, 2),
-    align: "center",
-  },
-  { name: "acciones", label: "Eliminar", field: "", align: "center" },
-];
-
-// variable para usar en tabla
-const detallesPedido = ref([]);
-
 // Función para forzar actualización de la tabla
 const forzarActualizacionTabla = async () => {
   try {
-    await refetch();
     await refetchListaProductosPedidoDet();
     await refetchObtenerPedidoID();
     await nextTick();
@@ -242,10 +322,6 @@ const forzarActualizacionTabla = async () => {
     console.error("Error forzando actualización:", error);
   }
 };
-
-// estado de guardado por fila
-const savingDescId = ref<number | null>(null);
-
 
 const onGuardarDescripcion = (row: any, nuevaDescripcion: string) => {
   const desc = (nuevaDescripcion ?? '').trim();
@@ -273,33 +349,6 @@ const onGuardarDescripcion = (row: any, nuevaDescripcion: string) => {
     }
   );
 };
-
-// actualización cuando cambia el id
-watch(idPedidoEnc, (nuevo) => {
-  if (nuevo && nuevo > 0) {
-    refetch();
-  }
-});
-
-// respuesta del query
-watchEffect(() => {
-  if (data.value) {
-    detallesPedido.value = data.value;
-  }
-});
-
-// Watch para actualizar total cuando cambian los datos del pedido
-watch(
-  pedidoData,
-  (nuevoPedido) => {
-    if (nuevoPedido) {
-      const nuevoTotal = Number(nuevoPedido.TOTAL_GENERAL_PEDIDO) || 0;
-      totalStore.setTotal(nuevoTotal);
-      //console.log("Total actualizado desde watch pedidoData:", nuevoTotal);
-    }
-  },
-  { immediate: true }
-);
 
 // Eliminar Producto
 const eliminarProducto = async (detalle) => {
@@ -360,10 +409,20 @@ defineExpose({
   eliminarProducto,
 });
 
+// LIFE CYCLE HOOKS
+// Cargar el tamaño de letra desde localStorage al montar el componente
 
-function emit(arg0: string) {
-  throw new Error("Function not implemented.");
-}
+onMounted(() => {
+  // Cargar el tamaño de letra desde localStorage si existe
+  const tamanio = localStorage.getItem('tamanioLetra');
+  if (tamanio) {
+    tamanioLetra.value = parseInt(tamanio, 10);
+  } else {
+    tamanioLetra.value = 16; // Valor por defecto
+  }
+});
+
+
 </script>
 
 <style scoped>
@@ -452,7 +511,7 @@ function emit(arg0: string) {
 
 .table-row {
   transition: all 0.2s ease;
-  font-size: 16px;
+  /* font-size: 16px; */
 }
 
 .table-row:hover {

@@ -53,8 +53,9 @@ export const actualizarDescripcionPedidoDetAction = async (id: number, descripci
 // obtener lista de pedido det
 export const obtenerListaPedidosDet = async (idPedidoEnc:number) : Promise<PedidosDet[]> => {
     try {
+      
       const { data } = await posApi.get<PedidosDet[]>(`/pedidos-det/pedidoEncDetalle/${idPedidoEnc}`)
-      //console.log('Devuelvo lista detalles', data)
+      
       return data
     } catch(error){
       const message = getAxiosErrorMessage(error, "hubo un error obteniendo la lista de pedidos det")

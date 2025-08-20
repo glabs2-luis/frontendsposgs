@@ -677,8 +677,6 @@ import {
   onBeforeUnmount,
   nextTick,
 } from "vue";
-import { useProductos } from "@/modules/Productos/composables/useProductos";
-import { usePedidoDet } from "@/modules/pedidos_det/composables/usePedidosDet";
 import {
   showConfirmationDialog,
   showErrorNotification,
@@ -688,28 +686,94 @@ import {
   showSuccessNotificationInside,
   runWithLoading,
 } from "@/common/helper/notification";
+
+import { useProductos } from "@/modules/Productos/composables/useProductos";
+import { usePedidoDet } from "@/modules/pedidos_det/composables/usePedidosDet";
 import { usePedidoStore } from "@/stores/pedido";
 import usePedidosEnc from "../../pedidos_enc/composables/usePedidosEnc";
 import { useCodigo } from "@/modules/codigo_barras/composables/useCodigo";
-import { Notify } from "quasar";
 import { useTotalStore } from "@/stores/total";
 import { useUserStore } from "@/stores/user";
 import { useConfiguracionStore } from "@/stores/serie";
-import { cleanAllStores } from "@/common/helper/cleanStore";
 import { useSync } from "@/modules/sync/composables/useSync";
 import { usePdfFactura } from "@/modules/facturar_pdf/composables/usePdFactura";
-import { useClienteStore } from "@/stores/cliente";
 import { useFacturasEnc } from "@/modules/facturas_enc/composables/useFacturasEnc";
 import { useCertification } from "@/modules/certification/composables/useCertification";
-import { useDatosFel } from "@/modules/fel_empresa_establecimiento/composables/useFelDatos";
 import { useCupones } from "@/modules/cupones/composables/useCupones";
 import useFormat from "@/common/composables/useFormat";
 import { useStoreSucursal } from "@/stores/sucursal";
-import { configuracionPosAction } from "@/modules/configuracion_pos/action/configuracionPosAction";
+
+import { cleanAllStores } from "@/common/helper/cleanStore";
+
+
+
+
+
+/*
+==========================================================
+                      COLUMNAS
+==========================================================
+*/ 
+const columnasCatalogo = [
+  {
+    name: "codigo",
+    label: "Código / Marca",
+    align: "left",
+    field: "PRODUCT0",
+    sortable: true,
+    style: "min-width: 200px",
+  },
+  {
+    name: "descripcion",
+    label: "Descripción",
+    align: "left",
+    field: "DESCRIPCION_PROD",
+    sortable: true,
+    style: "min-width: 300px",
+  },
+  {
+    name: "precio",
+    label: "Precio",
+    align: "center",
+    field: "PRECIO_SUGERIDO",
+    sortable: true,
+    style: "min-width: 150px",
+  },
+  {
+    name: "niveles",
+    label: "Niveles de Precio",
+    align: "left",
+    field: "niveles",
+    sortable: false,
+    style: "min-width: 200px",
+  },
+  {
+    name: "cantidad",
+    label: "Cantidad",
+    align: "center",
+    field: "CANTIDAD_PEDIDA",
+    sortable: false,
+    style: "min-width: 120px",
+  },
+  {
+    name: "accion",
+    label: "Acción",
+    align: "center",
+    field: "accion",
+    sortable: false,
+    style: "min-width: 120px",
+  },
+];
+
+/*
+==========================================================
+                      PROPS
+==========================================================
+*/
 
 const props = defineProps({
   pedidoId: {
-    type: [String, Number, null],
+    type: [Number, null],
     required: false,
     default: null,
   },
@@ -719,89 +783,114 @@ const props = defineProps({
   },
 });
 
+const idPedidoEnc = computed(() => props.pedidoId);
+
+/*
+==========================================================
+                  COMPOSABLES FUNCTIONS
+==========================================================
+*/
+
 const { formatNumber, formatCurrency } = useFormat();
 const storeSucursal = useStoreSucursal();
 const { mutateAplicarCupon } = useCupones();
-const { datosEmpresa, datosEstablecimiento } = useDatosFel();
 const contingencia = ref(false);
-const { mutateCertificar, certificarAsync, mutateFacturaContingencia } =
+const { mutateCertificar, mutateFacturaContingencia } =
   useCertification();
-const { obtenerDetalleFactura, obtenerFacturasEnc, obtenerFacturaId3 } =
+const { obtenerDetalleFactura, obtenerFacturaId3 } =
   useFacturasEnc();
-const { data: factura3 } = obtenerFacturaId3();
-const clienteStore = useClienteStore();
 const { generarFacturaPDF } = usePdfFactura();
 const { mutateCrearSincronizacion } = useSync();
 const {
   mutateCrearPedidoDet,
+  useListaProductosPedidoDet,
   obtenerPedidosDetID,
-  mutateActualizarPedidoDetId,
-  mutateEliminarPedidoDetID,
-  ListaDet1,
-  ListaDet2,
-  refetchListaDet2,
 } = usePedidoDet();
 const configuracionStore = useConfiguracionStore();
 const { mutateCrearFacturaEnc2 } = useFacturasEnc();
-const { obtenerPedidoPorId, obtenerPedidosPendientes } = usePedidosEnc();
+const { obtenerPedidoPorId } = usePedidosEnc();
 const {
   todosProductos,
   refetchTodosProductos,
-  obtenerProductosId,
   precioReal,
 } = useProductos();
-const { obtenerPorCodigo } = useCodigo();
+
+const pedidoStore = usePedidoStore();
+const totalStore = useTotalStore();
+const userStore = useUserStore();
+const queryClient = useQueryClient();
+const {  consultarCodigoM } = useCodigo();
 const $q = useQuasar();
-const detallesPedido = ref([]);
-const codigoProducto = ref("");
+const { mutateAnularPedidoPendiente } = usePedidosEnc();
+
+//USE COMPOSABLES
+const {  data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedidoEnc);
+const {  refetch: refetchObtenerPedidoDetID } = useListaProductosPedidoDet(idPedidoEnc);
+
+const modalFacturacion = ref(false);
+const modalCuponazo = ref(false);
+
+
+
+/*
+==========================================================
+                VARIABLES GENERALES
+==========================================================
+*/
+const allowAutoFocusProduct = ref(true);  // Controla si el input de código puede auto-enfocarse
+const btnConfirmarFactura = ref(null);
+const calcularCambio = ref(0);
 const cantidad = ref(1); // Cantidad en el boton
 const cantidad2 = ref(1); // para modal cantidad
+const cantidadInputs = ref({});           // Referencias a los inputs de cantidad en el catálogo
+const clave = ref("");
+const codigoProducto = ref("");
+const cupon = ref("");
+const detallesPedido = ref([]);
+const filtroProductos = ref("");
+const focusCantidad = ref(null);          // focus modal cantidad
+const focusEfectivo = ref(null);          // focus efectivo
+const focusTarjeta = ref(null);
+const inputCodigo = ref(null);
+const loadingAgregar = ref(false);
+const loadingDetalle = ref(false);
+const loadingPorCodigo = ref(false);
+const loadingProductos = ref(false);
+const modalCantidad = ref(false);
+const modalProductos = ref(false);
+const modalProductos2 = ref(false);
 const montoEfectivo = ref(null);
 const montoTarjeta = ref(null);
 const opcionesPago2 = ["EFECTIVO", "TARJETA", "MIXTO"];
-const tipoPago = ref("EFECTIVO");
-const calcularCambio = ref(0);
 const refCupon = ref();
-const cupon = ref("");
-const clave = ref("");
-const modalCantidad = ref(false);
-const modalProductos = ref(false);
-const filtroProductos = ref("");
-const loadingProductos = ref(false);
-const loadingPorCodigo = ref(false);
-const loadingDetalle = ref(false);
-const loadingAgregar = ref(false);
-const pedidoStore = usePedidoStore();
-const { consultarCodigo, consultarCodigoM } = useCodigo();
-const totalStore = useTotalStore();
-const modalFacturacion = ref(false);
-const userStore = useUserStore();
-const modalCuponazo = ref(false);
-const queryClient = useQueryClient();
-const idPedidoEnc = computed(() => {
-  // Usar el prop pedidoId si está disponible, sino usar el del store
-  return props.pedidoId !== null ? props.pedidoId : pedidoStore.idPedidoEnc;
+const tipoPago = ref("EFECTIVO");
+
+// Paginación del catálogo
+const paginacionCatalogo = ref({
+  sortBy: "PRODUCTO",
+  descending: false,
+  page: 1,
+  rowsPerPage: 100,
 });
-const { data: pedidoData, refetchObtenerPedidoID } =
-  obtenerPedidoPorId(idPedidoEnc);
-const focusCantidad = ref(null); // focus modal cantidad
-const { refetch: relistaDet2 } = ListaDet2(idPedidoEnc);
-const focusEfectivo = ref(null); // focus efectivo
-const focusTarjeta = ref(null);
-const modalProductos2 = ref(false);
-const cantidadInputs = ref({}); // Referencias a los inputs de cantidad en el catálogo
+
+/*
+==========================================================
+                    REFERENCIAS (FORMS)
+==========================================================
+*/
 const buscadorProductoRef = ref(null);
-// Controla si el input de código puede auto-enfocarse
-const allowAutoFocusProduct = ref(true);
-const { mutateAnularPedidoPendiente } = usePedidosEnc();
-const { totalItems } = useTotalStore();
+
+/*
+==========================================================
+                    VARIABLES COMPUTED
+==========================================================
+*/
 
 // Facturación - cálculos y validaciones
-const totalAPagar = computed(() =>
-  Number(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0)
-);
+const totalAPagar = computed(() => Number(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0));
 const montoEfectivoNum = computed(() => Number(montoEfectivo.value) || 0);
 const montoTarjetaNum = computed(() => Number(montoTarjeta.value) || 0);
+
 const sumaPago = computed(() => {
   if (tipoPago.value === "EFECTIVO") return montoEfectivoNum.value;
   if (tipoPago.value === "TARJETA") return montoTarjetaNum.value;
@@ -818,7 +907,6 @@ const isPagoValido = computed(
 );
 
 // Referencia y helper para enfocar botón Confirmar
-const btnConfirmarFactura = ref(null);
 const focusBtnConfirmar = async () => {
   await nextTick();
   if (btnConfirmarFactura.value && btnConfirmarFactura.value.$el) {
@@ -826,23 +914,129 @@ const focusBtnConfirmar = async () => {
   }
 };
 
-// Inicializar cantidadInputs de manera segura
-onMounted(() => {
-  cantidadInputs.value = {};
+/*
+==========================================================
+                WATCHS Y WATCH EFFECTS
+==========================================================
+*/ 
+// focus en modal cupon
+watch(modalCuponazo, (val) => {
+  if (val)
+    nextTick(() => {
+      refCupon.value?.$el.querySelector("input")?.select();
+    });
 });
 
-// Limpiar cantidadInputs al desmontar
-onBeforeUnmount(() => {
-  if (cantidadInputs && cantidadInputs.value) {
-    cantidadInputs.value = {};
+//focus al modal cantidad
+watch(modalCantidad, (val) => {
+  if (val) {
+    nextTick(() => {
+      focusCantidad.value?.$el.querySelector("input")?.select();
+    });
   }
 });
-// para facturacion, no mostrar por ahora
-const {
-  data: productosFactura,
-  refetch: refetchProductosFactura,
-  isLoading: cargandoProductosFactura,
-} = ListaDet1(idPedidoEnc);
+
+//cargar productos en factura
+watch(modalFacturacion, (val) => {
+  if (val) {
+    refetchProductosFactura();
+  }
+});
+
+// cargar nuevos productos
+watch(idPedidoEnc, (nuevo) => {
+  if (nuevo && nuevo > 0) {
+    refetchObtenerPedidoID();
+  }
+});
+
+// actualizar cliente en facturacion
+watch(pedidoData, () => {
+  refetchObtenerPedidoID();
+});
+
+watch(modalProductos, async (val) => {
+  if (val) {
+    try {
+      loadingProductos.value = true;
+      await refetchTodosProductos();
+    } catch (error) {
+      $q.notify({ type: "negative", message: "Error al cargar productos" });
+    } finally {
+      loadingProductos.value = false;
+    }
+  }
+});
+
+// si el efectivo cambia, calcular cambio
+watch(montoEfectivo, (nuevoValor) => {
+  if (nuevoValor !== null && nuevoValor >= 0) {
+    calcularCambioModal();
+  } else {
+    calcularCambio.value = 0;
+  }
+});
+
+// focus desde mixto
+watch(tipoPago, async (nuevo) => {
+  if (nuevo === "EFECTIVO") {
+    await nextTick();
+    focusEfectivo.value?.focus();
+  } else if (nuevo === "MIXTO") {
+    await nextTick();
+    focusEfectivo.value?.focus();
+  } else if (nuevo === "TARJETA") {
+    await nextTick();
+    focusTarjeta.value?.focus();
+  }
+});
+// limpiar campos de pago
+watch(
+  tipoPago, 
+  (nuevo) => {
+    if (nuevo === "EFECTIVO") {
+      montoTarjeta.value = null;
+    } else if (nuevo === "TARJETA") {
+      montoEfectivo.value = null;
+    } else if (nuevo === "MIXTO") {
+      montoEfectivo.value = null;
+      montoTarjeta.value = null;
+    }
+  }
+);
+// mantener focus y limpiar referencias cuando se cierre el modal
+watch(
+  modalProductos2, 
+  async (val) => {
+    try {
+      if (val) {
+        // Cuando se abre el modal, asegurar que los productos estén cargados
+        await refetchTodosProductos();
+        // Reinicializar cantidadInputs cuando se abre el modal
+        if (cantidadInputs && cantidadInputs.value) {
+          cantidadInputs.value = {};
+        }
+
+        // Enfocar el buscador después de que el modal esté completamente renderizado
+        await nextTick();
+        nextTick(() => {
+          if (buscadorProductoRef.value) {
+            buscadorProductoRef.value.focus();
+            buscadorProductoRef.value.select();
+          }
+        });
+      } else {
+        if (allowAutoFocusProduct.value) enfocarCodigo();
+        // Limpiar referencias de inputs cuando se cierre el modal
+        if (cantidadInputs && cantidadInputs.value) {
+          cantidadInputs.value = {};
+        }
+      }
+    } catch (error) {
+      console.error("Error in modalProductos2 watch:", error);
+    }
+  }
+);
 
 // filtro del catalogo
 const productosFiltrados2 = computed(() => {
@@ -889,6 +1083,12 @@ const productosUnicos = computed(() => {
 
   return Array.from(mapa.values());
 });
+
+/*
+==========================================================
+                      FUNCIONES
+==========================================================
+*/
 const cantidadIngresada = (producto) => {
   if (!producto.CANTIDAD_PEDIDA || producto.CANTIDAD_PEDIDA <= 0) {
     showErrorNotification("Cantidad", "Ingrese una cantidad válida");
@@ -981,41 +1181,6 @@ const enfocarEfectivo = async () => {
   focusEfectivo.value?.focus();
 };
 
-// focus en modal cupon
-watch(modalCuponazo, (val) => {
-  if (val)
-    nextTick(() => {
-      refCupon.value?.$el.querySelector("input")?.select();
-    });
-});
-
-//focus al modal cantidad
-watch(modalCantidad, (val) => {
-  if (val) {
-    nextTick(() => {
-      focusCantidad.value?.$el.querySelector("input")?.select();
-    });
-  }
-});
-
-//cargar productos en factura
-watch(modalFacturacion, (val) => {
-  if (val) {
-    refetchProductosFactura();
-  }
-});
-
-// cargar nuevos productos
-watch(idPedidoEnc, (nuevo) => {
-  if (nuevo && nuevo > 0) {
-    refetchObtenerPedidoID();
-  }
-});
-
-// actualizar cliente en facturacion
-watch(pedidoData, () => {
-  refetchObtenerPedidoID();
-});
 
 // Despues del cantidad volver al focus del input
 const volverAFocusInput = () => {
@@ -1026,7 +1191,6 @@ const volverAFocusInput = () => {
 };
 
 // focus
-const inputCodigo = ref(null);
 
 const enfocarCodigo = () => {
   if (!allowAutoFocusProduct.value) return;
@@ -1071,42 +1235,6 @@ const actualizarCantidad = () => {
     return;
   }
 };
-
-// Filtro antiguo - not in use
-const productosFil = computed(() => {
-  if (!filtroProductos.value) return todosProductos.value;
-
-  const palabras = filtroProductos.value
-    .toLowerCase()
-    .split(" ")
-    .filter((p) => p.trim() !== "");
-
-  return todosProductos.value.filter((prod) => {
-    const texto = (
-      (prod.PRODUCT0 || "") +
-      " " +
-      (prod.DESCRIPCION_MARCA || "") +
-      " " +
-      (prod.DESCRIPCION_PROD || "")
-    ).toLowerCase();
-
-    return palabras.every((palabra) => texto.includes(palabra));
-  });
-});
-
-// productos modal
-watch(modalProductos, async (val) => {
-  if (val) {
-    try {
-      loadingProductos.value = true;
-      await refetchTodosProductos();
-    } catch (error) {
-      $q.notify({ type: "negative", message: "Error al cargar productos" });
-    } finally {
-      loadingProductos.value = false;
-    }
-  }
-});
 
 const limpiarPedido = async() => {
     if (!pedidoStore.idPedidoEnc) {
@@ -1184,43 +1312,6 @@ const abrirCatalogo2 = async () => {
 const abrirModalCantidad = () => {
   modalCantidad.value = true;
 };
-
-// Multiplicador
-onMounted(() => {
-  window.addEventListener("keydown", usarMultiplicador);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("keydown", usarMultiplicador);
-});
-
-// limpiar
-onMounted(() => {
-  window.addEventListener("keydown", usarDelete);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("keydown", usarDelete);
-});
-
-// Abrir facturacion con F4
-onMounted(() => {
-  window.addEventListener("keydown", usarF4);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("keydown", usarF4);
-});
-
-// Abrir Catalogo
-onMounted(() => {
-  window.addEventListener("keydown", usarF1);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("keydown", usarF1);
-});
-
 // calcular cambio
 const calcularCambioModal = () => {
   if (opcionesPago2 === "MIXTO") calcularCambio.value = 0;
@@ -1228,51 +1319,7 @@ const calcularCambioModal = () => {
     calcularCambio.value = montoEfectivo.value - totalStore.totalGeneral;
   }
 };
-
-// si el efectivo cambia, calcular cambio
-watch(montoEfectivo, (nuevoValor) => {
-  if (nuevoValor !== null && nuevoValor >= 0) {
-    calcularCambioModal();
-  } else {
-    calcularCambio.value = 0;
-  }
-});
-
-//focus a efectivo
-watch(tipoPago, async (nuevo) => {
-  if (nuevo === "EFECTIVO") {
-    await nextTick();
-    focusEfectivo.value?.focus();
-  }
-});
-
-// focus desde mixto
-watch(tipoPago, async (nuevo) => {
-  if (nuevo === "MIXTO") {
-    await nextTick();
-    focusEfectivo.value?.focus();
-  }
-});
-
-// focus a tarjeta
-watch(tipoPago, async (nuevo) => {
-  if (nuevo === "TARJETA") {
-    await nextTick();
-    focusTarjeta.value?.focus();
-  }
-});
-
-// limpiar campos de pago
-watch(tipoPago, (nuevo) => {
-  if (nuevo === "EFECTIVO") {
-    montoTarjeta.value = null;
-  } else if (nuevo === "TARJETA") {
-    montoEfectivo.value = null;
-  } else if (nuevo === "MIXTO") {
-    montoEfectivo.value = null;
-    montoTarjeta.value = null;
-  }
-});
+// FUNCIONES GENERALES
 
 const formatearFecha = (fecha) => {
   return new Date(fecha).toLocaleString("es-GT", {
@@ -1280,8 +1327,6 @@ const formatearFecha = (fecha) => {
     timeStyle: "short",
   });
 };
-
-const idFacturaEnc = ref("0");
 
 const certificarFactura = async (id) => {
   console.log("Iniciando certificacion de factura...");
@@ -1498,66 +1543,6 @@ const imprimirFactura = async (data) => {
   console.log("Finalizando impresion de factura");
 };
 
-// Columnas para el catálogo de productos
-const columnasCatalogo = [
-  {
-    name: "codigo",
-    label: "Código / Marca",
-    align: "left",
-    field: "PRODUCT0",
-    sortable: true,
-    style: "min-width: 200px",
-  },
-  {
-    name: "descripcion",
-    label: "Descripción",
-    align: "left",
-    field: "DESCRIPCION_PROD",
-    sortable: true,
-    style: "min-width: 300px",
-  },
-  {
-    name: "precio",
-    label: "Precio",
-    align: "center",
-    field: "PRECIO_SUGERIDO",
-    sortable: true,
-    style: "min-width: 150px",
-  },
-  {
-    name: "niveles",
-    label: "Niveles de Precio",
-    align: "left",
-    field: "niveles",
-    sortable: false,
-    style: "min-width: 200px",
-  },
-  {
-    name: "cantidad",
-    label: "Cantidad",
-    align: "center",
-    field: "CANTIDAD_PEDIDA",
-    sortable: false,
-    style: "min-width: 120px",
-  },
-  {
-    name: "accion",
-    label: "Acción",
-    align: "center",
-    field: "accion",
-    sortable: false,
-    style: "min-width: 120px",
-  },
-];
-
-// Paginación del catálogo
-const paginacionCatalogo = ref({
-  sortBy: "PRODUCTO",
-  descending: false,
-  page: 1,
-  rowsPerPage: 100,
-});
-
 // mostrar total
 const totalEncabezado = computed(() => {
   return pedidoData.value?.TOTAL_PEDIDO ?? 0;
@@ -1680,7 +1665,7 @@ const buscarProductoEscaneado = async () => {
       codigoProducto.value = "";
       await refetchObtenerPedidoID(); // Refrescar datos del pedido primero
       totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0);
-      relistaDet2(); // Refrescar lista de detalles
+      // relistaDet2(); // Refrescar lista de detalles
       cantidad2.value = 1; // Resetear cantidad del modal
 
       $q.notify({
@@ -1745,7 +1730,8 @@ const agregarProductoAlPedido2 = async (producto) => {
         codigoProducto.value = "";
         producto.CANTIDAD_PEDIDA = 1;
         await refetchObtenerPedidoID(); // Refrescar datos del pedido primero
-        relistaDet2();
+        await refetchObtenerPedidoDetID();
+        // relistaDet2();
         totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0);
         if (allowAutoFocusProduct.value) enfocarCodigo();
 
@@ -1828,36 +1814,59 @@ const seleccionarProducto2 = async (producto, index) => {
   }
 };
 
-// mantener focus y limpiar referencias cuando se cierre el modal
-watch(modalProductos2, async (val) => {
-  try {
-    if (val) {
-      // Cuando se abre el modal, asegurar que los productos estén cargados
-      await refetchTodosProductos();
-      // Reinicializar cantidadInputs cuando se abre el modal
-      if (cantidadInputs && cantidadInputs.value) {
-        cantidadInputs.value = {};
-      }
+/*
+==========================================================
+              LIFE HOCKS (CICLOS DE VIDA)
+==========================================================
+*/
+// Multiplicador
+onMounted(() => {
+  window.addEventListener("keydown", usarMultiplicador);
+});
 
-      // Enfocar el buscador después de que el modal esté completamente renderizado
-      await nextTick();
-      nextTick(() => {
-        if (buscadorProductoRef.value) {
-          buscadorProductoRef.value.focus();
-          buscadorProductoRef.value.select();
-        }
-      });
-    } else {
-      if (allowAutoFocusProduct.value) enfocarCodigo();
-      // Limpiar referencias de inputs cuando se cierre el modal
-      if (cantidadInputs && cantidadInputs.value) {
-        cantidadInputs.value = {};
-      }
-    }
-  } catch (error) {
-    console.error("Error in modalProductos2 watch:", error);
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", usarMultiplicador);
+});
+
+// limpiar
+onMounted(() => {
+  window.addEventListener("keydown", usarDelete);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", usarDelete);
+});
+
+// Abrir facturacion con F4
+onMounted(() => {
+  window.addEventListener("keydown", usarF4);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", usarF4);
+});
+
+// Abrir Catalogo
+onMounted(() => {
+  window.addEventListener("keydown", usarF1);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", usarF1);
+});
+
+// Inicializar cantidadInputs de manera segura
+onMounted(() => {
+  cantidadInputs.value = {};
+});
+
+// Limpiar cantidadInputs al desmontar
+onBeforeUnmount(() => {
+  if (cantidadInputs && cantidadInputs.value) {
+    cantidadInputs.value = {};
   }
 });
+
 
 defineExpose({
   enfocarCodigo,
