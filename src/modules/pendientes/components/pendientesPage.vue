@@ -1,100 +1,109 @@
 <template>
-  <q-page class="q-pa-md">
-    <div class="row q-col-gutter-md">
-      <!-- Tabla de facturas pendientes -->
-      <div class="col">
-        <q-card class="q-pa-md">
-          <q-card-section class="q-pa-xs q-ma-none">
-            <div class="row items-center justify-between q-mb-sm">
-              <div class="text-h6">Facturas Pendientes</div>
+  <q-page class="q-pa-md full-page">
+    <q-splitter
+      v-model="splitter"
+      unit="%"
+      vertical
+      :limits="[20, 85]"
+      class="fit"
+    >
 
-              <div class="row q-gutter-sm">
-                <q-btn
-                  icon="refresh"
-                  label=""
-                  color="cyan"
-                  @click="Refrescar"
-                />
+      <!-- Pane superior: Facturas Pendientes -->
+      <template #before>
+        <div class="column fit">
+          <div class="col">
+            <q-card class="q-pa-md">
+              <q-card-section class="q-pa-xs q-ma-none">
+                <div class="row items-center justify-between q-mb-sm">
+                  <div class="text-h6">Facturas Pendientes</div>
 
-                <q-btn
-                  label="Certificar"
-                  color="primary"
-                  @click="certificarAgain"
-                />
-              </div>
-            </div>
+                  <div class="row q-gutter-sm">
+                    <q-btn
+                      icon="refresh"
+                      label=""
+                      color="cyan"
+                      @click="Refrescar"
+                    />
 
-            <q-table
-              :rows="facturasPendientes"
-              :columns="columnasPendientes"
-              :row-key="(row) => `${row.NUMERO_FACTURA}-${row.SERIE}`"
-              class="tabla-estilo"
-              flat
-              bordered
-              dense
-              :pagination="{ rowsPerPage: 25 }"
-              :rows-per-page-options="[10, 20, 50, 100]"
-              style="height: 600px"
-              virtual-scroll
-              selection="single"
-              v-model:selected="facturaSeleccionadaArray"
-            >
-              <template v-slot:no-data>
-                <div class="full-width text-center" style="padding: 200px 20px">
-                  <q-icon name="inventory_2" size="64px" color="grey-8" />
-                  <div class="text-subtitle1 q-mt-sm text-grey-7">
-                    No hay Facturas Pendientes
-                  </div>
-                  <div class="text-caption text-grey-5">
-                    Todas las facturas ya fueron certificadas
+                    <q-btn
+                      label="Certificar"
+                      color="primary"
+                      @click="certificarAgain"
+                    />
                   </div>
                 </div>
-              </template>
-            </q-table>
-          </q-card-section>
-        </q-card>
-      </div>
 
-    </div>
-    
-    <div class="row q-col-gutter-md">
-      
-      <!-- Tabla de errores -->
-      <div class="col">
-        <q-card class="q-pa-md q-pt-xs">
-          <q-card-section class="q-pa-xs text-h6">
-            Errores
+                <q-table
+                  :rows="facturasPendientes"
+                  :columns="columnasPendientes"
+                  :row-key="(row) => `${row.NUMERO_FACTURA}-${row.SERIE}`"
+                  class="tabla-estilo fill-table"
+                  flat
+                  bordered
+                  dense
+                  :pagination="{ rowsPerPage: 25 }"
+                  :rows-per-page-options="[10, 20, 50, 100]"
+                  virtual-scroll
+                  selection="single"
+                  v-model:selected="facturaSeleccionadaArray"
+                >
+                  <template v-slot:no-data>
+                    <div class="full-width text-center" style="padding: 200px 20px">
+                      <q-icon name="inventory_2" size="64px" color="grey-8" />
+                      <div class="text-subtitle1 q-mt-sm text-grey-7">
+                        No hay Facturas Pendientes
+                      </div>
+                      <div class="text-caption text-grey-5">
+                        Todas las facturas ya fueron certificadas
+                      </div>
+                    </div>
+                  </template>
+                </q-table>
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+      </template>
 
-            <q-table
-              :rows="facturasConErrores"
-              :columns="columnasErrores"
-              :row-key="(row) => `${row.NUMERO_FACTURA}-${row.SERIE}`"
-              flat
-              bordered
-              dense
-              :pagination="{ rowsPerPage: 20 }"
-              :rows-per-page-options="[10, 20, 50, 100]"
-              style="height: 600px"
-              virtual-scroll
-            >
-              <template v-slot:no-data>
-                <div class="full-width text-center" style="padding: 200px 20px">
-                  <q-icon name="inventory_2" size="64px" color="grey-8" />
-                  <div class="text-subtitle1 q-mt-sm text-grey-7">
-                    Seleccione una Factura
-                  </div>
-                  <div class="text-caption text-grey-5">
-                    Para ver los errores
-                  </div>
-                </div>
-              </template>
-            </q-table>
-          </q-card-section>
-        </q-card>
-      </div>
+      <!-- Pane inferior: Errores -->
+      <template #after>
+        <div class="column fit">
+          <div class="col">
+            <q-card class="q-pa-md q-pt-xs">
+              <q-card-section class="q-pa-xs text-h6">
+                Errores
 
-    </div>
+                <q-table
+                  :rows="facturasConErrores"
+                  :columns="columnasErrores"
+                  :row-key="(row) => `${row.NUMERO_FACTURA}-${row.SERIE}`"
+                  class="fill-table"
+                  flat
+                  bordered
+                  dense
+                  :pagination="{ rowsPerPage: 20 }"
+                  :rows-per-page-options="[10, 20, 50, 100]"
+                  virtual-scroll
+                >
+                  <template v-slot:no-data>
+                    <div class="full-width text-center" style="padding: 200px 20px">
+                      <q-icon name="inventory_2" size="64px" color="grey-8" />
+                      <div class="text-subtitle1 q-mt-sm text-grey-7">
+                        Seleccione una Factura
+                      </div>
+                      <div class="text-caption text-grey-5">
+                        Para ver los errores
+                      </div>
+                    </div>
+                  </template>
+                </q-table>
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+      </template>
 
+    </q-splitter>
   </q-page>
 </template>
 
@@ -127,6 +136,7 @@ const { generarFacturaPDF } = usePdfFactura()
 const { obtenerDatosFel } = useFacturasEnc()
 const { obtenerFacturasEnc, obtenerDetalleFactura } = useFacturasEnc()
 const { data: facturasData, isLoading } = obtenerFacturasEnc()
+const splitter = ref(70) // 70% arriba (Pendientes) / 30% abajo (Errores)
 
 // Observa la factura seleccionada
 watch(facturaSeleccionadaArray, (newSelection) => {
