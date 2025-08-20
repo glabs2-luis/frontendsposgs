@@ -1424,6 +1424,8 @@ const limpiar = async () => {
     return;
   }
 
+  const tipoPedido = pedidoStore.estadoPedido === 'P' ? 'Pedido' : 'Cotización'
+
   const confirmado = await showConfirmationDialog(
     `Anular ${tipoPedido.value}`,
     `¿Estás seguro de que deseas anular ${tipoPedido.value === 'pedido' ? 'el ' + tipoPedido.value : 'la ' + tipoPedido.value}?`

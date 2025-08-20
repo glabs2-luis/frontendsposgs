@@ -513,7 +513,6 @@ const {
 } = usePedidosEnc();
 const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc || 0); // Aseguramos que sea un número
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
-const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
 const focus2 = ref<HTMLInputElement | null>(null);
 let espera: ReturnType<typeof setTimeout> | null = null; // Para la busqueda automatica
@@ -555,6 +554,10 @@ watch(abrirModalCliente, async (isOpen, wasOpen) => {
     crearPedido();
   }
 });
+
+watch(mostrarNumPedido, async () => [
+  pedidoStore.estadoPedido = 'P'
+])
 
 //crear pedido
 const crearPedidod2 = () => {
@@ -610,8 +613,8 @@ const anularPedido = async (pedido: PedidosEnc) => {
   const tipoPedido = pedido.ESTADO_PEDIDO === 'P' ? 'pedido' : 'cotización'
 
   const confirmado = await showConfirmationInsideModal(
-    `Anular ${tipoPedido}`,
-    `¿Está seguro que desea anular ${tipoPedido === "pedido" ? "el" : "la"} ${tipoPedido}?`
+    `Anular ${estadoPedido.value}`,
+    `¿Está seguro que desea anular ${estadoPedido.value === 'Pedido' ? 'el' : 'la'} ${estadoPedido.value} #${pedido.NUMERO_DE_PEDIDO}?`
   );
 
   if (!confirmado) return;
