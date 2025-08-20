@@ -323,11 +323,12 @@
 
   <ProductosTab
     ref="productosTabRef"
-    :pedidoId="pedidoStore.idPedidoEnc"
+    :pedidoId="idPedidoEnc"
     :onNuevoPedido="nuevoPedido"
   />
   <TablaProductos
     ref="tablaProductosRef"
+    :-pedido-id="idPedidoEnc"
     :onProductoEliminado="enfocarInputCodigo"
   />
   <q-footer class="z-max">
@@ -420,8 +421,8 @@ const {
   obtenerPedidoPorId,
   mutateAnularPedidoPendiente,
 } = usePedidosEnc();
-const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc);
-const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
+const idPedidoEnc =  computed(() => pedidoStore.idPedidoEnc||0); // Aseguramos que sea un número
+const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);  
 const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
 const estadoPedido = computed(() => pedidoStore.estadoPedido === 'P' ? 'Pedido' : 'Cotización');
@@ -529,7 +530,7 @@ const continuarPedido = async (pedido) => {
 
   if (!confirmado) return;
 
-  cleanAllStores();
+  // cleanAllStores();
   await nextTick();
 
   await formRef.value?.resetValidation();
@@ -648,12 +649,13 @@ watchEffect(() => {
   }
 });
 
-const { data: pedidosPendientes, isLoading } = obtenerPedidosPendientes(
+const { data: pedidosPendientes, isLoading, refetch:refetchPedidosPendientes } = obtenerPedidosPendientes(
   Number(storeSucursal.idSucursal), // Convertido a numero
   userStore.codigoVendedor
 );
 
 const abrirModalPedidosPendientes = () => {
+  refetchPedidosPendientes();
   modalPendientes.value = true;
 };
 
