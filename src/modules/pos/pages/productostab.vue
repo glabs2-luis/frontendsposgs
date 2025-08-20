@@ -1565,13 +1565,15 @@ const confirmarFactura = async () => {
       // Asignar este valor para llenar la factura
       idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
       // Ahora sí espera a que termine la certificación
-
+      
       if (contingencia.value === true) {
         await imprimirFactura(respuesta);
         return;
-      } else {
-        await certificarFactura(respuesta.ID_FACTURA_ENC);
       }
+
+      await certificarFactura(respuesta.ID_FACTURA_ENC);
+
+      idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
     },
     onError: (error) => {
       console.error("Error creando factura:", error);
@@ -1586,11 +1588,12 @@ const confirmarFactura = async () => {
 };
 
 const imprimirFactura = async (data) => {
+
   console.log("imprimiendo factura...");
   const factura2 = await obtenerFacturaId3(idFacturaEnc.value);
 
-  // console.log("este es data:", data);
-  console.log("imprimir factura2:", factura2);
+  //console.log("este es data:", data);
+  //console.log('imprimir factura2:', factura2)
 
   // console.log('yo soy contingencia xd:', contingencia.value)
   // console.log("data certificada con exito: ", data)
