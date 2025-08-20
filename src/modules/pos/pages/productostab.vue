@@ -1260,13 +1260,15 @@ const limpiarPedido = async() => {
 // anular pedido
 const limpiar = async () => {
   if (!pedidoStore.idPedidoEnc) {
-    showErrorNotification("Error", "No existe un pedido para anular");
+    showErrorNotification("Error", "No existe un pedido o cotización para anular");
     return;
   }
 
+  const tipoPedido = pedidoStore.estadoPedido === 'P' ? 'Pedido' : 'Cotización'
+
   const confirmado = await showConfirmationDialog(
-    "Anular Pedido",
-    "¿Estás seguro de que deseas anular el pedido?"
+    `Anular ${tipoPedido}`,
+    `¿Estás seguro de que deseas anular ${tipoPedido}?`
   );
 
   if (confirmado) {
@@ -1279,7 +1281,7 @@ const limpiar = async () => {
         onSuccess: () => {
           $q.notify({
             type: "positive",
-            message: "Pedido anulado con éxito",
+            message: `${tipoPedido} anulad${tipoPedido === 'Pedido' ? 'o' : 'a'} con éxito`,
             position: "top-right",
             timeout: 3000,
             icon: "check",
@@ -1287,7 +1289,10 @@ const limpiar = async () => {
         },
       }
     );
+
+    console.log("Estado del pedido before: ", pedidoStore.estadoPedido)
     cleanAllStores();
+    console.log("Estado del pedido after: ", pedidoStore.estadoPedido)
     focus.value.setFocus();
   }
 };
