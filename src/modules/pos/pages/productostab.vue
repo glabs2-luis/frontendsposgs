@@ -1655,7 +1655,7 @@ const imprimirFactura = async (data) => {
     subtotal: item.SUBTOTAL_GENERAL.toFixed(4),
   }));
 
-  console.log("detalle: ", detalle);
+  console.log('detalle: ', detalle)
 
   const totalItems = itemsFactura.reduce(
     (total, item) => total + Number(item.cantidad),
