@@ -841,6 +841,22 @@ const idPedidoEnc = computed(() => props.pedidoId);
 ==========================================================
 */
 
+const idPedidoEnc = computed(() => props.pedidoId);
+
+/*
+==========================================================
+                  COMPOSABLES FUNCTIONS
+==========================================================
+*/
+
+const idPedidoEnc = computed(() => props.pedidoId);
+
+/*
+==========================================================
+                  COMPOSABLES FUNCTIONS
+==========================================================
+*/
+
 const { mutateAgregarContingencia } = useFacturasEnc();
 const { formatNumber, formatCurrency } = useFormat();
 const storeSucursal = useStoreSucursal();
@@ -936,9 +952,7 @@ const totalAnterior = ref(0);
 */
 
 // Facturación - cálculos y validaciones
-const totalAPagar = computed(() =>
-  Number(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0)
-);
+const totalAPagar = computed(() => Number(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0));
 const montoEfectivoNum = computed(() => Number(montoEfectivo.value) || 0);
 const montoTarjetaNum = computed(() => Number(montoTarjeta.value) || 0);
 
@@ -969,7 +983,7 @@ const focusBtnConfirmar = async () => {
 ==========================================================
                 WATCHS Y WATCH EFFECTS
 ==========================================================
-*/
+*/ 
 // focus en modal cupon
 watch(modalCuponazo, (val) => {
   if (val)
@@ -1006,6 +1020,19 @@ watch(pedidoData, () => {
   refetchObtenerPedidoID();
 });
 
+watch(modalProductos, async (val) => {
+  if (val) {
+    try {
+      loadingProductos.value = true;
+      await refetchTodosProductos();
+    } catch (error) {
+      $q.notify({ type: "negative", message: "Error al cargar productos" });
+    } finally {
+      loadingProductos.value = false;
+    }
+  }
+});
+
 // si el efectivo cambia, calcular cambio
 watch(montoEfectivo, (nuevoValor) => {
   if (nuevoValor !== null && nuevoValor >= 0) {
@@ -1029,46 +1056,52 @@ watch(tipoPago, async (nuevo) => {
   }
 });
 // limpiar campos de pago
-watch(tipoPago, (nuevo) => {
-  if (nuevo === "EFECTIVO") {
-    montoTarjeta.value = null;
-  } else if (nuevo === "TARJETA") {
-    montoEfectivo.value = null;
-  } else if (nuevo === "MIXTO") {
-    montoEfectivo.value = null;
-    montoTarjeta.value = null;
-  }
-});
-// mantener focus y limpiar referencias cuando se cierre el modal
-watch(modalProductos2, async (val) => {
-  try {
-    if (val) {
-      // Cuando se abre el modal, asegurar que los productos estén cargados
-      await refetchTodosProductos();
-      // Reinicializar cantidadInputs cuando se abre el modal
-      if (cantidadInputs && cantidadInputs.value) {
-        cantidadInputs.value = {};
-      }
-
-      // Enfocar el buscador después de que el modal esté completamente renderizado
-      await nextTick();
-      nextTick(() => {
-        if (buscadorProductoRef.value) {
-          buscadorProductoRef.value.focus();
-          buscadorProductoRef.value.select();
-        }
-      });
-    } else {
-      if (allowAutoFocusProduct.value) enfocarCodigo();
-      // Limpiar referencias de inputs cuando se cierre el modal
-      if (cantidadInputs && cantidadInputs.value) {
-        cantidadInputs.value = {};
-      }
+watch(
+  tipoPago, 
+  (nuevo) => {
+    if (nuevo === "EFECTIVO") {
+      montoTarjeta.value = null;
+    } else if (nuevo === "TARJETA") {
+      montoEfectivo.value = null;
+    } else if (nuevo === "MIXTO") {
+      montoEfectivo.value = null;
+      montoTarjeta.value = null;
     }
-  } catch (error) {
-    console.error("Error in modalProductos2 watch:", error);
   }
-});
+);
+// mantener focus y limpiar referencias cuando se cierre el modal
+watch(
+  modalProductos2, 
+  async (val) => {
+    try {
+      if (val) {
+        // Cuando se abre el modal, asegurar que los productos estén cargados
+        await refetchTodosProductos();
+        // Reinicializar cantidadInputs cuando se abre el modal
+        if (cantidadInputs && cantidadInputs.value) {
+          cantidadInputs.value = {};
+        }
+
+        // Enfocar el buscador después de que el modal esté completamente renderizado
+        await nextTick();
+        nextTick(() => {
+          if (buscadorProductoRef.value) {
+            buscadorProductoRef.value.focus();
+            buscadorProductoRef.value.select();
+          }
+        });
+      } else {
+        if (allowAutoFocusProduct.value) enfocarCodigo();
+        // Limpiar referencias de inputs cuando se cierre el modal
+        if (cantidadInputs && cantidadInputs.value) {
+          cantidadInputs.value = {};
+        }
+      }
+    } catch (error) {
+      console.error("Error in modalProductos2 watch:", error);
+    }
+  }
+);
 
 // filtro del catalogo
 const productosFiltrados2 = computed(() => {
@@ -1261,8 +1294,6 @@ watch(modalFacturacion, (val) => {
 watch(idPedidoEnc, (nuevo) => {
   if (nuevo && nuevo > 0) {
     refetchObtenerPedidoID();
-    // Resetear totalAnterior cuando se crea un nuevo pedido
-    totalAnterior.value = 0;
   }
 });
 
@@ -1997,6 +2028,7 @@ onBeforeUnmount(() => {
     cantidadInputs.value = {};
   }
 });
+
 
 defineExpose({
   enfocarCodigo,
