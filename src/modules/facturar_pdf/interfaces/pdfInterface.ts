@@ -5,7 +5,7 @@ export interface DataFactura {
   items: ItemFactura[];
   resumen: ResumenFactura;
   nombreVendedor: string;
-  qrCodeData: string;
+  qrCodeData?: string;
   observacion?: string;
 }
 
@@ -21,7 +21,8 @@ export interface EncabezadoFactura {
   serie?: string;
   numero: string;
   uuid?: string;
-  numeroInterno: string;
+  serieInterna: string;
+  numeroInterno?: number;
   fechaEmision?: string;
   tipoDocumento: string;
 }

@@ -30,7 +30,9 @@
             class="toggle-brillante"
             @click="confirmarContingencia"
           />
-          <q-btn label="" icon="restart_alt" class="" @click="limpiar" />
+          <q-btn icon="restart_alt" color="amber-9" class="color: black" @click="limpiarPedido" />
+          <q-btn label="Anular" color="red-5" text-color="black" style="color: black; "  @click="limpiar" />
+
           <q-btn
             label="Terminar Venta (F4)"
             icon="point_of_sale"
@@ -94,6 +96,7 @@
             <div
               class="text-subtitle2 text-black"
               style="
+                background-color: #f2f28a;
                 font-size: 180%;
                 border-radius: 4px;
                 color: #000;
@@ -411,10 +414,10 @@
           <div class="row q-col-gutter-md">
             <!-- Total -->
             <div class="col-12">
-              <q-card flat bordered class="total-card">
-                <q-card-section class="text-center">
+              <q-card flat class="total-card">
+                <q-card-section class="text-center q-pa-none">
                   <div class="text-caption text-grey-6">Total a pagar</div>
-                  <div class="text-h4 text-weight-bold text-green-7">
+                  <div class="text-h4 text-weight-bold">
                     {{ formatCurrency(totalAPagar, 2) }}
                   </div>
                 </q-card-section>
@@ -490,34 +493,74 @@
         <!-- Resumen de pago y estado -->
         <q-card-section class="q-pt-none">
           <q-card flat bordered class="resumen-pago-card">
-            <q-card-section>
-              <div class="row items-center justify-between">
-                <div class="text-body2 text-grey-7">Pagado</div>
-                <div class="text-subtitle1 text-weight-bold">
-                  {{ formatCurrency(sumaPago, 2) }}
+            <!-- Sección de descuento aplicado -->
+            <q-card-section v-if="totalAnterior > 0" class="descuento-section">
+              <div class="row items-center justify-between q-mb-sm">
+                <div class="text-subtitle2 text-grey-8">
+                  <q-icon name="local_offer" size="sm" class="q-mr-xs" />
+                  Descuento Aplicado
+                </div>
+                <q-chip
+                  color="green-6"
+                  text-color="white"
+                  size="sm"
+                  icon="check_circle"
+                >
+                  Cupón Válido
+                </q-chip>
+              </div>
+
+              <div class="row items-center justify-between q-mb-xs">
+                <div class="text-body2 text-grey-7">Total original</div>
+                <div class="text-subtitle1 text-weight-bold text-red-7">
+                  {{ formatCurrency(totalAnterior, 2) }}
                 </div>
               </div>
-              <div class="row items-center justify-between q-mt-xs">
+
+              <div class="row items-center justify-between q-mb-xs">
+                <div class="text-body2 text-grey-7">Descuento</div>
+                <div class="text-subtitle1 text-weight-bold text-green-7">
+                  -{{ formatCurrency(totalAnterior - totalAPagar, 2) }}
+                </div>
+              </div>
+
+              <q-separator class="q-my-sm" />
+
+              <div class="row items-center justify-between">
+                <div class="text-body1 text-weight-bold text-grey-8">
+                  Total final
+                </div>
+                <div class="text-h6 text-weight-bold text-green-7">
+                  {{ formatCurrency(totalAPagar, 2) }}
+                </div>
+              </div>
+            </q-card-section>
+
+            <q-card-section>
+              <div
+                v-if="faltantePago > 0"
+                class="row items-center justify-between q-mt-xs q-pb-none"
+              >
                 <div class="text-body2 text-grey-7">Faltante</div>
                 <div
-                  class="text-subtitle1 text-weight-bold"
+                  class="text-h5 text-weight-bold"
                   :class="{ 'text-negative': faltantePago > 0 }"
                 >
                   {{ formatCurrency(faltantePago, 2) }}
                 </div>
               </div>
-              <div class="row items-center justify-between q-mt-xs">
+              <div
+                v-if="cambioPago > 0"
+                class="row items-center justify-between q-mt-xs"
+              >
                 <div class="text-body2 text-grey-7">Cambio</div>
-                <div
-                  v-if="cambioPago > 0"
-                  class="text-subtitle1 text-weight-bold text-positive bg-green-1"
-                >
+                <div class="text-weight-bold text-positive text-h5">
                   {{ formatCurrency(cambioPago, 2) }}
                 </div>
               </div>
             </q-card-section>
             <q-separator />
-            <q-card-section class="q-pt-sm">
+            <q-card-section class="q-pt-sm q-pb-none">
               <q-banner
                 v-if="!isPagoValido"
                 dense
@@ -788,6 +831,8 @@ const focusTarjeta = ref(null);
 const modalProductos2 = ref(false);
 const cantidadInputs = ref({}); // Referencias a los inputs de cantidad en el catálogo
 const buscadorProductoRef = ref(null);
+const totalAnterior = ref(0);
+
 // Controla si el input de código puede auto-enfocarse
 const allowAutoFocusProduct = ref(true);
 const { mutateAnularPedidoPendiente } = usePedidosEnc();
@@ -935,31 +980,41 @@ const aplicarCuponazo = () => {
     usuario: clave.value,
   };
 
-  //console.log('datos del cupon: ', datosCupon)
+  // Guardar el total ANTES de aplicar el cupón para calcular el descuento
+  const totalAntesDelCupon = pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0;
 
   mutateAplicarCupon(datosCupon, {
-    onSuccess: (res) => {
-      showSuccessNotificationInside("Aplicado", "Cupon aplicado con exito");
+    onSuccess: async (res) => {
+      // Establecer el total anterior ANTES de refrescar los datos
+      totalAnterior.value = totalAntesDelCupon;
+
+      // Refrescar datos del pedido para obtener el nuevo total
+      await refetchObtenerPedidoID();
+
+      // Verificar que realmente se aplicó un descuento
+      const nuevoTotal = pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0;
+      const descuentoAplicado = totalAntesDelCupon - nuevoTotal;
+
+      // Actualizar el store con el nuevo total
+      totalStore.setTotal(nuevoTotal);
+
+      $q.notify({
+        type: "positive",
+        message: `Cupón aplicado exitosamente. Descuento: ${formatCurrency(
+          descuentoAplicado,
+          2
+        )}`,
+        position: "top-right",
+        timeout: 4000,
+        icon: "check",
+      });
+
       modalCuponazo.value = false;
       clave.value = "";
       cupon.value = "";
-      nextTick();
+      enfocarEfectivo();
     },
     onError: (error) => {
-      // $q.notify({
-      //   type: "negative",
-
-      //   message: error.message,
-      //   position: "top-right",
-      //   timeout: 3000,
-      //   icon: "error",
-      //   actions: [
-      //     {
-      //       label: "OK",
-      //       color: "white",
-      //     },
-      //   ],
-      // });
       showErrorNotificationInside("Error", error.message);
       nextTick(() => {
         refCupon.value?.focus();
@@ -1006,6 +1061,8 @@ watch(modalFacturacion, (val) => {
 watch(idPedidoEnc, (nuevo) => {
   if (nuevo && nuevo > 0) {
     refetchObtenerPedidoID();
+    // Resetear totalAnterior cuando se crea un nuevo pedido
+    totalAnterior.value = 0;
   }
 });
 
@@ -1104,6 +1161,22 @@ watch(modalProductos, async (val) => {
     }
   }
 });
+
+const limpiarPedido = async () => {
+  if (!pedidoStore.idPedidoEnc) {
+    showErrorNotification("Error", "No hay un pedido seleccionado");
+    return;
+  }
+
+  const confirmado = await showConfirmationDialog(
+    "Limpiar Pedido",
+    "¿Estás seguro de que deseas limpiar el pedido?"
+  );
+
+  if (confirmado) {
+    cleanAllStores();
+  }
+};
 
 // anular pedido
 const limpiar = async () => {
@@ -1279,6 +1352,7 @@ const certificarFactura = async (id) => {
     spinnerColor: "green",
     spinnerSize: 50,
   });
+  console.log('yo soy id"', id);
 
   // Usar Promise para manejar la mutación de certificación
   mutateCertificar(
@@ -1295,7 +1369,8 @@ const certificarFactura = async (id) => {
         $q.loading.hide();
 
         // Si se certifica la factura, se debe de sincronizar
-        mutateCrearSincronizacion(id);
+        console.log('yo soy id"', id);
+        await mutateCrearSincronizacion(id);
 
         await imprimirFactura(data);
 
@@ -1318,7 +1393,7 @@ const certificarFactura = async (id) => {
 
 // modal factura
 const terminarVenta = async () => {
-  await nextTick(); // epserar los productos para verlos en factura
+  await nextTick(); // Cargar los productos
 
   // si no existe pedido
   if (!pedidoStore.idPedidoEnc) {
@@ -1364,22 +1439,25 @@ const confirmarFactura = async () => {
     onSuccess: async (respuesta) => {
       console.log("Pedido facturado correctamente");
       modalFacturacion.value = false;
+
       // Guardar último cambio para mostrarlo en clienteform luego de cerrar el modal
       totalStore.setUltimoCambio(cambioCapturado);
 
       // Ocultar loading antes de certificar
       $q.loading.hide();
 
+      // Asignar este valor para llenar la factura
+      idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
       // Ahora sí espera a que termine la certificación
-
+      
       if (contingencia.value === true) {
         await imprimirFactura(respuesta);
         return;
+      } else {
+      
+       await certificarFactura(respuesta.ID_FACTURA_ENC);
       }
 
-      await certificarFactura(respuesta.ID_FACTURA_ENC);
-
-      idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
     },
     onError: (error) => {
       console.error("Error creando factura:", error);
@@ -1394,14 +1472,15 @@ const confirmarFactura = async () => {
 };
 
 const imprimirFactura = async (data) => {
+
   console.log("imprimiendo factura...");
   const factura2 = await obtenerFacturaId3(idFacturaEnc.value);
 
-  //console.log("este es data:", data);
-  //console.log('imprimir factura2:', factura2)
+  // console.log("este es data:", data);
+  console.log('imprimir factura2:', factura2)
 
-  //console.log('yo soy contingencia xd:', contingencia.value)
-  //console.log("data certificada con exito: ", data)
+  // console.log('yo soy contingencia xd:', contingencia.value)
+  // console.log("data certificada con exito: ", data)
 
   const detalle = await obtenerDetalleFactura(idFacturaEnc.value);
   if (!detalle || detalle.length === 0) return;
@@ -1412,6 +1491,8 @@ const imprimirFactura = async (data) => {
     precio: item.PRECIO_UNITARIO_VTA.toFixed(4),
     subtotal: item.SUBTOTAL_GENERAL.toFixed(4),
   }));
+
+  console.log('detalle: ', detalle)
 
   const totalItems = itemsFactura.reduce(
     (total, item) => total + Number(item.cantidad),
@@ -1439,13 +1520,14 @@ const imprimirFactura = async (data) => {
         : data.NumeroFacturaFel,
       uuid: data.Uuid,
       fechaEmision: formatearFecha(data.FechaAccion),
-      numeroInterno: `${factura2.SERIE} | ${factura2.NUMERO_FACTURA}`,
+      serieInterna: factura2.SERIE,
+      numeroInterno: factura2.NUMERO_FACTURA,
       tipoDocumento: contingencia.value
         ? "FACTURA EN CONTINGENCIA"
         : "FACTURA ELECTRONICA",
     },
     cliente: {
-      nombre: factura2.NOMBRE_CLI_A_FACTURAR,
+      nombre: factura2.NOMBRE_CLI_A_FACTUAR,
       nit: factura2.NIT_CLIEN_A_FACTURAR,
       direccion: factura2.DIRECCION_CLI_FACTUR,
     },
@@ -2074,6 +2156,36 @@ defineExpose({
   background-color: #f8f9fa;
   font-weight: 600;
   color: #495057;
+}
+
+/* Estilos para la sección de descuento */
+.descuento-section {
+  background: linear-gradient(135deg, #f8fff8 0%, #f0fff0 100%);
+  border-left: 4px solid #4caf50;
+  border-radius: 8px;
+}
+
+.descuento-section .text-green-7 {
+  color: #2e7d32 !important;
+}
+
+.descuento-section .text-red-7 {
+  color: #c62828 !important;
+}
+
+/* Mejoras para el resumen de pago */
+.resumen-pago-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.resumen-pago-card .q-card-section {
+  padding: 16px;
+}
+
+.resumen-pago-card .q-separator {
+  background: #e0e0e0;
+  margin: 8px 0;
 }
 
 .toggle-brillante.q-toggle--truthy {

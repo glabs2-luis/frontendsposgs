@@ -12,110 +12,40 @@
         :loading="isLoadingQuery || isLoading"
         :pagination="{ rowsPerPage: 50 }"
         class="elegant-table h-full full-height-table"
+        table-header-style="background: linear-gradient(135deg, #536103 0%, #6b745b 100%); color: white;"
       >
         <!-- Header -->
-        <template v-slot:header="props">
-          <q-tr :props="props" class="table-header">
-            <q-th
-              v-for="col in props.cols"
-              :key="col.name"
-              :props="props"
-              class="header-cell"
-            >
-              <div class="header-content justify-center">
-                <span class="text-weight-medium">{{ col.label }}</span>
-              </div>
-            </q-th>
-          </q-tr>
-        </template>
-
+        <!--
+          Se quito esto ya que era una carga extra para la tabla 
+         -->
         <!-- Filas  -->
-        <template v-slot:body="props">
-          <q-tr :props="props" class="table-row">
-            <q-td
-              v-for="col in props.cols"
-              :key="col.name"
-              :props="props"
-              class="body-cell"
-            >
-              <!-- Precio formateado -->
-              <template v-if="col.name === 'PRECIO_UNIDAD_VENTA'">
-                <div class="price-cell column">
-                  <template
-                    v-if="
-                      props.row.PRECIO_PROMOCION &&
-                      props.row.PRECIO_PROMOCION < props.row.PRECIO_UNIDAD_VENTA
-                    "
-                  >
-                    <div class="text-grey text-strike">
-                      {{
-                        formatCurrency(Number(props.row.PRECIO_UNIDAD_VENTA), 4)
-                      }}
-                    </div>
-                  </template>
-                  <template v-else>
-                    <div class="text-weight-medium" style="font-size: 18px">
-                      {{
-                        formatCurrency(Number(props.row.PRECIO_UNIDAD_VENTA), 4)
-                      }}
-                    </div>
-                  </template>
-                </div>
-              </template>
-
-              <!-- Subtotal General -->
-              <template v-else-if="col.name === 'SUBTOTAL_GENERAL'">
-                <div class="price-cell">
-                  <span class="text-weight-medium" style="font-size: 18px">
-                    <!-- Calculo  manual-->
-
-                    {{
-                      formatCurrency(
-                        props.row.CANTIDAD_PEDIDA *
-                          props.row.PRECIO_UNIDAD_VENTA,
-                        2
-                      )
-                    }}
-                  </span>
-                </div>
-              </template>
-
-              <!-- Acciones -->
-              <template v-else-if="col.name === 'acciones'">
-                <div class="actions-cell">
-                  <q-btn
-                    size="md"
-                    color="negative"
-                    icon="delete"
-                    round
-                    flat
-                    @click.stop="eliminarProducto(props.row)"
-                    class="delete-btn"
-                  >
-                    <q-tooltip>Eliminar producto</q-tooltip>
-                  </q-btn>
-                </div>
-              </template>
-
-              <!-- Otras columnas -->
-          <!-- Descripción editable con  (AUX -> PROD) -->
-          <template v-else-if="col.name === 'DESCRIPCION_PROD'">
-            <div class="descripcion-prod row items-center no-wrap cursor-pointer">
-              <span class="ellipsis">{{ col.value }}</span>
-              <!-- Icono de editar
-              <q-icon name="edit" size="16px" class="q-ml-xs text-grey-6" /> -->
-
-                  <q-popup-edit
-                    :model-value="col.value"
-                    buttons
-                    label-set="Guardar"
-                    label-cancel="Cancelar"
-                    :disable="savingDescId === props.row.ID_PEDIDO_DET"
-                    @save="(val) => onGuardarDescripcion(props.row, val)"
-                    v-slot="scope"
-                  >
+        <!-- Descripción editable con  (AUX -> PROD) -->
+        <template v-slot:body-cell-DESCRIPCION_PROD="props">
+            <q-td :props="props" >
+              
+              {{ descMostrar(props.row) }}
+                <q-tooltip anchor="bottom middle" self="bottom middle" transition-show="scale" transition-hide="scale">
+                  {{ props.row.DESCRIPCION_PROD_AUX || props.row.DESCRIPCION_PROD }}
+                  
+                </q-tooltip>
+              <!-- Descripción editable -->
+                <!-- <div class="descripcion-prod row items-center no-wrap cursor-pointer"> -->
+                <q-popup-edit
+                  style="width: 500px;"
+                  :cover="false"
+                  :model-value="props.row.DESCRIPCION_PROD_AUX || props.row.DESCRIPCION_PROD"
+                  buttons
+                  label-set="Guardar"
+                  label-cancel="Cancelar"
+                  :disable="savingDescId === props.row.ID_PEDIDO_DET"
+                  @save="(val) => onGuardarDescripcion(props.row, val)"
+                  v-slot="scope"
+                >
                     <q-input
+                      type="textarea"
                       v-model="scope.value"
+                      clearable
+
                       dense
                       autofocus
                       counter
@@ -123,26 +53,37 @@
                       @focus="(e) => (e.target as HTMLInputElement).select()"
                       @keyup.enter.stop="onGuardarDescripcion(props.row, scope.value)"
                     />
-                  </q-popup-edit>
-                </div>
-              </template>
+                </q-popup-edit>
 
-
-              <template v-else-if="col.name === 'CANTIDAD_PEDIDA'">
-                <!--centrar -->
-                <div class="align-cantidad">
-                  {{ formatNumber(col.value) }}
-                </div>
-              </template>
-
-              <template v-else>
-                {{ col.value }}
-              </template>
             </q-td>
-          </q-tr>
+          </template>
+          <!-- ELIMINAR PRODUCTO -->
+          <template v-slot:body-cell-acciones="props">
+            <q-td :props="props">
+              <q-btn
+                color="negative"
+                icon="delete"
+                round
+                dense
+                flat
+                class="delete-btn"
+                @click.stop="eliminarProducto(props.row)"
+              />
+            </q-td>
+          </template>
+
+
+
+        <!-- Loading -->
+        <template v-slot:loading>
+          <q-inner-loading showing class="custom-loading">
+            <q-spinner-dots color="primary" />
+            <div class="text-body2 text-grey-6 q-mt-sm">
+              Cargando productos...
+            </div>
+          </q-inner-loading>
         </template>
 
-        <!-- Estado sin datos -->
         <template v-slot:no-data>
           <div
             class="full-width full-height flex flex-center"
@@ -160,16 +101,6 @@
               </div>
             </div>
           </div>
-        </template>
-
-        <!-- Loading -->
-        <template v-slot:loading>
-          <q-inner-loading showing class="custom-loading">
-            <q-spinner-dots size="40px" color="primary" />
-            <div class="text-body2 text-grey-6 q-mt-sm">
-              Cargando productos...
-            </div>
-          </q-inner-loading>
         </template>
       </q-table>
     </q-card-section>
@@ -230,7 +161,7 @@ watchEffect(() => {
   }, 0);
   items.value = total;
   totalStore.setItems(items.value);
-  console.log('Total store items: ', totalStore.totalItems); 
+  //console.log('Total store items: ', totalStore.totalItems); 
 });
 
 // calcular total
@@ -261,32 +192,40 @@ const descMostrar = (row: any) => {
 
 // Columnas para la tabla
 const columnas: QTableColumn[] = [
-  { name: "PRODUCT0", label: "Código", field: "PRODUCT0", align: "left" },
+  { 
+    name:"PRODUCT0", 
+    label: "Código", 
+    field: "PRODUCT0", 
+    align: "center" 
+  },
   {
     name: "DESCRIPCION_PROD",
     label: "Descripción",
     field: (row) => (row?.DESCRIPCION_PROD_AUX?.trim() || row?.DESCRIPCION_PROD), 
+    style: "max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
     align: "left",
   },
   {
     name: "CANTIDAD_PEDIDA",
     label: "Cantidad",
     field: "CANTIDAD_PEDIDA",
-    align: "right",
+    align: "center",
   },
   {
     name: "PRECIO_UNIDAD_VENTA",
     label: "Precio Unitario",
     field: "PRECIO_UNIDAD_VENTA",
-    align: "right",
+    format: (val, row) => formatCurrency(Number(row.PRECIO_UNIDAD_VENTA), 4),
+    align: "center",
   },
   {
     name: "SUBTOTAL_GENERAL",
     label: "Subtotal",
     field: "SUBTOTAL_GENERAL",
-    align: "right",
+    format: (val, row) => formatCurrency(row.SUBTOTAL_VENTAS + row.MONTO_IVA, 2),
+    align: "center",
   },
-  { name: "acciones", label: "Eliminar", field: "", align: "right" },
+  { name: "acciones", label: "Eliminar", field: "", align: "center" },
 ];
 
 // variable para usar en tabla
@@ -476,10 +415,11 @@ function emit(arg0: string) {
 }
 
 .elegant-table {
+  
   background: white;
   border-radius: 0%;
-  justify-items: center;
-  justify-content: center;
+  /* justify-items: center;
+  justify-content: center; */
 }
 
 .table-header {
