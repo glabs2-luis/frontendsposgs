@@ -221,7 +221,7 @@
 
 <script setup lang="ts">
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import useFacturasEnc from '../../facturas_enc/composables/useFacturasEnc'
 import { runWithLoading, showErrorNotification } from '@/common/helper/notification'
 import { usePdfFactura } from '@/modules/facturar_pdf/composables/usePdFactura'
@@ -284,10 +284,6 @@ const reimprimirFactura = async (idFactura: number) => {
     }
 
     const datosFelCertificados = await   obtenerDatosFel(factura.NUMERO_FACTURA)
-
-    const datosEmpresa1 = await obtenerDatosEmpresa(1)
-    const datosEstablecimiento1 = await obtenerDatosEstablecimiento(1)
-
     
     const detalle = await obtenerDetalleFactura(idFactura)
     if (!detalle || detalle.length === 0) {
