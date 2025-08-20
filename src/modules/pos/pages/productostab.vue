@@ -1613,7 +1613,7 @@ const confirmarFactura = async () => {
       // Asignar este valor para llenar la factura
       idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
       // Ahora sí espera a que termine la certificación
-
+      
       if (contingencia.value === true) {
         await imprimirFactura(respuesta);
         return;
@@ -1634,6 +1634,7 @@ const confirmarFactura = async () => {
 };
 
 const imprimirFactura = async (data) => {
+
   console.log("imprimiendo factura...");
   const factura2 = await obtenerFacturaId3(idFacturaEnc.value);
 
