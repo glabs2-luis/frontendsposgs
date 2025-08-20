@@ -1261,6 +1261,8 @@ watch(modalFacturacion, (val) => {
 watch(idPedidoEnc, (nuevo) => {
   if (nuevo && nuevo > 0) {
     refetchObtenerPedidoID();
+    // Resetear totalAnterior cuando se crea un nuevo pedido
+    totalAnterior.value = 0;
   }
 });
 
@@ -1343,8 +1345,8 @@ const actualizarCantidad = () => {
   }
 };
 
-const limpiarPedido = async() => {
-    if (!pedidoStore.idPedidoEnc) {
+const limpiarPedido = async () => {
+  if (!pedidoStore.idPedidoEnc) {
     showErrorNotification("Error", "No hay un pedido seleccionado");
     return;
   }
