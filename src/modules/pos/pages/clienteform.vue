@@ -492,6 +492,7 @@ const pedidoStore = usePedidoStore();
 const userStore = useUserStore();
 const abrirModalCliente = ref(false);
 const mostrarCardPedidoCreado = ref(false);
+const mostrarNumPedido = ref(false);
 const mostrarCardTotal = ref(false);
 const expansion = ref<any>(null);
 const numPedido = ref(0);
