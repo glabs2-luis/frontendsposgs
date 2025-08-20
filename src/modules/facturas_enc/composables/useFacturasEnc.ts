@@ -7,10 +7,11 @@ import {
   crearFacturaEncAction2,
   obtenerDatosFelAction,
   obtenerFacturasFechaAction,
-  obtenerFacturaNumeroSerieAction
+  obtenerFacturaNumeroSerieAction,
 } from "../action/facturasEncAction";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
 import { showErrorNotification } from "@/common/helper/notification";
+import { cambiarNitFacturaACFAction } from "../action/cambiarNItFacturaAcf.action";
 
 export const useFacturasEnc = () => {
   const queryClient = useQueryClient();
@@ -63,6 +64,14 @@ export const useFacturasEnc = () => {
     },
   });
 
+  //cambiar nit factura a cf
+  const { mutate: mutateCambiarNitFacturaACF } = useMutation({
+    mutationFn: cambiarNitFacturaACFAction,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["facturas-pendientes"] });
+    },
+  });
+
   // This en uso
   const { mutate: mutateCrearFacturaEnc2 } = useMutation({
     mutationFn: crearFacturaEncAction2,
@@ -84,10 +93,10 @@ export const useFacturasEnc = () => {
 
   const obtenerFacturasPorNumeroSerie = async (
     numero: number,
-    serie: string,
+    serie: string
   ) => {
     return await obtenerFacturaNumeroSerieAction(serie, numero);
-  }
+  };
 
   return {
     obtenerFacturasEnc,
@@ -98,7 +107,8 @@ export const useFacturasEnc = () => {
     obtenerFacturaId3,
     obtenerDatosFel,
     obtenerFacturasPorFecha,
-    obtenerFacturasPorNumeroSerie
+    obtenerFacturasPorNumeroSerie,
+    mutateCambiarNitFacturaACF,
   };
 };
 
