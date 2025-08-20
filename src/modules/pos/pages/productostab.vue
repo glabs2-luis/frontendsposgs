@@ -1487,7 +1487,7 @@ const certificarFactura = async (id) => {
 
 // modal factura
 const terminarVenta = async () => {
-  await nextTick(); // epserar los productos para verlos en factura
+  await nextTick(); // Cargar los productos
 
   // si no existe pedido
   if (!pedidoStore.idPedidoEnc) {
@@ -1585,6 +1585,8 @@ const imprimirFactura = async (data) => {
     precio: item.PRECIO_UNITARIO_VTA.toFixed(4),
     subtotal: item.SUBTOTAL_GENERAL.toFixed(4),
   }));
+
+  console.log('detalle: ', detalle)
 
   const totalItems = itemsFactura.reduce(
     (total, item) => total + Number(item.cantidad),

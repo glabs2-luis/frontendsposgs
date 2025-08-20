@@ -19,6 +19,17 @@ const isGeneratingPdf: Ref<boolean> = ref(false);
 const pdfMessage: Ref<string> = ref("");
 const pdfSuccess: Ref<boolean> = ref(false);
 
+const fmtFechaGT = new Intl.DateTimeFormat('es-GT', {
+  timeZone: 'America/Guatemala',
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false
+});
+
 
 // Funcion para truncar el texto a un número máximo de líneas
 const truncateTextByLines = (
@@ -192,6 +203,8 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
         marginVertical,
       ],
 
+      // Comeinza la Factura
+
       content: [
         // --- SECCIÓN: DATOS DE LA EMPRESA ---
         {
@@ -307,6 +320,11 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
               },
               {
                 text: `NÚMERO INTERNO: ${data.encabezado.numeroInterno || ""}`,
+                style: "caption",
+                alignment: "center",
+              },
+              {
+                text: `SERIE: ${data.encabezado.serieInterna || ""}`,
                 style: "caption",
                 alignment: "center",
               },
@@ -499,7 +517,7 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
         },
 
         {
-          text: `FECHA IMPRESION: ${new Date().toISOString()}`,
+          text: `FECHA IMPRESIÓN: ${fmtFechaGT.format(new Date())}`,
           style: "smallText",
           margin: [0, 0, 0, 10],
         },
