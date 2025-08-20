@@ -224,7 +224,8 @@ const facturasConErrores = computed(() => {
           serie: datosFelCertificados?.SERIE_FACTURA_FEL ?? '',
           numero: datosFelCertificados?.NUMERO_FACTURA_FEL ?? '',
           uuid: datosFelCertificados?.UUID ?? '',
-          numeroInterno: `${factura?.SERIE ?? ''} | ${factura?.NUMERO_FACTURA ?? ''}`,
+          serieInterna: factura.SERIE,
+          numeroInterno: factura.NUMERO_FACTURA,
           fechaEmision: fechaEmisionValida,
           tipoDocumento: 'FACTURA ELECTRONICA'
         },

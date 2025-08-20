@@ -222,12 +222,23 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
         { text: "\n", margin: [0, 0, 0, -6] },
 
         // --- SECCIÓN: DATOS DE LA FACTURA ---
+
+        ...(data.encabezado.tipoDocumento.toUpperCase()=== 'FACTURA EN CONTINGENCIA' 
+        ? [
+        {
+          text: `DOCUMENTO EMITIDO EN CONTINGENCIA`,
+          style: "sectionTitle",
+          alignment: "center",
+        } ] :
+        [
         {
           text: `DATOS DE LA ${data.encabezado.tipoDocumento}`,
           style: "sectionTitle",
           alignment: "center",
         },
-
+      ]
+      ),
+        
         {
           canvas: [
             {
@@ -242,25 +253,33 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
           margin: [0, 0, 0, 5],
         },
 
-        { text: documentoTipo, style: "caption", alignment: "center" },
-        {
-          text: data.encabezado.tipoDocumento,
-          style: "caption",
-          alignment: "center",
-        },
-
         ...(data.encabezado.tipoDocumento.toUpperCase() ===
         "FACTURA EN CONTINGENCIA"
           ? // Si el tipo de documento es "Documento en contingencia", solo muestra el número.
             [
+
               {
                 text: `NÚMERO DE CONTINGENCIA: ${data.encabezado.numero || ""}`,
+                style: "caption",
+                alignment: "center",
+              },
+              {
+                text: `SERIE: ${data.encabezado.serieInterna || ""}`,
                 style: "caption",
                 alignment: "center",
               },
             ]
           : // De lo contrario, muestra serie, número y número de autorización.
             [
+
+               { text: documentoTipo, style: "caption", alignment: "center" }, // DOCUMENTO TRIBUTARIO ELECTRONICO
+
+               {
+                 text: data.encabezado.tipoDocumento, // FACTURA ELECTRONICA
+                 style: "caption",
+                 alignment: "center",
+               },
+
               {
                 text: `SERIE: ${data.encabezado.serie || ""}`,
                 style: "caption",
@@ -286,13 +305,14 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
                 style: "caption",
                 alignment: "center",
               },
-            ]),
+              {
+                text: `NÚMERO INTERNO: ${data.encabezado.numeroInterno || ""}`,
+                style: "caption",
+                alignment: "center",
+              },
+            ]
+          ),
 
-        {
-          text: `NÚMERO INTERNO: ${data.encabezado.numeroInterno || ""}`,
-          style: "caption",
-          alignment: "center",
-        },
         { text: "\n", margin: [0, 0, 0, -6] },
 
         // --- SECCIÓN: DATOS DEL CLIENTE ---
@@ -396,7 +416,7 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
         ...(data.encabezado.tipoDocumento.toUpperCase() !== 'NOTA DE CREDITO'
           ?
             [
-                            {
+              {
                 columns: [
                   {
                     text: "Subtotal:",
@@ -570,6 +590,13 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
           margin: [0, 0, 0, 5],
         },
 
+        ...(data.encabezado.tipoDocumento.toUpperCase() ===
+        "FACTURA EN CONTINGENCIA"
+          ?
+        [
+          {}  //No lleva Codgio QR
+        ] : 
+        [
         // Codigo QR
         {
           image: qrDataUrl,
@@ -577,12 +604,16 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
           width: 80,
           margin: [0, 10, 0, 15],
         },
+        
+      ]),
 
+      // Leyendas al final de la factura
         { text: leyenda1, style: "legend", alignment: "center", bold: true },
         { text: leyenda2, style: "legend", alignment: "center" },
         { text: leyenda3, style: "legend", alignment: "center" },
         { text: leyenda4, style: "legend", alignment: "center" },
-      ],
+
+      ], // Fin de la Factura
 
       styles: {
         header: {
