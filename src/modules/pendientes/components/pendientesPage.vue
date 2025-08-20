@@ -446,7 +446,6 @@ const certificarAgain = async () => {
     { sucursal: storeSucursal.idSucursal, serie, numero: numero2 },
     {
       onSuccess: async (data) => {
-
         // Ocultar loading antes de continuar, por que nos aseguramos que se haya certificado
         $q.loading.hide();
 
@@ -488,17 +487,10 @@ const certificarAgain = async () => {
 
 // Recargar el error
 const Refrescar = async () => {
+  // Limpiar caches antes de refrescar
+  limpiarCaches();
 
-  $q.loading.show({
-    message: "Refrescando Facturas",
-    spinnerColor: "green",
-    spinnerSize: 50,
-  })
-
-  await refetchFacturasErrores(),
-    "Refrescando Facturas"
-
-  $q.loading.hide();
+  await runWithLoading(() => refetchFacturasErrores(), "Refrescando Facturas");
 };
 
 // tabla pendientes -
@@ -558,11 +550,14 @@ const columnasPendientes: QTableColumn[] = [
 
 // Tabla que muestra errores
 const columnasErrores: QTableColumn[] = [
-  { name: "numero", label: "No. Factura", field: "NUMERO_FACTURA", align: "left" },
-  { name: "error", label: "Mensaje de Error", field: "ERROR", align: "left" },
+  {
+    name: "error",
+    label: "Mensaje de Error",
+    field: "ERROR",
+    align: "left",
+    style: "width: 400px; min-width: 350px;",
+  },
 ];
-
-
 </script>
 
 <style scoped>
@@ -773,16 +768,44 @@ const columnasErrores: QTableColumn[] = [
   will-change: scroll-position;
 }
 
-.boton-amarillo:hover {
-  background: linear-gradient(90deg, #fbc02d, #f9a825);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  transform: scale(1.02);
+.fill-table {
+  contain: layout style paint;
+  will-change: scroll-position;
 }
 
-.tabla-estilo thead th {
-  background: linear-gradient(to right, #1976d2, #2196f3); /* degradado */
-  color: white;
-  font-weight: bold;
-  text-align: center;
+.splitter-btn {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #1976d2, #2196f3) !important;
+}
+
+/* Transición suave para el cambio de icono */
+.splitter-btn .q-icon {
+  transition: transform 0.3s ease;
+  font-size: 18px !important;
+}
+
+.splitter-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.splitter-btn:hover .q-icon {
+  transform: rotate(180deg);
+}
+
+.splitter-btn:active {
+  transform: scale(0.95);
+}
+
+/* Ajustar el separador para acomodar el botón bidireccional */
+.splitter-personalizado .q-splitter__separator {
+  min-width: 12px !important;
+  width: 12px !important;
 }
 </style>
