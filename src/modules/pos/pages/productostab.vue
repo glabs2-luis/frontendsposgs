@@ -877,6 +877,7 @@ const queryClient = useQueryClient();
 const {  consultarCodigoM } = useCodigo();
 const $q = useQuasar();
 const { mutateAnularPedidoPendiente } = usePedidosEnc();
+const { totalItems } = useTotalStore();
 
 //USE COMPOSABLES
 const {  data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedidoEnc);
@@ -897,24 +898,6 @@ const btnConfirmarFactura = ref(null);
 const calcularCambio = ref(0);
 const cantidad = ref(1); // Cantidad en el boton
 const cantidad2 = ref(1); // para modal cantidad
-const cantidadInputs = ref({});           // Referencias a los inputs de cantidad en el catálogo
-const clave = ref("");
-const codigoProducto = ref("");
-const cupon = ref();
-const detallesPedido = ref([]);
-const errorAgregarProducto = ref(false);
-const filtroProductos = ref("");
-const focusCantidad = ref(null);          // focus modal cantidad
-const focusEfectivo = ref(null);          // focus efectivo
-const focusTarjeta = ref(null);
-const inputCodigo = ref(null);
-const loadingAgregar = ref(false);
-const loadingDetalle = ref(false);
-const loadingPorCodigo = ref(false);
-const loadingProductos = ref(false);
-const modalCantidad = ref(false);
-const modalProductos = ref(false);
-const modalProductos2 = ref(false);
 const montoEfectivo = ref(null);
 const montoTarjeta = ref(null);
 const opcionesPago2 = ["EFECTIVO", "TARJETA", "MIXTO"];
@@ -935,12 +918,9 @@ const paginacionCatalogo = ref({
 ==========================================================
 */
 const buscadorProductoRef = ref(null);
+const totalAnterior = ref(0);
 
-/*
-==========================================================
-                    VARIABLES COMPUTED
-==========================================================
-*/
+// Controla si el input de código puede auto-enfocarse
 
 // Facturación - cálculos y validaciones
 const totalAPagar = computed(() => Number(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0));
@@ -1275,8 +1255,6 @@ watch(modalFacturacion, (val) => {
 watch(idPedidoEnc, (nuevo) => {
   if (nuevo && nuevo > 0) {
     refetchObtenerPedidoID();
-    // Resetear totalAnterior cuando se crea un nuevo pedido
-    totalAnterior.value = 0;
   }
 });
 
@@ -1838,7 +1816,6 @@ const agregarProductoAlPedido2 = async (producto) => {
         producto.CANTIDAD_PEDIDA = 1;
         await refetchObtenerPedidoID(); // Refrescar datos del pedido primero
         await refetchObtenerPedidoDetID();
-        console.log("Producto agregado con éxito:", data);
         // relistaDet2();
         totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0);
         if (allowAutoFocusProduct.value) enfocarCodigo();

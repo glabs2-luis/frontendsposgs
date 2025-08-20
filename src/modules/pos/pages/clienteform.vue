@@ -421,8 +421,8 @@ const {
   obtenerPedidoPorId,
   mutateAnularPedidoPendiente,
 } = usePedidosEnc();
-const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc);
-const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
+const idPedidoEnc =  computed(() => pedidoStore.idPedidoEnc||0); // Aseguramos que sea un número
+const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);  
 const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
 const estadoPedido = computed(() => pedidoStore.estadoPedido === 'P' ? 'Pedido' : 'Cotización');
