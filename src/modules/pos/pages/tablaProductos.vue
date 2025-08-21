@@ -92,12 +92,18 @@
         <template v-slot:body-cell-PRECIO_UNIDAD_VENTA="props">
           <q-td :props="props" :style="'font-size:' + tamanioLetra + 'px;'">
             {{ formatCurrency(Number(props.row.PRECIO_UNIDAD_VENTA), 4) }}
+            <q-tooltip anchor="bottom middle" self="bottom middle" transition-show="scale" transition-hide="scale">
+              {{ formatCurrency(Number(props.row.PRECIO_UNIDAD_VENTA), 4) }}    
+            </q-tooltip>
           </q-td>
         </template>
         <!-- SUBTOTAL -->
         <template v-slot:body-cell-SUBTOTAL_GENERAL="props">
           <q-td :props="props" :style="'font-size:' + tamanioLetra + 'px;'">
             {{ formatCurrency(props.row.SUBTOTAL_VENTAS + props.row.MONTO_IVA, 2) }}
+            <q-tooltip anchor="bottom middle" self="bottom middle" transition-show="scale" transition-hide="scale">
+              {{ formatCurrency(props.row.SUBTOTAL_VENTAS + props.row.MONTO_IVA, 2) }}
+            </q-tooltip>
           </q-td>
         </template>
         <!-- ELIMINAR PRODUCTO -->
@@ -190,7 +196,7 @@ const columnas: QTableColumn[] = [
     label: "Cantidad",
     field: "CANTIDAD_PEDIDA",
     align: "center",
-    style: 'width: 80px; min-width: 80px; max-width: 80px;',
+    style: 'width: 80px; min-width: 80px; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
   },
   {
     name: "PRECIO_UNIDAD_VENTA",
@@ -198,7 +204,7 @@ const columnas: QTableColumn[] = [
     field: "PRECIO_UNIDAD_VENTA",
     format: (val, row) => formatCurrency(Number(row.PRECIO_UNIDAD_VENTA), 4),
     align: "center",
-    style: 'width: 120px; min-width: 120px; max-width: 120px;',
+    style: 'width: 150px; min-width: 150px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
   },
   {
     name: "SUBTOTAL_GENERAL",
@@ -206,7 +212,7 @@ const columnas: QTableColumn[] = [
     field: "SUBTOTAL_GENERAL",
     format: (val, row) => formatCurrency(row.SUBTOTAL_VENTAS + row.MONTO_IVA, 2),
     align: "center",
-    style: 'width: 120px; min-width: 120px; max-width: 120px;',
+    style: 'width: 100px; min-width: 100px; max-width: 120px;',
   },
   { 
     name: "acciones", 
@@ -418,7 +424,7 @@ onMounted(() => {
   if (tamanio) {
     tamanioLetra.value = parseInt(tamanio, 10);
   } else {
-    tamanioLetra.value = 16; // Valor por defecto
+    tamanioLetra.value = 28; // Valor por defecto
   }
 });
 
