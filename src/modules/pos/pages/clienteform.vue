@@ -3,7 +3,6 @@
     <div class="col-12">
       <!-- informacion mas pedido y cantidad-->
       <div class="row items-start q-gutter-sm">
-
         <!-- Boton para Cotizacion y pedido -->
         <div class="tipo-transaccion-container">
           <div class="q-gutter-y-md">
@@ -16,8 +15,8 @@
               color="grey-1"
               text-color="black"
               :options="[
-                {label: 'Pedido', value: 'pedido'},
-                {label: 'Cotizacion', value: 'cotización'}
+                { label: 'Pedido', value: 'pedido' },
+                { label: 'Cotizacion', value: 'cotización' },
               ]"
               class="tipo-transaccion-toggle"
             />
@@ -252,9 +251,7 @@
         </div>
 
         <!-- Boton para modal pedidos/cotizaciones pendientes -->
-        <div
-          class="btn-pendientes-container"
-        >
+        <div class="btn-pendientes-container">
           <q-btn
             flat
             dense
@@ -284,9 +281,7 @@
               </div>
 
               <!-- Total de Venta -->
-              <div
-                class="row items-center q-gutter-xs q-pa-xs"
-              >
+              <div class="row items-center q-gutter-xs q-pa-xs">
                 <div
                   class="text-body1 text-amber-10 text-weight-bold"
                   style="font-size: 400%"
@@ -329,9 +324,7 @@
   <q-footer class="z-max">
     <div class="bg-yellow-8 text-black q-pa-sm row items-center justify-center">
       <div class="q-pr-md">
-        <div class="text-weight-bold">
-          Libreria San Bartolome - 2025
-        </div>
+        <div class="text-weight-bold">Libreria San Bartolome - 2025</div>
       </div>
 
       <div class="cambio row items-center q-gutter-xs">
@@ -342,7 +335,6 @@
       </div>
     </div>
   </q-footer>
-
 </template>
 
 <script setup lang="ts">
@@ -419,9 +411,11 @@ const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc || 0); // Aseguramos 
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
 const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
-const estadoPedido = computed(() => pedidoStore.estadoPedido === 'P' ? 'Pedido' : 'Cotización');
-const focus2 = ref<HTMLInputElement | null>(null)
-let espera: ReturnType<typeof setTimeout> | null = null // Para la busqueda automatica
+const estadoPedido = computed(() =>
+  pedidoStore.estadoPedido === "P" ? "Pedido" : "Cotización"
+);
+const focus2 = ref<HTMLInputElement | null>(null);
+let espera: ReturnType<typeof setTimeout> | null = null; // Para la busqueda automatica
 const tipoTransaccion = ref(pedidoStore.tipoPedido); // Valor inicial
 
 // abrir expansion item y focus a nit
@@ -457,9 +451,7 @@ watch(abrirModalCliente, async (isOpen, wasOpen) => {
   }
 });
 
-watch(mostrarNumPedido, async () => [
-  pedidoStore.estadoPedido = 'P'
-])
+watch(mostrarNumPedido, async () => [(pedidoStore.estadoPedido = "P")]);
 
 //crear pedido
 const crearPedidod2 = () => {
@@ -501,10 +493,12 @@ const busquedaAutomatica = () => {
 
 // Anular pedido pendiente
 const anularPedido = async (pedido) => {
-  console.log(tipoTransaccion.value)
+  console.log(tipoTransaccion.value);
   const confirmado = await showConfirmationInsideModal(
     `Anular ${estadoPedido.value}`,
-    `¿Está seguro que desea anular ${estadoPedido.value === 'Pedido' ? 'el' : 'la'} ${estadoPedido.value} #${pedido.NUMERO_DE_PEDIDO}?`
+    `¿Está seguro que desea anular ${
+      estadoPedido.value === "Pedido" ? "el" : "la"
+    } ${estadoPedido.value} #${pedido.NUMERO_DE_PEDIDO}?`
   );
 
   if (!confirmado) return;
@@ -514,7 +508,7 @@ const anularPedido = async (pedido) => {
     usuario: userStore.nombreVendedor,
   });
 
-  tipoTransaccion.value = 'pedido'
+  tipoTransaccion.value = "pedido";
 };
 
 // continuar pedido pendiente
@@ -717,7 +711,7 @@ const crearPedido = () => {
     USUARIO_INGRESO_PEDI: userStore.nombreVendedor.substring(0, 10),
     CODIGO_VENDEDOR: userStore.codigoVendedor,
     CODIGO_DE_CLIENTE: obtenerConfiguracionPos.value.CODIGO_CLIENTE_CF, // Cliente Ticket
-    ESTADO_PEDIDO: tipoTransaccion.value === 'pedido' ? 'P' : 'C'
+    ESTADO_PEDIDO: tipoTransaccion.value === "pedido" ? "P" : "C",
   };
 
   mutateCrearPedidoEnc(pedidoEnc, {
@@ -755,7 +749,10 @@ const crearPedido = () => {
     onError: (error: any) => {
       showErrorNotification(
         "Error al crear",
-        error.message || `No se pudo registrar ${estadoPedido.value === 'Pedido' ? 'el' : 'la'} ${estadoPedido.value}`
+        error.message ||
+          `No se pudo registrar ${
+            estadoPedido.value === "Pedido" ? "el" : "la"
+          } ${estadoPedido.value}`
       );
     },
   });
@@ -1022,7 +1019,7 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
   position: absolute;
   right: 0;
   font-size: 18px;
-  margin-right: 60px; 
+  margin-right: 60px;
 }
 
 .tipo-transaccion-container {
@@ -1037,5 +1034,4 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 .btn-pendientes-container {
   margin: 8px 0px 0px;
 }
-
 </style>
