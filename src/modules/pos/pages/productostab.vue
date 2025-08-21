@@ -865,6 +865,14 @@ const updateEstadoPedido = (nuevoEstado) => {
 */
 
 const idPedidoEnc = computed(() => props.pedidoId);
+const tipoPedido = computed(() => props.tipoPedido)
+
+// Emits
+const emit = defineEmits(['updateEstado']);
+
+const updateEstadoPedido = (nuevoEstado) => {
+  emit('updateEstado', nuevoEstado);
+}
 
 /*
 ==========================================================
@@ -1406,8 +1414,6 @@ const limpiar = async () => {
     return;
   }
 
-  const tipoPedido = pedidoStore.estadoPedido === "P" ? "Pedido" : "Cotización";
-
   const confirmado = await showConfirmationDialog(
     `Anular ${tipoPedido.value}`,
     `¿Estás seguro de que deseas anular ${tipoPedido.value === 'pedido' ? 'el ' + tipoPedido.value : 'la ' + tipoPedido.value}?`
@@ -1423,8 +1429,8 @@ const limpiar = async () => {
         onSuccess: () => {
           $q.notify({
             type: "positive",
-            message: `${tipoPedido} anulad${
-              tipoPedido === "Pedido" ? "o" : "a"
+            message: `${tipoPedido.value} anulad${
+              tipoPedido.value === "pedido" ? "o" : "a"
             } con éxito`,
             position: "top-right",
             timeout: 3000,
@@ -1435,7 +1441,7 @@ const limpiar = async () => {
     );
 
     cleanAllStores();
-    console.log("Estado del pedido after: ", pedidoStore.estadoPedido);
+    updateEstadoPedido('pedido')
   }
 };
 

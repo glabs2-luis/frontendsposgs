@@ -10,12 +10,6 @@ export const usePedidoStore = defineStore("pedido", {
     estadoPedido: null as string | null,
   }),
 
-  getters: {
-    tipoPedido() {
-      return this.estadoPedido === 'P' || !this.estadoPedido ? 'pedido' : 'cotización';
-    }
-  },
-
   actions: {
     setPedidoEncabezado(id: number, numero: number, codigoVendedor: number, estadoPedido: string) {
       this.idPedidoEnc = id;
