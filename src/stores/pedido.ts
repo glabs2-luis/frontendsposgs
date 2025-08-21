@@ -7,21 +7,15 @@ export const usePedidoStore = defineStore("pedido", {
     numeroDePedido: null as number | null,
     cliente: null as Cliente | null,
     codigoVendedor: null as number | null,
-    estadoPedido: 'P' as string,
+    estadoPedido: null as string | null,
   }),
-
-  getters: {
-    tipoPedido() {
-      return this.estadoPedido === 'P' || !this.estadoPedido ? 'pedido' : 'cotización';
-    }
-  },
 
   actions: {
     setPedidoEncabezado(id: number, numero: number, codigoVendedor: number, estadoPedido: string) {
       this.idPedidoEnc = id;
       this.numeroDePedido = numero;
       this.codigoVendedor = codigoVendedor;
-      this.estadoPedido = estadoPedido
+      this.estadoPedido = estadoPedido;
     },
 
     setCliente(clienteData: Cliente) {
@@ -37,7 +31,7 @@ export const usePedidoStore = defineStore("pedido", {
       this.idPedidoEnc = null;
       this.numeroDePedido = null;
       this.cliente = null;
-      this.estadoPedido = 'P';
+      this.estadoPedido = null;
       localStorage.removeItem("pedido");
     },
   },
