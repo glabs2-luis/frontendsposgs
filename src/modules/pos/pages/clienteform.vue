@@ -3,7 +3,6 @@
     <div class="col-12">
       <!-- informacion mas pedido y cantidad-->
       <div class="row items-start q-gutter-sm">
-
         <!-- Boton para Cotizacion y pedido -->
         <div class="tipo-transaccion-container">
           <div class="q-gutter-y-md">
@@ -16,8 +15,8 @@
               color="grey-1"
               text-color="black"
               :options="[
-                {label: 'Pedido', value: 'pedido'},
-                {label: 'Cotizacion', value: 'cotización'}
+                { label: 'Pedido', value: 'pedido' },
+                { label: 'Cotizacion', value: 'cotización' },
               ]"
               class="tipo-transaccion-toggle"
             />
@@ -72,12 +71,10 @@
                       inline
                     />
 
-
                     <!-- Rules:  :rules="[(val) => !!val || 'Requerido']"  -->
 
                     <!-- Campo de búsqueda de cliente -->
                     <div class="col-4">
-
                       <!-- DPI-->
                       <q-input
                         ref="focus"
@@ -86,7 +83,6 @@
                         dense
                         outlined
                         lazy-rules
-                       
                         hide-bottom-space
                         style="font-size: 13px"
                         @keydown.enter.prevent="buscarClienteDPINIT2"
@@ -104,7 +100,6 @@
                             size="xs"
                           />
                         </template>
-
                       </q-input>
                     </div>
 
@@ -151,7 +146,7 @@
                         outlined
                         type="email"
                         style="font-size: 13px"
-                     >
+                      >
                         <template v-slot:append>
                           <q-btn
                             flat
@@ -162,7 +157,6 @@
                             size="xs"
                           />
                         </template>
-
                       </q-input>
                     </div>
                   </div>
@@ -257,9 +251,7 @@
         </div>
 
         <!-- Boton para modal pedidos/cotizaciones pendientes -->
-        <div
-          class="btn-pendientes-container"
-        >
+        <div class="btn-pendientes-container">
           <q-btn
             flat
             dense
@@ -289,9 +281,7 @@
               </div>
 
               <!-- Total de Venta -->
-              <div
-                class="row items-center q-gutter-xs q-pa-xs"
-              >
+              <div class="row items-center q-gutter-xs q-pa-xs">
                 <div
                   class="text-body1 text-amber-10 text-weight-bold"
                   style="font-size: 400%"
@@ -334,9 +324,7 @@
   <q-footer class="z-max">
     <div class="bg-yellow-8 text-black q-pa-sm row items-center justify-center">
       <div class="q-pr-md">
-        <div class="text-weight-bold">
-          Libreria San Bartolome - 2025
-        </div>
+        <div class="text-weight-bold">Libreria San Bartolome - 2025</div>
       </div>
 
       <div class="cambio row items-center q-gutter-xs">
@@ -347,11 +335,9 @@
       </div>
     </div>
   </q-footer>
-
 </template>
 
 <script setup lang="ts">
-
 import { useQuasar } from "quasar";
 import {
   ref,
@@ -421,17 +407,20 @@ const {
   obtenerPedidoPorId,
   mutateAnularPedidoPendiente,
 } = usePedidosEnc();
-const idPedidoEnc =  computed(() => pedidoStore.idPedidoEnc||0); // Aseguramos que sea un número
-const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);  
+const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc || 0); // Aseguramos que sea un número
+const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
 const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
-const estadoPedido = computed(() => pedidoStore.estadoPedido === 'P' ? 'Pedido' : 'Cotización');
-const focus2 = ref<HTMLInputElement | null>(null)
-let espera: ReturnType<typeof setTimeout> | null = null // Para la busqueda automatica
+const estadoPedido = computed(() =>
+  pedidoStore.estadoPedido === "P" ? "Pedido" : "Cotización"
+);
+const focus2 = ref<HTMLInputElement | null>(null);
+let espera: ReturnType<typeof setTimeout> | null = null; // Para la busqueda automatica
 const tipoTransaccion = ref(pedidoStore.tipoPedido); // Valor inicial
 
 // abrir expansion item y focus a nit
-watch(() => clienteStore.documento,
+watch(
+  () => clienteStore.documento,
   async (nuevo) => {
     if (!nuevo || nuevo.trim() === "" || nuevo === "0") {
       await nextTick();
@@ -450,9 +439,9 @@ watch(abrirModalCliente, async (isOpen, wasOpen) => {
   // Cuando pase de abierto -> cerrado
   if (wasOpen && !isOpen) {
     // Validamos que el store tenga datos mínimos
-    const nit = (clienteStore.documento || '').trim();
-    const nombre = (clienteStore.nombre || '').trim();
-    const direccion = (clienteStore.direccion || '').trim();
+    const nit = (clienteStore.documento || "").trim();
+    const nombre = (clienteStore.nombre || "").trim();
+    const direccion = (clienteStore.direccion || "").trim();
 
     if (!nit || !nombre || !direccion) return;
 
@@ -462,25 +451,24 @@ watch(abrirModalCliente, async (isOpen, wasOpen) => {
   }
 });
 
-watch(mostrarNumPedido, async () => [
-  pedidoStore.estadoPedido = 'P'
-])
+watch(mostrarNumPedido, async () => [(pedidoStore.estadoPedido = "P")]);
 
 //crear pedido
 const crearPedidod2 = () => {
-  crearPedido()
-}
+  crearPedido();
+};
 
 // Limpiar informaicon del form
 const limpiarCliente = async () => {
-  clienteStore.limpiarCliente()
-  resetCliente()
-}
+  clienteStore.limpiarCliente();
+  resetCliente();
+};
 
 // si dpi o nit cambia, limpiar el store
-watch(tipoDocumento, async(nuevo) => {  enfocarCodigo()
-  clienteStore.limpiarCliente()
-})
+watch(tipoDocumento, async (nuevo) => {
+  enfocarCodigo();
+  clienteStore.limpiarCliente();
+});
 
 // controla que exista un pedido
 watch(idPedidoEnc, (nuevoId) => {
@@ -493,22 +481,24 @@ watch(idPedidoEnc, (nuevoId) => {
 
 //busqueda automatica
 const busquedaAutomatica = () => {
-  
-  if (espera) clearTimeout(espera) // Limpir tiempo
+  if (espera) clearTimeout(espera); // Limpir tiempo
 
-  if(clienteStore.documento.length>7){ //  Longitud mayor a 7 para buscar
-  espera = setTimeout(()=>{
-    buscarClienteDPINIT2()
-  }, 500)
-}
-}
+  if (clienteStore.documento.length > 7) {
+    //  Longitud mayor a 7 para buscar
+    espera = setTimeout(() => {
+      buscarClienteDPINIT2();
+    }, 500);
+  }
+};
 
 // Anular pedido pendiente
 const anularPedido = async (pedido) => {
-  console.log(tipoTransaccion.value)
+  console.log(tipoTransaccion.value);
   const confirmado = await showConfirmationInsideModal(
     `Anular ${estadoPedido.value}`,
-    `¿Está seguro que desea anular ${estadoPedido.value === 'Pedido' ? 'el' : 'la'} ${estadoPedido.value} #${pedido.NUMERO_DE_PEDIDO}?`
+    `¿Está seguro que desea anular ${
+      estadoPedido.value === "Pedido" ? "el" : "la"
+    } ${estadoPedido.value} #${pedido.NUMERO_DE_PEDIDO}?`
   );
 
   if (!confirmado) return;
@@ -518,7 +508,7 @@ const anularPedido = async (pedido) => {
     usuario: userStore.nombreVendedor,
   });
 
-  tipoTransaccion.value = 'pedido'
+  tipoTransaccion.value = "pedido";
 };
 
 // continuar pedido pendiente
@@ -576,24 +566,24 @@ const usarMenos = (e) => {
     e.preventDefault();
     abrirModalPedidosPendientes();
   }
-}
+};
 
 // Crear Pedido con F3
 onMounted(() => {
   window.addEventListener("keydown", crearPedidoConF3);
-})
+});
 
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", crearPedidoConF3);
-})
+});
 
 const crearPedidoConF3 = (e: KeyboardEvent) => {
   if (e.key === "F3") {
-    e.preventDefault()
-    crearPedido()
-    expansion.value?.hide()
+    e.preventDefault();
+    crearPedido();
+    expansion.value?.hide();
   }
-}
+};
 
 // Cerrar expansion cuando se crea un pedido
 watchEffect(() => {
@@ -614,7 +604,7 @@ watch(
       enfocarCodigo();
     }
   }
-)
+);
 
 // focus al ref
 const enfocarCodigo = () => {
@@ -649,7 +639,11 @@ watchEffect(() => {
   }
 });
 
-const { data: pedidosPendientes, isLoading, refetch:refetchPedidosPendientes } = obtenerPedidosPendientes(
+const {
+  data: pedidosPendientes,
+  isLoading,
+  refetch: refetchPedidosPendientes,
+} = obtenerPedidosPendientes(
   Number(storeSucursal.idSucursal), // Convertido a numero
   userStore.codigoVendedor
 );
@@ -717,7 +711,7 @@ const crearPedido = () => {
     USUARIO_INGRESO_PEDI: userStore.nombreVendedor.substring(0, 10),
     CODIGO_VENDEDOR: userStore.codigoVendedor,
     CODIGO_DE_CLIENTE: obtenerConfiguracionPos.value.CODIGO_CLIENTE_CF, // Cliente Ticket
-    ESTADO_PEDIDO: tipoTransaccion.value === 'pedido' ? 'P' : 'C'
+    ESTADO_PEDIDO: tipoTransaccion.value === "pedido" ? "P" : "C",
   };
 
   mutateCrearPedidoEnc(pedidoEnc, {
@@ -755,7 +749,10 @@ const crearPedido = () => {
     onError: (error: any) => {
       showErrorNotification(
         "Error al crear",
-        error.message || `No se pudo registrar ${estadoPedido.value === 'Pedido' ? 'el' : 'la'} ${estadoPedido.value}`
+        error.message ||
+          `No se pudo registrar ${
+            estadoPedido.value === "Pedido" ? "el" : "la"
+          } ${estadoPedido.value}`
       );
     },
   });
@@ -792,12 +789,10 @@ const { data, DatosSat2 } = useValidation(
   tipoDocumento.value,
   validador.value,
   empresa.value
-)
-
+);
 
 const buscarClienteDPINIT2 = async () => {
   try {
-
     // Valor que se ingresa es doc
     const doc = (clienteStore.documento || "").trim();
     if (!doc) return;
@@ -822,43 +817,51 @@ const buscarClienteDPINIT2 = async () => {
 
     // 2) SEGUNDO: SAT (si el validador está activo)
     if (validador.value) {
-      
       // Loadingsd
-      const result = await runWithLoading( () => DatosSat2(nit.value, tipoDocumento.value, validador.value, empresa.value),
-        'Consultando datos en SAT…'
-      )
+      const result = await runWithLoading(
+        () =>
+          DatosSat2(
+            nit.value,
+            tipoDocumento.value,
+            validador.value,
+            empresa.value
+          ),
+        "Consultando datos en SAT…"
+      );
 
-            // Consolar los resultados
-      console.log('Tipo de documento:',tipoDocumento.value)
-      console.log('Este es el resultado de consultar datos en la sat: ', result.data)
-      console.log('valor booleano sat', result.isCertified)
+      // Consolar los resultados
+      console.log("Tipo de documento:", tipoDocumento.value);
+      console.log(
+        "Este es el resultado de consultar datos en la sat: ",
+        result.data
+      );
+      console.log("valor booleano sat", result.isCertified);
 
       const nombreSat = result.data.nombre; // Guardar el nombre retornado de sat
 
       // result = texto
-      if(nombreSat==='Contribuyente no encontrado'){
-        showErrorNotification('No encontrado', 'Verificar el NIT ingresado')
-        return
-      } else { 
-
+      if (nombreSat === "Contribuyente no encontrado") {
+        showErrorNotification("No encontrado", "Verificar el NIT ingresado");
+        return;
+      } else {
         // 3) No existe en BD pero SAT devolvió nombre -> abrir modal con datos prellenados
-        abrirModalCliente.value = true
-        clienteTemp.value.NIT = tipoDocumento.value ==='nit' ? doc : '',
-        clienteTemp.value.DPI = tipoDocumento.value ==='dpi' ? doc : '',
-        clienteTemp.value.NOMBRE = nombreSat
-        clienteTemp.value.DIRECCION = "Ciudad"
+        abrirModalCliente.value = true;
+        (clienteTemp.value.NIT = tipoDocumento.value === "nit" ? doc : ""),
+          (clienteTemp.value.DPI = tipoDocumento.value === "dpi" ? doc : ""),
+          (clienteTemp.value.NOMBRE = nombreSat);
+        clienteTemp.value.DIRECCION = "Ciudad";
 
-        nextTick(async() => {
-
+        nextTick(async () => {
           //await crearPedido() // Nuevo crear pedido - no lo esta creando miau miau miau
-        })
+        });
         // Crear el pedido ahora
-        clienteStore.nombre = clienteTemp.value.NOMBRE
-        clienteStore.direccion = clienteTemp.value.DIRECCION
-        clienteStore.telefono = clienteTemp.value.TELEFONO
-        clienteStore.documento = clienteTemp.value.NIT ? clienteTemp.value.NIT : clienteTemp.value.DPI
+        clienteStore.nombre = clienteTemp.value.NOMBRE;
+        clienteStore.direccion = clienteTemp.value.DIRECCION;
+        clienteStore.telefono = clienteTemp.value.TELEFONO;
+        clienteStore.documento = clienteTemp.value.NIT
+          ? clienteTemp.value.NIT
+          : clienteTemp.value.DPI;
       }
-    
     }
 
     // 4) Si no hay en BD y SAT no devolvió nombre -> abrir modal solo con NIT
@@ -1013,7 +1016,7 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
   position: absolute;
   right: 0;
   font-size: 18px;
-  margin-right: 60px; 
+  margin-right: 60px;
 }
 
 .tipo-transaccion-container {
@@ -1028,5 +1031,4 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 .btn-pendientes-container {
   margin: 8px 0px 0px;
 }
-
 </style>

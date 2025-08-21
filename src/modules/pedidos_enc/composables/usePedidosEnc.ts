@@ -23,7 +23,7 @@ export const usePedidosEnc = () => {
     id_sucursal: number,
     codigo_vendedor: number
   ) => {
-  //  console.log("id_sucursal", id_sucursal);
+    //  console.log("id_sucursal", id_sucursal);
     // console.log("codigo_vendedor", codigo_vendedor);
     return useQuery({
       queryKey: ["pedidos-pendientes", id_sucursal, codigo_vendedor],
@@ -57,11 +57,11 @@ export const usePedidosEnc = () => {
   });
 
   // Obtener pedido por ID
-  const obtenerPedidoPorId = (idPedidoEnc: Ref<number, number> ) => {
+  const obtenerPedidoPorId = (idPedidoEnc: Ref<number, number>) => {
     const { data, refetch: refetchObtenerPedidoID } = useQuery({
       queryKey: computed(() => ["pedidoEnc", idPedidoEnc.value]),
       queryFn: () => obtenerPedidoEncPorIdAction(idPedidoEnc.value),
-      enabled: !!idPedidoEnc.value,
+      enabled: !!idPedidoEnc.value && idPedidoEnc.value > 0,
       refetchOnWindowFocus: false,
     });
 
