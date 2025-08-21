@@ -511,13 +511,14 @@ const {
   obtenerPedidoPorId,
   mutateAnularPedidoPendiente,
 } = usePedidosEnc();
-const idPedidoEnc =  computed(() => pedidoStore.idPedidoEnc||0); // Aseguramos que sea un número
-const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);  
+const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc || 0); // Aseguramos que sea un número
+const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
 const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
+const estadoPedido = computed(() => (!pedidoStore.estadoPedido || pedidoStore.estadoPedido === "P") ? "Pedido" : "Cotización");
 const focus2 = ref<HTMLInputElement | null>(null);
 let espera: ReturnType<typeof setTimeout> | null = null; // Para la busqueda automatica
-const estadoPedido = ref(!pedidoStore.estadoPedido || pedidoStore.estadoPedido === 'P' ? 'pedido' : 'cotización');
+const tipoTransaccion = ref(pedidoStore.tipoPedido); // Valor inicial
 const tab = ref('pedidos')
 const { generarCotizacionPDF } = usePdfCotizacion()
 const filtroPedidos = ref('');
@@ -556,9 +557,7 @@ watch(abrirModalCliente, async (isOpen, wasOpen) => {
   }
 });
 
-watch(mostrarNumPedido, async () => [
-  pedidoStore.estadoPedido = 'P'
-])
+watch(mostrarNumPedido, async () => [(pedidoStore.estadoPedido = "P")]);
 
 //crear pedido
 const crearPedidod2 = () => {
@@ -606,7 +605,7 @@ const busquedaAutomatica = () => {
 
 // Funcion para manejar el estado del pedido
 const handleActualizarPedido = (nuevoEstado: string) => {
-  estadoPedido.value = nuevoEstado;
+  tipoTransaccion.value = nuevoEstado;
 }
 
 // Anular pedido pendiente
@@ -615,7 +614,9 @@ const anularPedido = async (pedido: PedidosEnc) => {
 
   const confirmado = await showConfirmationInsideModal(
     `Anular ${estadoPedido.value}`,
-    `¿Está seguro que desea anular ${estadoPedido.value === 'Pedido' ? 'el' : 'la'} ${estadoPedido.value} #${pedido.NUMERO_DE_PEDIDO}?`
+    `¿Está seguro que desea anular ${
+      estadoPedido.value === "Pedido" ? "el" : "la"
+    } ${estadoPedido.value} #${pedido.NUMERO_DE_PEDIDO}?`
   );
 
   if (!confirmado) return;
@@ -625,7 +626,7 @@ const anularPedido = async (pedido: PedidosEnc) => {
     usuario: userStore.nombreVendedor,
   });
 
-  estadoPedido.value = "pedido";
+  tipoTransaccion.value = "pedido";
 };
 
 // continuar pedido pendiente
@@ -663,7 +664,7 @@ const continuarPedido = async (pedido) => {
     email: pedido.EMAIL_CLIENTE || null, // no viene la info
   });
 
-  estadoPedido.value = tipoPedido
+  tipoTransaccion.value = tipoPedido
 
   // Cerrar modal de pendientes
   modalPendientes.value = false;
@@ -852,7 +853,11 @@ watchEffect(() => {
   }
 });
 
-const { data: pedidosPendientes, isLoading, refetch:refetchPedidosPendientes } = obtenerPedidosPendientes(
+const {
+  data: pedidosPendientes,
+  isLoading,
+  refetch: refetchPedidosPendientes,
+} = obtenerPedidosPendientes(
   Number(storeSucursal.idSucursal), // Convertido a numero
   userStore.codigoVendedor
 );
@@ -956,7 +961,7 @@ const crearPedido = () => {
     USUARIO_INGRESO_PEDI: userStore.nombreVendedor.substring(0, 10),
     CODIGO_VENDEDOR: userStore.codigoVendedor,
     CODIGO_DE_CLIENTE: obtenerConfiguracionPos.value.CODIGO_CLIENTE_CF, // Cliente Ticket
-    ESTADO_PEDIDO: estadoPedido.value === "pedido" ? "P" : "C",
+    ESTADO_PEDIDO: tipoTransaccion.value === "pedido" ? "P" : "C",
   };
 
   mutateCrearPedidoEnc(pedidoEnc, {
@@ -996,7 +1001,7 @@ const crearPedido = () => {
         "Error al crear",
         error.message ||
           `No se pudo registrar ${
-            estadoPedido.value === "pedido" ? "el" : "la"
+            tipoTransaccion.value === "pedido" ? "el" : "la"
           } ${estadoPedido.value}`
       );
     },
