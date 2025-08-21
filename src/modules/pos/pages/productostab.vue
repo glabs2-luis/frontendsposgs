@@ -976,7 +976,9 @@ const totalAnterior = ref(0);
 */
 
 // Facturación - cálculos y validaciones
-const totalAPagar = computed(() => Number(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0));
+const totalAPagar = computed(() =>
+  Number(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0)
+);
 const montoEfectivoNum = computed(() => Number(montoEfectivo.value) || 0);
 const montoTarjetaNum = computed(() => Number(montoTarjeta.value) || 0);
 
@@ -1527,11 +1529,14 @@ const limpiarPedido = async() => {
 // anular pedido
 const limpiar = async () => {
   if (!pedidoStore.idPedidoEnc) {
-    showErrorNotification("Error", "No existe un pedido o cotización para anular");
+    showErrorNotification(
+      "Error",
+      "No existe un pedido o cotización para anular"
+    );
     return;
   }
 
-  const tipoPedido = pedidoStore.estadoPedido === 'P' ? 'Pedido' : 'Cotización'
+  const tipoPedido = pedidoStore.estadoPedido === "P" ? "Pedido" : "Cotización";
 
   const confirmado = await showConfirmationDialog(
     `Anular ${tipoPedido.value}`,
@@ -1548,7 +1553,9 @@ const limpiar = async () => {
         onSuccess: () => {
           $q.notify({
             type: "positive",
-            message: `${tipoPedido} anulad${tipoPedido === 'Pedido' ? 'o' : 'a'} con éxito`,
+            message: `${tipoPedido} anulad${
+              tipoPedido === "Pedido" ? "o" : "a"
+            } con éxito`,
             position: "top-right",
             timeout: 3000,
             icon: "check",
@@ -1721,7 +1728,7 @@ const confirmarFactura = async () => {
       // Asignar este valor para llenar la factura
       idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
       // Ahora sí espera a que termine la certificación
-      console.log(' Que trae respuesta:', respuesta);
+
       if (contingencia.value === true) {
         await imprimirFactura(respuesta);
         return;
@@ -1744,7 +1751,6 @@ const confirmarFactura = async () => {
 };
 
 const imprimirFactura = async (data) => {
-
   console.log("imprimiendo factura...");
   const factura2 = await obtenerFacturaId3(idFacturaEnc.value);
 
@@ -1764,7 +1770,7 @@ const imprimirFactura = async (data) => {
     subtotal: item.SUBTOTAL_GENERAL.toFixed(4),
   }));
 
-  console.log('detalle: ', detalle)
+  console.log("detalle: ", detalle);
 
   const totalItems = itemsFactura.reduce(
     (total, item) => total + Number(item.cantidad),
@@ -2158,7 +2164,6 @@ onBeforeUnmount(() => {
     cantidadInputs.value = {};
   }
 });
-
 
 defineExpose({
   enfocarCodigo,
