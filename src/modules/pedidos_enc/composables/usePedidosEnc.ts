@@ -57,7 +57,7 @@ export const usePedidosEnc = () => {
   });
 
   // Obtener pedido por ID
-  const obtenerPedidoPorId = (idPedidoEnc: Ref<number, number> ) => {
+  const obtenerPedidoPorId = (idPedidoEnc: Ref<number, number>) => {
     const { data, refetch: refetchObtenerPedidoID } = useQuery({
       queryKey: computed(() => ["pedidoEnc", idPedidoEnc.value]),
       queryFn: () => obtenerPedidoEncPorIdAction(idPedidoEnc.value),

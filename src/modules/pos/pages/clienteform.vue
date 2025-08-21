@@ -3,7 +3,6 @@
     <div class="col-12">
       <!-- informacion mas pedido y cantidad-->
       <div class="row items-start q-gutter-sm">
-
         <!-- Boton para Cotizacion y pedido -->
         <div class="tipo-transaccion-container">
           <div class="q-gutter-y-md">
@@ -16,8 +15,8 @@
               color="grey-1"
               text-color="black"
               :options="[
-                {label: 'Pedido', value: 'pedido'},
-                {label: 'Cotizacion', value: 'cotización'}
+                { label: 'Pedido', value: 'pedido' },
+                { label: 'Cotizacion', value: 'cotización' },
               ]"
               class="tipo-transaccion-toggle"
               :disable="!!mostrarNumPedido"
@@ -355,9 +354,7 @@
         </div>
 
         <!-- Boton para modal pedidos/cotizaciones pendientes -->
-        <div
-          class="btn-pendientes-container"
-        >
+        <div class="btn-pendientes-container">
           <q-btn
             icon="assignment"
             color="red"
@@ -516,13 +513,15 @@ const {
   obtenerPedidoPorId,
   mutateAnularPedidoPendiente,
 } = usePedidosEnc();
-const idPedidoEnc =  computed(() => pedidoStore.idPedidoEnc||0); // Aseguramos que sea un número
-const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);  
+const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc || 0); // Aseguramos que sea un número
+const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
 const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
-const estadoPedido = computed(() => pedidoStore.estadoPedido === 'P' ? 'Pedido' : 'Cotización');
-const focus2 = ref<HTMLInputElement | null>(null)
-let espera: ReturnType<typeof setTimeout> | null = null // Para la busqueda automatica
+const estadoPedido = computed(() =>
+  pedidoStore.estadoPedido === "P" ? "Pedido" : "Cotización"
+);
+const focus2 = ref<HTMLInputElement | null>(null);
+let espera: ReturnType<typeof setTimeout> | null = null; // Para la busqueda automatica
 const tipoTransaccion = ref(pedidoStore.tipoPedido); // Valor inicial
 const tab = ref('pedidos')
 const { generarCotizacionPDF } = usePdfCotizacion()
@@ -858,7 +857,11 @@ watchEffect(() => {
   }
 });
 
-const { data: pedidosPendientes, isLoading, refetch:refetchPedidosPendientes } = obtenerPedidosPendientes(
+const {
+  data: pedidosPendientes,
+  isLoading,
+  refetch: refetchPedidosPendientes,
+} = obtenerPedidosPendientes(
   Number(storeSucursal.idSucursal), // Convertido a numero
   userStore.codigoVendedor
 );
