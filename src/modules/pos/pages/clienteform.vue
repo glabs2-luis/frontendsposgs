@@ -11,7 +11,7 @@
               unelevated
               spread
               no-caps
-              toggle-color="green-8"
+              toggle-color="indigo"
               color="grey-1"
               text-color="black"
               :options="[
@@ -212,7 +212,19 @@
 
               <q-tab-panels v-model="tab" animated>
                 <q-tab-panel name="pedidos">
-                  <p class="text-caption">Lista de pedidos no facturados</p>
+                  <!-- <p class="text-caption">Lista de pedidos no facturados</p> -->
+
+                  <q-input
+                    dense
+                    debounce="300"
+                    v-model="filtroPedidos"
+                    placeholder="Buscar pedidos..."
+                    class="q-mb-md"
+                  >
+                    <template v-slot:append>
+                      <q-icon name="search" />
+                    </template>
+                  </q-input>
 
                   <q-markup-table flat bordered class="q-mt-sm tabla-elegante">
                     <thead>
@@ -227,7 +239,7 @@
                     </thead>
                     <tbody>
                       <tr
-                        v-for="pedido in pedidosPendientes.filter(pedido => pedido.ESTADO_PEDIDO === 'P')"
+                        v-for="pedido in filteredPedidos"
                         :key="pedido.NUMERO_DE_PEDIDO"
                       >
                         <td>{{ pedido.NUMERO_DE_PEDIDO }}</td>
@@ -260,8 +272,20 @@
                 </q-tab-panel>
 
                 <q-tab-panel name="cotizaciones">
-                  <p class="text-caption">Lista de cotizaciones pendientes</p>
+                  <!-- <p class="text-caption">Lista de cotizaciones pendientes</p> -->
                   
+                  <q-input
+                    dense
+                    debounce="300"
+                    v-model="filtroCotizaciones"
+                    placeholder="Buscar cotizaciones..."
+                    class="q-mb-md"
+                  >
+                    <template v-slot:append>
+                      <q-icon name="search" />
+                    </template>
+                  </q-input>
+
                   <q-markup-table flat bordered class="q-mt-sm tabla-elegante">
                     <thead>
                       <tr>
@@ -276,7 +300,7 @@
                     </thead>
                     <tbody>
                       <tr
-                        v-for="pedido in pedidosPendientes.filter(pedido => pedido.ESTADO_PEDIDO === 'C')"
+                        v-for="pedido in filteredCotizaciones"
                         :key="pedido.NUMERO_DE_PEDIDO"
                       >
                         <td>{{ pedido.NUMERO_DE_PEDIDO }}</td>
@@ -324,6 +348,9 @@
               </q-card-actions>
             </q-card>
           </q-dialog>
+
+
+
         </div>
 
         <!-- Boton para modal pedidos/cotizaciones pendientes -->
@@ -495,6 +522,8 @@ let espera: ReturnType<typeof setTimeout> | null = null; // Para la busqueda aut
 const estadoPedido = ref(!pedidoStore.estadoPedido || pedidoStore.estadoPedido === 'P' ? 'pedido' : 'cotización');
 const tab = ref('pedidos')
 const { generarCotizacionPDF } = usePdfCotizacion()
+const filtroPedidos = ref('');
+const filtroCotizaciones = ref('');
 
 // abrir expansion item y focus a nit
 watch(
@@ -645,6 +674,13 @@ const truncateDosDecimales = (numero) => {
   return Math.trunc(numero * 100) / 100;
 }
 
+const formatearFecha = (fecha) => {
+  return new Date(fecha).toLocaleString("es-GT", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+};
+
 // Preparar actualizacion para pedido
 const prepararDataCotizacion = async (pedido: PedidosEnc): Promise<DataCotizacion> => {
   const apiResponseDetallePedido = await obtenerDetallePedido(pedido.ID_PEDIDO_ENC);
@@ -665,7 +701,7 @@ const prepararDataCotizacion = async (pedido: PedidosEnc): Promise<DataCotizacio
     encabezado: {
       numeroInterno: `${pedido.NUMERO_DE_PEDIDO}`,
       tipoDocumento: "COTIZACION",
-      fechaEmision: new Date().toISOString(),
+      fechaEmision: formatearFecha(pedido.FECHA_PEDIDO),
     },
 
     observacion: pedido.OBSERVACIONES,
@@ -822,6 +858,42 @@ const {
   Number(storeSucursal.idSucursal), // Convertido a numero
   userStore.codigoVendedor
 );
+
+// Propiedad computada para filtrar la lista de pedidos
+const filteredPedidos = computed(() => {
+  if (!pedidosPendientes.value) {
+    return [];
+  }
+  const searchTerm = filtroPedidos.value.toLowerCase();
+  
+  return pedidosPendientes.value.filter(p => {
+    const isPending = p.ESTADO_PEDIDO === 'P';
+    const matchesSearch = 
+      String(p.NUMERO_DE_PEDIDO).toLowerCase().includes(searchTerm) ||
+      p.NOMBRE_A_FACTURAR.toLowerCase().includes(searchTerm) ||
+      p.NIT_A_FACTURAR.toLowerCase().includes(searchTerm);
+      
+    return isPending && matchesSearch;
+  });
+});
+
+// Propiedad computada para filtrar la lista de cotizaciones
+const filteredCotizaciones = computed(() => {
+  if (!pedidosPendientes.value) {
+    return [];
+  }
+  const searchTerm = filtroCotizaciones.value.toLowerCase();
+  
+  return pedidosPendientes.value.filter(p => {
+    const isQuote = p.ESTADO_PEDIDO === 'C';
+    const matchesSearch =
+      String(p.NUMERO_DE_PEDIDO).toLowerCase().includes(searchTerm) ||
+      p.NOMBRE_A_FACTURAR.toLowerCase().includes(searchTerm) ||
+      p.NIT_A_FACTURAR.toLowerCase().includes(searchTerm);
+      
+    return isQuote && matchesSearch;
+  });
+});
 
 const abrirModalPedidosPendientes = () => {
   refetchPedidosPendientes();
