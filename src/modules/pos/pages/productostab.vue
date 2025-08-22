@@ -848,21 +848,6 @@ const props = defineProps({
   }
 });
 
-const tipoPedido = computed(() => props.tipoPedido)
-
-// Emits
-const emit = defineEmits(['updateEstado']);
-
-const updateEstadoPedido = (nuevoEstado) => {
-  emit('updateEstado', nuevoEstado);
-}
-
-/*
-==========================================================
-                  COMPOSABLES FUNCTIONS
-==========================================================
-*/
-
 const idPedidoEnc = computed(() => props.pedidoId);
 const tipoPedido = computed(() => props.tipoPedido)
 
@@ -872,6 +857,7 @@ const emit = defineEmits(['updateEstado']);
 const updateEstadoPedido = (nuevoEstado) => {
   emit('updateEstado', nuevoEstado);
 }
+
 
 /*
 ==========================================================
