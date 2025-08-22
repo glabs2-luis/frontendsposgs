@@ -33,7 +33,7 @@ export const useProductos = () => {
             return productoPrecio
         } catch (error) {
             console.log('Error obteniendo precio del producto', error)
-            showErrorNotification('Error', 'Error obteniendo precio del producto')
+            // showErrorNotification('Error', 'Error obteniendo precio del producto')
         }
     }
 

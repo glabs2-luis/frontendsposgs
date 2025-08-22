@@ -53,12 +53,13 @@
           dense
           @keyup.enter="buscarProductoEscaneado"
           class="col-12 col-md-5"
+          :disable="errorAgregarProducto"
         >
-          <template #prepend>
-            <q-icon name="view_headline" color="primary" />
-          </template>
           <template #append>
-            <q-btn round dense flat icon="search" color="primary" />
+            <q-icon name="search" color="primary" />
+          </template>
+          <template #prepend>
+            <q-btn round dense flat icon="view_headline" color="primary" @click="abrirCatalogo2" />
           </template>
         </q-input>
 
@@ -685,6 +686,8 @@ import {
   showErrorNotificationInside,
   showSuccessNotificationInside,
   runWithLoading,
+  mostrarNotificacionCorrectoSonido,
+  mostrarNotificacionErrorSonido,
 } from "@/common/helper/notification";
 
 import { useProductos } from "@/modules/Productos/composables/useProductos";
@@ -845,8 +848,9 @@ const cantidad2 = ref(1); // para modal cantidad
 const cantidadInputs = ref({});           // Referencias a los inputs de cantidad en el catálogo
 const clave = ref("");
 const codigoProducto = ref("");
-const cupon = ref("");
+const cupon = ref();
 const detallesPedido = ref([]);
+const errorAgregarProducto = ref(false);
 const filtroProductos = ref("");
 const focusCantidad = ref(null);          // focus modal cantidad
 const focusEfectivo = ref(null);          // focus efectivo
@@ -1561,13 +1565,17 @@ const buscarProductoEscaneado = async () => {
   if (!codigoProducto.value) return;
 
   if (!pedidoStore.idPedidoEnc) {
-    showErrorNotification("No hay pedido", "Debe de crear un pedido primero");
+    await errorAgregarProductoConSonido(
+      "No hay un pedido activo. Por favor, crea un nuevo pedido."
+    );
     return;
   }
 
+  
+
   loadingPorCodigo.value = true;
   let resultado = null;
-
+  
   // 1. buscar por código de barras
   try {
     resultado = await consultarCodigoM(codigoProducto.value, cantidad2.value);
@@ -1577,20 +1585,9 @@ const buscarProductoEscaneado = async () => {
 
   // 2. buscar por ID de producto
   if (!resultado || !resultado.producto) {
+    
     try {
       const productoDirecto = await precioReal(
-        codigoProducto.value,
-        cantidad2.value
-      );
-
-      console.log(
-        "mandando a consultar el precio: ",
-        codigoProducto.value,
-        cantidad2.value
-      );
-      // datos a consultar
-      console.log(
-        "mandando a consultar el precio: ",
         codigoProducto.value,
         cantidad2.value
       );
@@ -1599,12 +1596,14 @@ const buscarProductoEscaneado = async () => {
         productoDirecto.PRECIO_FINAL === 0 ||
         productoDirecto.PRECIO_FINAL === null
       ) {
-        showErrorNotification(
-          "Producto sin precio",
-          `El código ${codigoProducto.value} no tiene precio`
+        await errorAgregarProductoConSonido(
+          `Producto sin precio, El código ${codigoProducto.value} no tiene precio`
         );
         codigoProducto.value = "";
         loadingPorCodigo.value = false;
+        nextTick(() => {
+          inputCodigo.value?.focus();
+        });
         return;
       }
 
@@ -1621,7 +1620,7 @@ const buscarProductoEscaneado = async () => {
 
       resultado = {
         producto: {
-          //PRODUCT0: codigoProducto.value,
+          PRODUCT0: codigoProducto.value,
         },
         precio: {
           PRECIO_FINAL: prod.PRECIO_FINAL,
@@ -1630,15 +1629,18 @@ const buscarProductoEscaneado = async () => {
 
       console.log("resultado2: ", resultado);
     } catch (err) {
-      showErrorNotification(
-        "Producto no encontrado",
-        `El código ${codigoProducto.value} no existe`
+      await errorAgregarProductoConSonido(
+        `Error al buscar producto (${codigoProducto.value}) por código: ${err.message || "Error desconocido"}`
       );
       codigoProducto.value = "";
       loadingPorCodigo.value = false;
+      nextTick(() => {
+         inputCodigo.value?.focus();
+      });
       return;
     }
   }
+    console.log("Buscando producto por código:", codigoProducto.value);
 
   //console.log('Este es el resultado',resultado)
 
@@ -1657,34 +1659,30 @@ const buscarProductoEscaneado = async () => {
     NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido,
   };
 
-  // console.log("Este es el detalle: ", detalle);
-
+  
   mutateCrearPedidoDet(detalle, {
     onSuccess: async (data) => {
       detallesPedido.value.push(data);
       codigoProducto.value = "";
       await refetchObtenerPedidoID(); // Refrescar datos del pedido primero
+      await refetchObtenerPedidoDetID();
       totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0);
       // relistaDet2(); // Refrescar lista de detalles
       cantidad2.value = 1; // Resetear cantidad del modal
-
-      $q.notify({
-        type: "success",
-        message: `${detalle.DESCRIPCION_PROD_AUX} agregado con éxito`,
-        position: "bottom-right",
-        color: "green",
-        timeout: 2000,
-        group: false,
-        progress: true,
-        icon: "check",
-      });
+      console.log("Producto agregado con éxito:", data);
+      
+      mostrarNotificacionCorrectoSonido(`${detalle.PRODUCT0} agregado con éxito`);
     },
-    onError: (err) => {
-      console.error("Error al guardar producto:", err);
-      $q.notify({ type: "negative", message: "Error al guardar producto" });
+    onError: async (err) => {
+      await errorAgregarProductoConSonido(
+        `Error al guardar producto: ${err.message || "Error desconocido"}`
+      );
     },
     onSettled: () => {
       loadingPorCodigo.value = false;
+      nextTick(() => {
+        inputCodigo.value?.focus();
+      });
     },
   });
 };
@@ -1731,6 +1729,7 @@ const agregarProductoAlPedido2 = async (producto) => {
         producto.CANTIDAD_PEDIDA = 1;
         await refetchObtenerPedidoID(); // Refrescar datos del pedido primero
         await refetchObtenerPedidoDetID();
+        console.log("Producto agregado con éxito:", data);
         // relistaDet2();
         totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0);
         if (allowAutoFocusProduct.value) enfocarCodigo();
@@ -1747,11 +1746,10 @@ const agregarProductoAlPedido2 = async (producto) => {
 
         //console.log('detalle2',detalle2)
       },
-      onError: (error) => {
+      onError: async (error) => {
         console.error("Error al guardar producto en BD:", error);
-        showErrorNotificationInside(
-          "No hay pedido",
-          "Debe de crear un pedido primero"
+        await errorAgregarProductoConSonido(
+          `Error al agregar producto: ${error.message || "Error desconocido"}`
         );
         throw new Error(error);
       },
@@ -1812,6 +1810,12 @@ const seleccionarProducto2 = async (producto, index) => {
   } catch (error) {
     console.error("Error in seleccionarProducto2:", error);
   }
+};
+
+const errorAgregarProductoConSonido = async (mensajeError) => {
+  errorAgregarProducto.value = true;
+  errorAgregarProducto.value = await mostrarNotificacionErrorSonido(mensajeError);
+
 };
 
 /*
