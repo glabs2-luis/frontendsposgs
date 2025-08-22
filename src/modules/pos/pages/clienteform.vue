@@ -412,14 +412,12 @@
   <ProductosTab
     ref="productosTabRef"
     :pedidoId="idPedidoEnc"
-    :pedidoId="idPedidoEnc"
     :onNuevoPedido="nuevoPedido"
     :tipoPedido="estadoPedido"
     @update-estado="handleActualizarPedido"
   />
   <TablaProductos
     ref="tablaProductosRef"
-    :-pedido-id="idPedidoEnc"
     :-pedido-id="idPedidoEnc"
     :onProductoEliminado="enfocarInputCodigo"
   />
