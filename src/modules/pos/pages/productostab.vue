@@ -933,34 +933,13 @@ const montoEfectivo = ref(null);
 const montoTarjeta = ref(null);
 const opcionesPago2 = ["EFECTIVO", "TARJETA", "MIXTO"];
 const tipoPago = ref("EFECTIVO");
-const calcularCambio = ref(0);
+const errorAgregarProducto = ref(false);
 const refCupon = ref();
-const cupon = ref("");
-const clave = ref("");
-const modalCantidad = ref(false);
-const modalProductos = ref(false);
-const filtroProductos = ref("");
-const loadingProductos = ref(false);
-const loadingPorCodigo = ref(false);
-const loadingDetalle = ref(false);
-const loadingAgregar = ref(false);
 const pedidoStore = usePedidoStore();
 const { consultarCodigo, consultarCodigoM } = useCodigo();
 const totalStore = useTotalStore();
-const modalFacturacion = ref(false);
 const userStore = useUserStore();
-const modalCuponazo = ref(false);
 const queryClient = useQueryClient();
-const { data: pedidoData, refetchObtenerPedidoID } =
-  obtenerPedidoPorId(idPedidoEnc);
-const focusCantidad = ref(null); // focus modal cantidad
-const { refetch: relistaDet2 } = ListaDet2(idPedidoEnc);
-const focusEfectivo = ref(null); // focus efectivo
-const focusTarjeta = ref(null);
-const modalProductos2 = ref(false);
-const cantidadInputs = ref({}); // Referencias a los inputs de cantidad en el catálogo
-const buscadorProductoRef = ref(null);
-const totalAnterior = ref(0);
 
 /*
 ==========================================================
