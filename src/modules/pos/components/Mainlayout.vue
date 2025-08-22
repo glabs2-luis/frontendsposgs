@@ -44,7 +44,6 @@
           <q-item-section avatar><q-icon name="settings" /></q-item-section>
           <q-item-section>Configuracion</q-item-section>
         </q-item>
-
       </q-list>
     </q-drawer>
 
@@ -176,7 +175,7 @@ import { useSyncManager } from "@/modules/sync/composables/useSyncManager";
 import SyncResultsModal from "@/modules/sync/components/SyncResultsModal.vue";
 import { useStoreSucursal } from "@/stores/sucursal";
 
-const StoreSucursal  = useStoreSucursal()
+const StoreSucursal = useStoreSucursal();
 const { obtenerSucursal } = useSucursales();
 const { nombreVendedor, codigoVendedor } = useUserStore();
 const router = useRouter();
@@ -275,8 +274,8 @@ const limpiarNotificaciones = () => {
 
 // Función para iniciar sincronización automática
 const iniciarSincronizacionAutomatica = () => {
-  // solo cambiar el 1 por otro numero para indicar los minutos de intervalo de sincronizacion, para nop hacerce bolas
-  const intervalo = 1 * 60 * 1000;
+  // solo cambiar el 60 por otro numero para indicar los minutos de intervalo de sincronizacion, para nop hacerce bolas
+  const intervalo = 60 * 60 * 1000;
 
   // Primera sincronización si no hay registro previo
   if (syncTasks.value.every((task) => !task.lastSync)) {

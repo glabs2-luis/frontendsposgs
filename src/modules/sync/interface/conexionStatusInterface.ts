@@ -1,4 +1,5 @@
 export interface ConexionStatus {
-    serverConnected?: string;
-    FechaRevision?:   Date;
+  serverConnected?: string;
+  FechaRevision?: Date;
+  status: boolean;
 }
