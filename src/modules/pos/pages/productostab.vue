@@ -1396,6 +1396,7 @@ const truncateDosDecimales = (numero) => {
 // Preparar actualizacion para pedido
 const prepararDataCotizacion = async (idPedido) => {
   const apiResponseDetallePedido = await obtenerDetallePedido(idPedido);
+  const pedidoEnc = await obtenerPedidoEncPorIdAction(idPedido)
 
   const items = apiResponseDetallePedido.map((item) => {
     return {
@@ -1413,7 +1414,7 @@ const prepararDataCotizacion = async (idPedido) => {
     encabezado: {
       numeroInterno: `${pedidoStore.numeroDePedido}`,
       tipoDocumento: "COTIZACION",
-      fechaEmision: new Date().toISOString(),
+      fechaEmision: formatearFecha(pedidoEnc.FECHA_PEDIDO),
     },
 
     observacion: '',
