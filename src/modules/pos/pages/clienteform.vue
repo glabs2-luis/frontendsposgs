@@ -128,7 +128,7 @@
                       />
                     </div>
 
-                    <div class="col-3">
+                    <!-- <div class="col-3">
                       <q-input
                         v-model="clienteStore.telefono"
                         label="Teléfono"
@@ -137,8 +137,8 @@
                         mask="####-####"
                         style="font-size: 13px"
                       />
-                    </div>
-
+                    </div> -->
+                    <!-- 
                     <div class="col-6">
                       <q-input
                         v-model="clienteStore.email"
@@ -159,7 +159,7 @@
                           />
                         </template>
                       </q-input>
-                    </div>
+                    </div> -->
                   </div>
                 </q-form>
               </div>
@@ -1003,18 +1003,18 @@ const buscarClienteDPINIT2 = async () => {
       );
 
       // Consolar los resultados
-      console.log("Tipo de documento:", tipoDocumento.value);
-      console.log(
-        "Este es el resultado de consultar datos en la sat: ",
-        result.data
-      );
-      console.log("valor booleano sat", result.isCertified);
+      // console.log("Tipo de documento:", tipoDocumento.value);
+      // console.log(
+      //   "Este es el resultado de consultar datos en la sat: ",
+      //   result.data
+      // );
+      // console.log("valor booleano sat", result.isCertified);
 
       const nombreSat = result.data.nombre; // Guardar el nombre retornado de sat
 
       // result = texto
-      if (nombreSat === "Contribuyente no encontrado") {
-        showErrorNotification("No encontrado", "Verificar el NIT ingresado");
+      if (result.isCertified === false) {
+        showErrorNotification("Error", result.data.nombre);
         return;
       } else {
         // 3) No existe en BD pero SAT devolvió nombre -> abrir modal con datos prellenados
@@ -1107,10 +1107,13 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
       abrirModalCliente.value = false;
       expansion.value?.toggle();
 
-      showSuccessNotification(
-        "Nuevo Cliente",
-        "Cliente creado satisfactoriamente"
-      );
+      $q.notify({
+        type: "success",
+        message: "Cliente creado satisfactoriamente",
+        position: "top",
+        color: "green",
+        timeout: 2000,
+      });
     },
     onError: (error: any) => {
       console.error("Error creando cliente:", error);

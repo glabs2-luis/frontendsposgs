@@ -117,10 +117,7 @@ export const obtenerFacturasFechaAction = async (
     });
     return data;
   } catch (error) {
-    const message = getAxiosErrorMessage(
-      error,
-      "Hubo un error obteniendo facturas por fecha"
-    );
+    const message = getAxiosErrorMessage(error, "Hubo un error obteniendo facturas por fecha" );
     console.log(message);
     throw new Error(message);
   }
@@ -131,11 +128,22 @@ export const obtenerFacturaNumeroSerieAction = async (serie: string, numero: num
     const { data } = await posApi.get(`/facturas-enc/factura2/${serie}/${numero}`);
     return data
     } catch (error) {
-    const message = getAxiosErrorMessage(
-      error,
-      "Hubo un error obteniendo facturas por numero y serie"
+    const message = getAxiosErrorMessage(error, "Hubo un error obteniendo facturas por numero y serie"
     );
     console.log(message);
-    throw new Error(message);}
-
+    throw new Error(message);
   }
+}
+
+  export const actualizarContingenciaAction = async (id: number): Promise<FacturaEnc> => {
+    try {
+      const { data } = await posApi.patch(`/facturas-enc/contingencia`, {ID_FACTURA_ENC: id, CONTINGENCIA: true})
+      console.log('Datos desde action', data)
+      return data
+    } catch (error) {
+      const message = getAxiosErrorMessage(error, "Hubo un error actualizando la contingencia")
+      console.log(message)
+      throw new Error(message)
+    }   
+
+}

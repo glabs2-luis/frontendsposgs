@@ -8,6 +8,7 @@ import {
   obtenerDatosFelAction,
   obtenerFacturasFechaAction,
   obtenerFacturaNumeroSerieAction,
+  actualizarContingenciaAction
 } from "../action/facturasEncAction";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
 import { showErrorNotification } from "@/common/helper/notification";
@@ -98,6 +99,16 @@ export const useFacturasEnc = () => {
     return await obtenerFacturaNumeroSerieAction(serie, numero);
   };
 
+  const { mutate: mutateAgregarContingencia } = useMutation({
+    mutationFn: actualizarContingenciaAction,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["facturas-enc"] });
+    },
+    onError: (error: Error) => {
+      showErrorNotification("Error", error.message)
+    }
+  })
+
   return {
     obtenerFacturasEnc,
     obtenerDetalleFactura,
@@ -109,7 +120,8 @@ export const useFacturasEnc = () => {
     obtenerFacturasPorFecha,
     obtenerFacturasPorNumeroSerie,
     mutateCambiarNitFacturaACF,
-  };
-};
+    mutateAgregarContingencia,
+  }
+}
 
 export default useFacturasEnc;

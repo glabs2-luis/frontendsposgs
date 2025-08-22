@@ -725,6 +725,7 @@
 </template>
 
 <script setup>
+
 import { useQuasar } from "quasar";
 import { useQueryClient } from "@tanstack/vue-query";
 import {
@@ -761,7 +762,6 @@ import { useCertification } from "@/modules/certification/composables/useCertifi
 import { useCupones } from "@/modules/cupones/composables/useCupones";
 import useFormat from "@/common/composables/useFormat";
 import { useStoreSucursal } from "@/stores/sucursal";
-
 import { cleanAllStores } from "@/common/helper/cleanStore";
 import { usePdfCotizacion } from "@/modules/cotizacion_pdf/composable/useCotizacion";
 import { obtenerDetallePedido } from "@/modules/pedidos_enc/action/pedidosEncAction";
@@ -861,6 +861,7 @@ const updateEstadoPedido = (nuevoEstado) => {
 ==========================================================
 */
 
+const { mutateAgregarContingencia } = useFacturasEnc();
 const { formatNumber, formatCurrency } = useFormat();
 const storeSucursal = useStoreSucursal();
 const { mutateAplicarCupon } = useCupones();
@@ -918,6 +919,7 @@ const filtroProductos = ref("");
 const focusCantidad = ref(null); // focus modal cantidad
 const focusEfectivo = ref(null); // focus efectivo
 const focusTarjeta = ref(null);
+const idFacturaEnc = ref(null); // ID de la factura creada
 const inputCodigo = ref(null);
 const loadingAgregar = ref(false);
 const loadingDetalle = ref(false);
@@ -937,7 +939,7 @@ const paginacionCatalogo = ref({
   sortBy: "PRODUCTO",
   descending: false,
   page: 1,
-  rowsPerPage: 100,
+  rowsPerPage: 50,
 });
 
 /*
@@ -1023,19 +1025,6 @@ watch(idPedidoEnc, (nuevo) => {
 // actualizar cliente en facturacion
 watch(pedidoData, () => {
   refetchObtenerPedidoID();
-});
-
-watch(modalProductos, async (val) => {
-  if (val) {
-    try {
-      loadingProductos.value = true;
-      await refetchTodosProductos();
-    } catch (error) {
-      $q.notify({ type: "negative", message: "Error al cargar productos" });
-    } finally {
-      loadingProductos.value = false;
-    }
-  }
 });
 
 // si el efectivo cambia, calcular cambio
@@ -1157,6 +1146,16 @@ const cantidadIngresada = (producto) => {
   if (!producto.CANTIDAD_PEDIDA || producto.CANTIDAD_PEDIDA <= 0) {
     showErrorNotification("Cantidad", "Ingrese una cantidad válida");
     return;
+  }
+};
+
+// Función para refrescar productos en facturación
+const refetchProductosFactura = async () => {
+  try {
+    await refetchObtenerPedidoID();
+    await refetchObtenerPedidoDetID();
+  } catch (error) {
+    console.error("Error al refrescar productos en facturación:", error);
   }
 };
 
@@ -1291,6 +1290,27 @@ watch(pedidoData, () => {
   refetchObtenerPedidoID();
 });
 
+watch(modalProductos, async (val) => {
+  if (val) {
+    try {
+      loadingProductos.value = true;
+      await refetchTodosProductos();
+    } catch (error) {
+      $q.notify({ type: "negative", message: "Error al cargar productos" });
+    } finally {
+      loadingProductos.value = false;
+    }
+  }
+});
+
+// si el efectivo cambia, calcular cambio
+const calcularCambioModal = () => {
+  if (opcionesPago2 === "MIXTO") calcularCambio.value = 0;
+  else {
+    calcularCambio.value = montoEfectivo.value - totalStore.totalGeneral;
+  }
+};
+
 // Despues del cantidad volver al focus del input
 const volverAFocusInput = () => {
   setTimeout(() => {
@@ -1300,7 +1320,6 @@ const volverAFocusInput = () => {
 };
 
 // focus
-
 const enfocarCodigo = () => {
   if (!allowAutoFocusProduct.value) return;
   inputCodigo.value?.focus();
@@ -1519,13 +1538,7 @@ const abrirCatalogo2 = async () => {
 const abrirModalCantidad = () => {
   modalCantidad.value = true;
 };
-// calcular cambio
-const calcularCambioModal = () => {
-  if (opcionesPago2 === "MIXTO") calcularCambio.value = 0;
-  else {
-    calcularCambio.value = montoEfectivo.value - totalStore.totalGeneral;
-  }
-};
+
 // FUNCIONES GENERALES
 
 const formatearFecha = (fecha) => {
@@ -1546,7 +1559,7 @@ const certificarFactura = async (id) => {
     spinnerColor: "green",
     spinnerSize: 50,
   });
-  console.log('yo soy id"', id);
+  //console.log('yo soy id"', id);
 
   // Usar Promise para manejar la mutación de certificación
   mutateCertificar(
@@ -1576,10 +1589,27 @@ const certificarFactura = async (id) => {
           icon: "check",
         });
       },
-      onError: (error) => {
+
+      onError: async (error) => {
         console.error("Error en certificación:", error);
         $q.loading.hide();
-        //TODO: Implementar factura en contingencia en el caso que hay algun error en certificacion, lanzar un mensaje de que no se certificó
+        
+        $q.notify({
+          type: "negative",
+          message: `Error en certificación: ${error.message}, imprimiendo en contingencia`,
+          position: "top-right",
+          timeout: 5000,
+          icon: "error",
+        });
+
+        contingencia.value = true
+
+        await mutateAgregarContingencia(id)
+
+        nextTick() 
+
+        await imprimirFactura(id)
+
       },
     }
   );
@@ -1643,6 +1673,7 @@ const confirmarFactura = async () => {
       // Asignar este valor para llenar la factura
       idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
       // Ahora sí espera a que termine la certificación
+      console.log(' Que trae respuesta:', respuesta);
 
       if (contingencia.value === true) {
         await imprimirFactura(respuesta);
@@ -1670,7 +1701,7 @@ const imprimirFactura = async (data) => {
   // console.log("este es data:", data);
   console.log("imprimir factura2:", factura2);
 
-  // console.log('yo soy contingencia xd:', contingencia.value)
+  // console.log('yo soy contingencia:', contingencia.value)
   // console.log("data certificada con exito: ", data)
 
   const detalle = await obtenerDetalleFactura(idFacturaEnc.value);
@@ -1702,7 +1733,9 @@ const imprimirFactura = async (data) => {
       numero: factura2.NUMERO_FACTURA,
     });
   }
+
   console.log("Imprimiendo 2...");
+
   const dataFactura = {
     encabezado: {
       serie: data.SerieFacturaFel,
@@ -1733,7 +1766,7 @@ const imprimirFactura = async (data) => {
     qrCodeData: data.Uuid,
   };
 
-  // console.log(" yo soy data xd:", dataFactura);
+  // console.log(" yo soy data:", dataFactura);
   await nextTick();
   console.log("Imprimiendo 3...");
   await generarFacturaPDF(dataFactura);
