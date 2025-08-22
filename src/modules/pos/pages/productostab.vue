@@ -1721,7 +1721,7 @@ const confirmarFactura = async () => {
       // Asignar este valor para llenar la factura
       idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
       // Ahora sí espera a que termine la certificación
-      
+      console.log(' Que trae respuesta:', respuesta);
       if (contingencia.value === true) {
         await imprimirFactura(respuesta);
         return;
@@ -1751,7 +1751,7 @@ const imprimirFactura = async (data) => {
   //console.log("este es data:", data);
   //console.log('imprimir factura2:', factura2)
 
-  // console.log('yo soy contingencia xd:', contingencia.value)
+  // console.log('yo soy contingencia:', contingencia.value)
   // console.log("data certificada con exito: ", data)
 
   const detalle = await obtenerDetalleFactura(idFacturaEnc.value);
