@@ -911,6 +911,7 @@ const montoTarjeta = ref(null);
 const opcionesPago2 = ["EFECTIVO", "TARJETA", "MIXTO"];
 const refCupon = ref();
 const tipoPago = ref("EFECTIVO");
+const errorAgregarProducto = ref(false);
 
 // Paginación del catálogo
 const paginacionCatalogo = ref({
