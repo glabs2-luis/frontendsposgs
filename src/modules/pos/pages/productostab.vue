@@ -764,7 +764,7 @@ import useFormat from "@/common/composables/useFormat";
 import { useStoreSucursal } from "@/stores/sucursal";
 import { cleanAllStores } from "@/common/helper/cleanStore";
 import { usePdfCotizacion } from "@/modules/cotizacion_pdf/composable/useCotizacion";
-import { obtenerDetallePedido } from "@/modules/pedidos_enc/action/pedidosEncAction";
+import { obtenerDetallePedido, obtenerPedidoEncPorIdAction } from "@/modules/pedidos_enc/action/pedidosEncAction";
 import { useClienteStore } from "@/stores/cliente";
 
 /*
@@ -1371,6 +1371,7 @@ const truncateDosDecimales = (numero) => {
 // Preparar actualizacion para pedido
 const prepararDataCotizacion = async (idPedido) => {
   const apiResponseDetallePedido = await obtenerDetallePedido(idPedido);
+  const pedidoEnc = await obtenerPedidoEncPorIdAction(idPedido)
 
   const items = apiResponseDetallePedido.map((item) => {
     return {
@@ -1388,7 +1389,7 @@ const prepararDataCotizacion = async (idPedido) => {
     encabezado: {
       numeroInterno: `${pedidoStore.numeroDePedido}`,
       tipoDocumento: "COTIZACION",
-      fechaEmision: new Date().toISOString(),
+      fechaEmision: formatearFecha(pedidoEnc.FECHA_PEDIDO),
     },
 
     observacion: '',
