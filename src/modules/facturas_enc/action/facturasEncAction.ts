@@ -147,3 +147,15 @@ export const obtenerFacturaNumeroSerieAction = async (serie: string, numero: num
     }   
 
 }
+
+export const actualizarNitAction = async (id: number, nit: string, nombre:string): Promise<FacturaEnc> => {
+  try {
+    const { data } = await posApi.patch(`/facturas-enc/actualizarNit`, {ID_FACTURA_ENC: id, NIT_CLIEN_A_FACTURAR: nit, NOMBRE_CLI_A_FACTUAR: nombre})
+    console.log('Datos desde action', data)
+    return data
+  } catch (error) {
+    const message = getAxiosErrorMessage(error, "Hubo un error actualizando el NIT")
+    console.log(message)
+    throw new Error(message)
+  }
+}

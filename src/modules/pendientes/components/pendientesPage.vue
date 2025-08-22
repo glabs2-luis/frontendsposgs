@@ -6,7 +6,7 @@
       vertical
       :limits="[30, 75]"
       class="fit splitter-personalizado"
-      separator-style="width: 4px; background: linear-gradient(to bottom, #1976d2, #2196f3);"
+      separator-style="width: 4px; background: linear-gradient(to bottom, #1976d2, #2196f3); cursor: ew-resize;"
     >
       <template #separator>
         <div class="splitter-controls">
@@ -27,6 +27,7 @@
         <div class="column fit">
           <div class="col">
             <q-card class="q-pa-md">
+
               <q-card-section class="q-pa-xs q-ma-none">
                 <div class="row items-center justify-between q-mb-sm">
                   <div class="column">
@@ -37,6 +38,13 @@
                   </div>
 
                   <div class="row q-gutter-sm">
+                   <q-btn
+                      icon="swap_horiz"
+                      label="Cambiar Nit"
+                      color="green"
+                      @click="abrirActualizarNit"
+                      class="btn-accion"
+                    />
                     <q-btn
                       icon="update"
                       label="Nit a CF"
@@ -47,9 +55,9 @@
                     <q-btn
                       icon="refresh"
                       label=""
-                      color="cyan"
+                      color="blue"
                       @click="Refrescar"
-                      class="btn-accion"
+                      class="btn-accion"  
                     />
 
                     <q-btn
@@ -139,12 +147,156 @@
         </div>
       </template>
     </q-splitter>
+
+        <!-- Modal de contraseña -->
+    <q-dialog v-model="mostrarModalCambiarNit" style="z-index: auto;" persistent>
+      <q-card style="width: 340px; height: 210px;">
+        <q-card-section class="q-pa-md q-pl-md q-ma-none title-card">
+          <div class="text-h6 text-bold"><q-icon name="lock_open" />  Actualizar NIT
+          </div>
+        </q-card-section>
+
+        <q-card-section class="q-pa-sm q-mt-none q-ml-md q-mr-md">
+          <q-input v-model="password" label="Ingrese la contraseña" autofocus @keyup.enter="verificarPassword" :type="mostrarPassword ? 'text' : 'password'"
+          >    
+            <template #append>
+              <q-icon
+                :name="mostrarPassword ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="mostrarPassword = !mostrarPassword"
+              />
+            </template>
+          </q-input>
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-pa-md">
+          <q-btn flat label="Cancelar" @click="cancelar" color="black" />
+          <q-btn label="Ingresar" class="boton-amarillo" icon-right="arrow_forward" @click="verificarPassword" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+
+    <!-- Modal para actualizar el Nit --> 
+    <q-dialog v-model="modalActualizarNit" style="z-index: auto;" persistent>
+      <q-card style="width: 500px; height: 560px;">
+        <q-card-section class="q-pa-md q-pl-md q-ma-none title-card">
+          <div class="text-h6 text-bold"><q-icon name="" /> Actualizar NIT </div>
+        </q-card-section>
+      <q-card-section class="q-pt-none q-px-md">
+        <div class="row q-col-gutter-sm">
+          <div class="col-12">
+            <q-input
+              v-model="nitActual"
+              label="NIT "
+              standout
+              dense
+              disable
+              hint="Nit actual"
+              :rules="[() => !!nitActual || 'NIT actual no disponible']"
+            >
+              <template #prepend><q-icon name="key" /></template>
+            </q-input>
+          </div>
+
+          <div class="col-12">
+            <q-input
+              v-model="nombreActual"
+              label="Nombre"
+              standout
+              dense
+              disable
+              hint="Nombre Actual"
+            >
+              <template #prepend><q-icon name="person" /></template>
+            </q-input>
+          </div>
+        </div>
+      </q-card-section>
+
+      <q-separator />
+
+        <q-card-section class="q-pa-md q-pl-md q-ma-none title-card">
+          <div class="text-h6 text-bold text-green-8"><q-icon name="new" /> Ingrese el nuevo Nit</div>
+        </q-card-section>
+
+        <!-- Nuevo NIT -->
+      <q-card-section class="q-pt-none q-px-md">
+        <q-input
+          v-model="nuevoNit"
+          label="Nuevo NIT"
+          dense
+          autofocus
+          :maxlength="20"
+          @keydown.enter.prevent="buscarClienteSat"
+        >
+          <template #prepend><q-icon name="edit" /></template>
+          <template #hint>
+            Solo números y guión. Ej: 1234567-8
+          </template>
+          <template #append>
+            <q-btn
+              round
+              dense
+              flat
+              icon="cleaning_services"
+              @click="nuevoNit = ''"
+              :disable="isLoading"
+            />
+          </template>
+        </q-input>
+      </q-card-section>
+
+
+      <!-- Mostrar nuevos Valores -->
+      <q-card-section class="q-pt-none q-px-md">
+        <div class="row q-col-gutter-sm">
+          <div class="col-12">
+            <q-input
+              v-model="mostrarNuevoNit"
+              label="NIT"
+              standout
+              dense
+              disable
+              hint="Nuevo Nit"
+              :rules="[() => !!mostrarNuevoNit || 'No hay datos para este NIT']"
+            >
+              <template #prepend><q-icon name="key" /></template>
+            </q-input>
+          </div>
+
+          <div class="col-12">
+            <q-input
+              v-model="mostrarNuevoNombre"
+              label="Nombre"
+              standout
+              dense
+              disable
+              hint="Nuevo Nombre"
+            >
+              <template #prepend><q-icon name="person" /></template>
+            </q-input>
+          </div>
+        </div>
+      </q-card-section>
+
+
+
+      <!-- Botones de -->
+        <q-card-actions align="right" class="q-pa-md">
+          <q-btn flat label="Cancelar" @click="cancelar2" color="black" />
+          <q-btn label="Confirmar" class="boton-amarillo" icon-right="check" @click="actualizarNit" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
-import { debounce } from "quasar";
+import { ref, computed, watch, nextTick } from "vue";
+import { debounce, Notify } from 'quasar';
 import { QTableColumn, useQuasar } from "quasar";
 import { useFacturasFel } from "../composables/useFelPendientes";
 import { useCertification } from "@/modules/certification/composables/useCertification";
@@ -152,18 +304,33 @@ import {
   runWithLoading,
   showConfirmationDialog,
   showErrorNotification,
+  showSuccessNotification,
+  showSuccessNotificationInside,
 } from "@/common/helper/notification";
 import { useStoreSucursal } from "@/stores/sucursal";
 import { useSync } from "@/modules/sync/composables/useSync";
 import { useFacturasEnc } from "@/modules/facturas_enc/composables/useFacturasEnc";
 import { usePdfFactura } from "@/modules/facturar_pdf/composables/usePdFactura";
 import { FacturaEnc } from "@/modules/facturas_enc/interfaces/facturaEncInterface";
-import { useQueryClient } from "@tanstack/vue-query";
+import { obtenerTipoVendedor } from '@/modules/notas_credito/action/useNotaCreditoActions'
+import { showErrorNotificationInside } from "@/common/helper/notification";
+import { useValidation } from "@/modules/validation/composables/useValidation";
+import { DataFactura } from '../../facturar_pdf/interfaces/pdfInterface';
+
+const nitActual = ref(''); // Modal cambiar Nit
+const nombreActual = ref(''); // Modal cambiar Nit
+const nuevoNit = ref(''); // Nit a buscar
+const mostrarNuevoNit = ref(''); // Mostrar nuevo Nit
+const mostrarNuevoNombre = ref(''); // Mostrar nuevo Nombre
+const modalActualizarNit = ref(false); // Modal cambiar Nit
+const mostrarPassword = ref(false); // Modal cambiar Nit
+const password = ref('') // Modal cambiar Nit
+const mostrarModalCambiarNit = ref(false);
+const accesoPermitido = ref(false);
 
 const { obtenerFacturasPorNumeroSerie } = useFacturasEnc();
 const storeSucursal = useStoreSucursal();
 const { mutateCertificar } = useCertification();
-
 const { facturasErrores, refetchFacturasErrores } = useFacturasFel();
 const facturaSeleccionadaArray = ref([]);
 const facturaSeleccionada = ref<string | null>(null);
@@ -179,7 +346,19 @@ const {
 const { data: facturasData, isLoading } = obtenerFacturasEnc();
 const splitter = ref(60);
 const facturaSeleccionadaACF = ref<FacturaEnc | null>(null);
-const queryClient = useQueryClient();
+const { mutateActualizarNit } = useFacturasEnc();
+
+// Buscar en la SAT
+const empresa = ref('GS') 
+const tipoDocumento = ref('NIT');
+const validador = ref(true)
+
+const { data, DatosSat2 } = useValidation(
+  nuevoNit.value,
+  tipoDocumento.value,
+  validador.value,
+  empresa.value
+);
 
 // Función para alternar la dirección del splitter
 const toggleSplitterDirection = () => {
@@ -194,6 +373,7 @@ const toggleSplitterDirection = () => {
 
 // Cambiar NIT a CF de las facturas que generaron error por nit invalido
 const cambiarNitFacturaACF = async () => {
+
   if (facturaSeleccionada.value === null) {
     showErrorNotification(
       "Seleccione una Factura",
@@ -230,23 +410,163 @@ const cambiarNitFacturaACF = async () => {
           $q.loading.hide();
 
           // Limpiar caches y refrescar la lista de facturas con errores para ver el cambio
-          await refetchFacturasErrores();
+          await refetchFacturasErrores()
           $q.notify({
             message: `NIT a CF actualizado para factura ${numero}-${serie}`,
             color: "green",
             icon: "check",
             timeout: 3000,
           });
-          await Refrescar();
+          await Refrescar()
         },
         onError: (error) => {
-          $q.loading.hide();
-          showErrorNotification("Error al cambiar NIT a CF", error.message);
+          $q.loading.hide()
+          showErrorNotification("Error al cambiar NIT a CF", error.message)
         },
       }
-    );
+    )
   }
+}
+
+const cancelar = () => {
+  mostrarModalCambiarNit.value = false; // Cerrar modal
+  accesoPermitido.value = false; // Reiniciar acceso
+  password.value = ''; // Limpiar contraseña
 };
+
+const cancelar2 = () => {
+  modalActualizarNit.value = false; // Cerrar modal
+  mostrarModalCambiarNit.value = false; // Cerrar modal
+}
+
+const buscarClienteSat = async () =>{
+
+    $q.loading.show({
+      message: "Buscando NIT en SAT...",
+      spinnerColor: "green",
+      spinnerSize: 50,
+    });
+
+    const result = await DatosSat2(nuevoNit.value, tipoDocumento.value, validador.value, empresa.value )
+
+    $q.loading.hide();
+    //console.log('Resultado de la búsqueda SAT:', result);
+
+    if (result.isCertified===true) {
+      // Si hay datos, asignarlos a los campos
+      mostrarNuevoNit.value = result.data.nit;
+      mostrarNuevoNombre.value = result.data.nombre;
+
+    } else {
+
+      mostrarNuevoNit.value = '';
+      mostrarNuevoNombre.value = '';
+      nuevoNit.value = '';
+
+      // Si no hay datos, mostrar error
+      showErrorNotificationInside('NIT no encontrado', 'Verifique el NIT ingresado');
+      return;
+    }
+
+
+}
+
+// Dar acceso al cambio de NIT
+const verificarPassword = async () => {
+
+  const datos = await obtenerTipoVendedor(password.value)
+
+      // Validar si no encontro al vendedor
+    if (!datos || !datos.TIPO_VENDEDOR) {
+      showErrorNotificationInside('Contraseña incorrecta', 'Verifique sus credenciales')
+      password.value = ''; // Limpiar contraseña
+      return
+    }
+
+    if (datos.TIPO_VENDEDOR === 'SA') { // Validar que sea tipo SA
+
+    modalActualizarNit.value = true // Mostrar modal
+    mostrarModalCambiarNit.value = false
+
+   } else {
+    showErrorNotificationInside('Acceso No Autorizado', 'Contacte a algun administrador')
+  }
+}
+
+const id_factura_enc = ref(0)
+
+const abrirActualizarNit = async () => {
+
+  // Validar si hay una factura seleccionada
+    if (facturaSeleccionada.value === null) {
+    showErrorNotification(
+      "Seleccione una Factura",
+      "Debe de seleccionar una factura"
+    );
+    return;
+  }
+
+  console.log('Factura seleccionada:', facturaSeleccionada.value);
+  
+  // obtener los datos actuales
+  const [numero, serie] = facturaSeleccionada.value.split("-");
+  const numero2 = Number(numero);
+
+  const datosFac = await obtenerFacturasPorNumeroSerie(numero2, serie);
+
+  // setear y mostrar los datos actuales
+  nitActual.value = datosFac[0].NIT_CLIEN_A_FACTURAR || '';
+  nombreActual.value = datosFac[0].NOMBRE_CLI_A_FACTUAR || '';
+
+  id_factura_enc.value = datosFac[0].ID_FACTURA_ENC
+
+  nextTick()
+  mostrarModalCambiarNit.value = true; // Mostrar modal
+
+}
+
+// actualizar Nit
+const actualizarNit = async () => {
+
+console.log('Actualizar Nit para factura ID:', id_factura_enc.value);
+
+    $q.loading.show({
+    message: "Actualizando NIT...",
+    spinnerColor: "green",
+    spinnerSize: 50,
+  });
+
+  // Llamar a la mutación para actualizar el NIT
+ await mutateActualizarNit({id: id_factura_enc.value, nit: mostrarNuevoNit.value, nombre: mostrarNuevoNombre.value}, 
+     {
+      onSuccess: async () => {
+      
+        // Cerrar el loading
+      $q.loading.hide();
+      
+      // Actualizar Tabla
+      await refetchFacturasErrores()
+
+      nextTick()
+
+      password.value = ''; // Limpiar contraseña
+      mostrarNuevoNit.value = ''; // Limpiar nuevo NIT
+      mostrarNuevoNombre.value = ''
+
+      showSuccessNotificationInside('Exito', 'NIT actualizado con exito' )
+      modalActualizarNit.value = false; // Cerrar modal
+    },
+
+    onError: (error) => {
+      showErrorNotificationInside('Error al actualizar NIT', error.message)
+      password.value = ''; // Limpiar contraseña
+        // Terminar el Loading
+      $q.loading.hide();
+    }
+    }
+  )
+}
+
 
 // Función de selección optimizada con debounce
 const actualizarFacturaSeleccionada = debounce((newSelection: any[]) => {
@@ -448,6 +768,8 @@ const certificarAgain = async () => {
       onSuccess: async (data) => {
         // Ocultar loading antes de continuar, por que nos aseguramos que se haya certificado
         $q.loading.hide();
+        
+        await refetchFacturasErrores();
 
         // Sincronizar las facturas al server intermedio
         mutateCrearSincronizacion(idFacturaEnc);
@@ -758,7 +1080,7 @@ const columnasErrores: QTableColumn[] = [
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 10;
+  z-index: 1;
   will-change: transform;
 }
 
@@ -808,4 +1130,20 @@ const columnasErrores: QTableColumn[] = [
   min-width: 12px !important;
   width: 12px !important;
 }
+
+.boton-amarillo {
+  background: linear-gradient(90deg, #FFEB3B, #FBC02D);
+  color: #070606;
+  font-weight: 500;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.boton-amarillo:hover {
+  background: linear-gradient(90deg, #FBC02D, #F9A825);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transform: scale(1.02);
+}
+
 </style>

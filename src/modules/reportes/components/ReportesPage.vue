@@ -206,12 +206,14 @@ const verificarPassword = async () => {
       // Validar si no encontro al vendedor
     if (!datos || !datos.TIPO_VENDEDOR) {
       showErrorNotificationInside('Contraseña incorrecta', 'Verifique sus credenciales')
+      password.value = '' // Limpiar campo
       return
     }
 
     if (datos.TIPO_VENDEDOR === 'SA') { // Validar que sea tipo SA
     accesoPermitido.value = true // Activar acceso
     mostrarModal.value = false
+
    } else {
     showErrorNotificationInside('Acceso No Autorizado', 'Contacte a algun administrador')
   }
