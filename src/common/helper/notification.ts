@@ -1,3 +1,5 @@
+import { sonidoProceso } from "@/helper/emiteSonidoHelper";
+import { Notify } from "quasar";
 import Swal from "sweetalert2";
 
 // Mensaje de exito
@@ -214,4 +216,47 @@ export const runWithLoading = async <T>(
   } finally {
     hideLoading();
   }
+};
+
+
+// Mensaje de exito con sonido
+export const mostrarNotificacionCorrectoSonido = (text: string) => {
+  sonidoProceso("correcto");
+  
+  Notify.create({
+        type: "positive",
+        message: text,
+        position: "center",
+        color: "green",
+        timeout: 2000,
+        group: false,
+        progress: true,
+        icon: "check",
+      });
+};
+
+// Mensaje de error con sonido que no se cierra solo y debe cerrarse con el boton
+
+export const mostrarNotificacionErrorSonido = (text: string): Promise<boolean> => {
+  sonidoProceso("error");
+  return new Promise((resolve, reject) => {
+    Notify.create({
+        type: "negative",
+        message: text,
+        position: "center",
+        color: "red-12",
+        timeout: 0,
+        group: true,
+        progress: true,
+        icon: "error",
+        actions: [
+          {
+            label: 'OK',
+            color: 'white',
+            handler: () => resolve(false)
+          }
+         
+        ]
+    });
+  });
 };
