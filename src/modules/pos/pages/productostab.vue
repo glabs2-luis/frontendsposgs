@@ -906,6 +906,9 @@ const {
 const { obtenerPorCodigo } = useCodigo();
 const $q = useQuasar();
 const { mutateAnularPedidoPendiente } = usePedidosEnc();
+const { generarCotizacionPDF } = usePdfCotizacion()
+const clienteStore = useClienteStore();
+const { nombreVendedor } = useUserStore();
 const { totalItems } = useTotalStore();
 
 //USE COMPOSABLES
@@ -1387,6 +1390,100 @@ const actualizarCantidad = () => {
   }
 };
 
+const truncateDosDecimales = (numero) => {
+  return Math.trunc(numero * 100) / 100;
+}
+
+// Preparar actualizacion para pedido
+const prepararDataCotizacion = async (idPedido) => {
+  const apiResponseDetallePedido = await obtenerDetallePedido(idPedido);
+
+  const items = apiResponseDetallePedido.map((item) => {
+    return {
+      cantidad: item.CANTIDAD_PEDIDA,
+      descripcion: item.DESCRIPCION_PROD,
+      precio: formatCurrency(item.PRECIO_UNIDAD_VENTA, 2),
+      subtotal: formatCurrency(item.SUBTOTAL_VENTAS + item.MONTO_IVA, 2),
+    };
+  });
+
+  const totalItems = items.reduce((acc, item) => acc + item.cantidad, 0);
+  const subtotal = items.reduce((acc, item) => acc + parseFloat(item.subtotal.replace("Q.", "")), 0);
+
+  const dataCotizacion = {
+    encabezado: {
+      numeroInterno: `${pedidoStore.numeroDePedido}`,
+      tipoDocumento: "COTIZACION",
+      fechaEmision: new Date().toISOString(),
+    },
+
+    observacion: '',
+
+    cliente: {
+      nombre: clienteStore.nombre,
+      nit: String(clienteStore.documento ?? "CF"),
+      direccion: clienteStore.direccion,
+    },
+
+    items,
+
+    resumen: {
+      subtotal: formatCurrency(subtotal, 2),
+      totalPagar: `Q.${truncateDosDecimales(totalStore.totalGeneral).toFixed(2)}`,
+      totalItems,
+    },
+    nombreVendedor: nombreVendedor,
+  };
+
+  return dataCotizacion;
+}
+
+const imprimirCotizacion = async () => {
+  if (pedidoStore.numeroDePedido <= 0) {
+    $q.notify({
+      type: 'warning',
+      message: 'Crear una cotización para imprimir.',
+      position: 'top',
+      timeout: 3000
+    });
+    return;
+  }
+
+  if (!totalStore) {
+    $q.notify({
+      type: 'warning',
+      message: 'Agregue un producto antes de imprimir la cotización.',
+      position: 'top',
+      timeout: 3000
+    });
+    return;
+  }
+
+  try {
+    $q.loading.show({
+      message: 'Imprimiendo cotización',
+      boxClass: 'bg-grey-2 text-grey-9',
+      spinnerColor: 'primary'
+    });
+
+    const datosCotizacion = await prepararDataCotizacion(pedidoStore.idPedidoEnc)
+
+    const success = await generarCotizacionPDF(datosCotizacion);
+
+    if (success) {
+      console.log("Cotización generada con exito.")
+    } else {
+      console.log("Fallo al genera cotización.")
+    }
+    
+    $q.loading.hide();
+  } catch (error) {
+    console.log('Error al imprimir la cotización: ', error)
+  } finally {
+    $q.loading.hide()
+  }
+}
+
 const limpiarPedido = async () => {
   if (!pedidoStore.idPedidoEnc) {
     showErrorNotification("Error", "No hay un pedido seleccionado");
@@ -1429,9 +1526,7 @@ const limpiar = async () => {
         onSuccess: () => {
           $q.notify({
             type: "positive",
-            message: `${tipoPedido.value} anulad${
-              tipoPedido.value === "pedido" ? "o" : "a"
-            } con éxito`,
+            message: `Anulado con éxito`,
             position: "top-right",
             timeout: 3000,
             icon: "check",

@@ -358,7 +358,7 @@
           <q-btn
             icon="assignment"
             color="red"
-            class="text-caption btn-pendientes"
+            class="color: black"
             @click="abrirModalPedidosPendientes"
           />
         </div>
@@ -412,14 +412,12 @@
   <ProductosTab
     ref="productosTabRef"
     :pedidoId="idPedidoEnc"
-    :pedidoId="idPedidoEnc"
     :onNuevoPedido="nuevoPedido"
     :tipoPedido="estadoPedido"
     @update-estado="handleActualizarPedido"
   />
   <TablaProductos
     ref="tablaProductosRef"
-    :-pedido-id="idPedidoEnc"
     :-pedido-id="idPedidoEnc"
     :onProductoEliminado="enfocarInputCodigo"
   />
@@ -605,16 +603,15 @@ const busquedaAutomatica = () => {
 // Funcion para manejar el estado del pedido
 const handleActualizarPedido = (nuevoEstado: string) => {
   estadoPedido.value = nuevoEstado;
-  console.log(`Estado del pedido actualizado a: ${nuevoEstado}`)
 }
 
 // Anular pedido pendiente
-const anularPedido = async (pedido) => {
+const anularPedido = async (pedido: PedidosEnc) => {
+  const tipoPedido = pedido.ESTADO_PEDIDO === 'P' ? 'pedido' : 'cotización'
+
   const confirmado = await showConfirmationInsideModal(
-    `Anular ${estadoPedido.value}`,
-    `¿Está seguro que desea anular ${
-      estadoPedido.value === "pedido" ? "el" : "la"
-    } ${estadoPedido.value} #${pedido.NUMERO_DE_PEDIDO}?`
+    `Anular ${tipoPedido}`,
+    `¿Está seguro que desea anular ${tipoPedido === "pedido" ? "el" : "la"} ${tipoPedido}?`
   );
 
   if (!confirmado) return;
@@ -662,7 +659,7 @@ const continuarPedido = async (pedido) => {
     email: pedido.EMAIL_CLIENTE || null, // no viene la info
   });
 
-  tipoTransaccion.value = tipoPedido
+  estadoPedido.value = tipoPedido
 
   // Cerrar modal de pendientes
   modalPendientes.value = false;
