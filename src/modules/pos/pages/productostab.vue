@@ -920,6 +920,7 @@ const filtroProductos = ref("");
 const focusCantidad = ref(null); // focus modal cantidad
 const focusEfectivo = ref(null); // focus efectivo
 const focusTarjeta = ref(null);
+const idFacturaEnc = ref(null); // ID de la factura creada
 const inputCodigo = ref(null);
 const loadingAgregar = ref(false);
 const loadingDetalle = ref(false);
@@ -1044,19 +1045,6 @@ watch(idPedidoEnc, (nuevo) => {
 // actualizar cliente en facturacion
 watch(pedidoData, () => {
   refetchObtenerPedidoID();
-});
-
-watch(modalProductos, async (val) => {
-  if (val) {
-    try {
-      loadingProductos.value = true;
-      await refetchTodosProductos();
-    } catch (error) {
-      $q.notify({ type: "negative", message: "Error al cargar productos" });
-    } finally {
-      loadingProductos.value = false;
-    }
-  }
 });
 
 // si el efectivo cambia, calcular cambio
@@ -1322,6 +1310,27 @@ watch(pedidoData, () => {
   refetchObtenerPedidoID();
 });
 
+watch(modalProductos, async (val) => {
+  if (val) {
+    try {
+      loadingProductos.value = true;
+      await refetchTodosProductos();
+    } catch (error) {
+      $q.notify({ type: "negative", message: "Error al cargar productos" });
+    } finally {
+      loadingProductos.value = false;
+    }
+  }
+});
+
+// si el efectivo cambia, calcular cambio
+const calcularCambioModal = () => {
+  if (opcionesPago2 === "MIXTO") calcularCambio.value = 0;
+  else {
+    calcularCambio.value = montoEfectivo.value - totalStore.totalGeneral;
+  }
+};
+
 // Despues del cantidad volver al focus del input
 const volverAFocusInput = () => {
   setTimeout(() => {
@@ -1331,7 +1340,6 @@ const volverAFocusInput = () => {
 };
 
 // focus
-
 const enfocarCodigo = () => {
   if (!allowAutoFocusProduct.value) return;
   inputCodigo.value?.focus();
