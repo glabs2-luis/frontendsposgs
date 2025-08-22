@@ -79,6 +79,16 @@
                   </template>
                 </q-input>
 
+                <q-select
+                  v-model="tipoUsuario"
+                  :options="opcionesTipoUsuario"
+                  label="Tipo de usuario"
+                  outlined
+                  dense
+                  class="input-campo q-mb-md"
+                  color="primary"
+                />
+
                 <q-checkbox
                   v-model="recordarUsuario"
                   label="Recordar usuario"
@@ -133,6 +143,8 @@ const focusContra = ref(null)
 const focusUsuario = ref(null)
 const $q = useQuasar()
 const isPwd = ref(true)
+const opcionesTipoUsuario = ref<string[]>(['POS', 'ROMPEFILA']);
+const tipoUsuario = ref<string>('POS');
 
 const mostrarBodega = async () => {
   const result = await ObtenerBodegasId2();
@@ -159,10 +171,11 @@ const realizarLogin = () => {
     {
       USUARIO: usuario.value,
       PASSWORD: password.value,
+      TIPO_USUARIO: tipoUsuario.value,
     },
     {
       // Login exitoso
-      onSuccess: (data) => {
+      onSuccess: (data, tipo) => {
         // Rrecordar usuario
         if (recordarUsuario.value) {
           localStorage.setItem("usuarioRecordado", usuario.value)

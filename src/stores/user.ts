@@ -11,6 +11,7 @@ export const useUserStore = defineStore(
     const nombreVendedor = ref("");
     const codigoVendedor = ref<number | null>(null);
     const token = ref("");
+    const tipoUsuario = ref('');
 
     const router = useRouter();
 
@@ -18,6 +19,7 @@ export const useUserStore = defineStore(
       nombreVendedor.value = "";
       codigoVendedor.value = null;
       token.value = "";
+      tipoUsuario.value = '';
       localStorage.clear();
       delete axios.defaults.headers.common["Authorization"];
       router.push("/login");
@@ -30,10 +32,12 @@ export const useUserStore = defineStore(
         nombreVendedor.value = data.NOMBRE_VENDEDOR || "";
         codigoVendedor.value = data.CODIGO_VENDEDOR || null;
         token.value = data.token || "";
+        tipoUsuario.value = data.TIPO_USUARIO;
 
         localStorage.setItem("usuario", nombreVendedor.value);
         localStorage.setItem("codigo", String(codigoVendedor.value || ""));
         localStorage.setItem("token", token.value);
+        localStorage.setItem("tipoUsuario", tipoUsuario.value)
 
         axios.defaults.headers.common[
           "Authorization"
@@ -53,6 +57,7 @@ export const useUserStore = defineStore(
       nombreVendedor,
       codigoVendedor,
       token,
+      tipoUsuario,
       loginMutation: mutation.mutate,
       isLoading: computed(() => mutation.status.value === "pending"),
       cerrarSesion,

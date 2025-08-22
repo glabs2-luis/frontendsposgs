@@ -405,6 +405,36 @@
           modo="crear"
           @guardar="guardarClienteDesdeModal"
         />
+
+        <!-- Modal para escanear codigo de rompefilas -->
+        <q-dialog v-model="modalCodigoRompefilas">
+          <q-card style="min-width: 350px; min-height: 200px; border-radius: 10px;">
+
+            <q-toolbar class="bg-yellow-8 text-black">
+              <q-icon name="qr_code_2" size="sm" class="q-mr-sm" />
+              <q-toolbar-title class="text-subtitle1 text-weight-bold">Rompefilas</q-toolbar-title>
+              <q-btn icon="close" flat round dense v-close-popup />
+            </q-toolbar>
+
+            <q-card-section class="q-pt-md">
+              <q-input
+                dense
+                v-model="codigoBarra"
+                autofocus
+                @keyup.enter="handleAceptarCodigo"
+                placeholder="Escanear o ingresar código"
+                class="q-mt-sm"
+              />
+            </q-card-section>
+
+            <q-card-actions align="right" class="q-pa-md">
+              <q-btn label="Cancelar" color="grey-8" @click="handleCancelar" />
+              <q-btn label="Aceptar" color="yellow-8 text-black text-weight-bold" @click="handleAceptarCodigo" :disable="!codigoBarra" />
+            </q-card-actions>
+            
+          </q-card>
+        </q-dialog>
+
       </div>
     </div>
   </div>
@@ -476,7 +506,7 @@ import { runWithLoading } from "@/common/helper/notification";
 import { PedidosEnc } from "@/modules/pedidos_enc/interfaces/pedidoEncInterface";
 import { usePdfCotizacion } from "@/modules/cotizacion_pdf/composable/useCotizacion";
 import type { DataCotizacion } from "@/modules/cotizacion_pdf/interfaces/cotizacion.interface";
-import { obtenerDetallePedido } from "@/modules/pedidos_enc/action/pedidosEncAction";
+import { obtenerDetallePedido, obtenerPedidoEncPorNumero } from "@/modules/pedidos_enc/action/pedidosEncAction";
 
 const { ObtenerBodegasId2 } = useBodegas();
 const storeSucursal = useStoreSucursal();
@@ -522,6 +552,8 @@ const tab = ref('pedidos')
 const { generarCotizacionPDF } = usePdfCotizacion()
 const filtroPedidos = ref('');
 const filtroCotizaciones = ref('');
+const modalCodigoRompefilas = ref(false)
+const codigoBarra = ref('')
 
 // abrir expansion item y focus a nit
 watch(
@@ -626,14 +658,15 @@ const anularPedido = async (pedido: PedidosEnc) => {
 
 // continuar pedido pendiente
 const continuarPedido = async (pedido) => {
+  console.log(pedido);
   const tipoPedido = pedido.ESTADO_PEDIDO === 'P' ? 'pedido' : 'cotización'
 
-  const confirmado = await showConfirmationInsideModal(
-    `Continuar ${tipoPedido}`,
-    `¿Está seguro que desea continuar con ${tipoPedido === "pedido" ? "el" : "la"} ${tipoPedido} N° ${pedido.NUMERO_DE_PEDIDO}?`
-  );
+  // const confirmado = await showConfirmationInsideModal(
+  //   `Continuar ${tipoPedido}`,
+  //   `¿Está seguro que desea continuar con ${tipoPedido === "pedido" ? "el" : "la"} ${tipoPedido} N° ${pedido.NUMERO_DE_PEDIDO}?`
+  // );
 
-  if (!confirmado) return;
+  // if (!confirmado) return;
 
   // cleanAllStores();
   await nextTick();
@@ -1196,6 +1229,82 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
     },
   });
 };
+
+// Crear Pedido con F9
+onMounted(() => {
+  window.addEventListener("keydown", handleModalCodigo);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", handleModalCodigo);
+});
+
+// Modal para escanear codigo generado en rompefilas
+const handleModalCodigo = (event: KeyboardEvent) => {
+  if (event.key === 'F9') {
+    if (numPedido2.value > 0) {
+      $q.notify({
+        type: "negative",
+        message: `Limpie, anule o termine el pedido actual para cargar rompefilas.`,
+        position: "top",
+        timeout: 2000,
+      });
+      return
+    }
+    event.preventDefault(); 
+    modalCodigoRompefilas.value = true
+  }
+};
+
+const handleAceptarCodigo = async () => {
+  if (!codigoBarra.value) return
+
+  try {
+    $q.loading.show({
+      message: 'Buscando pedido',
+      boxClass: 'bg-grey-2 text-grey-9',
+      spinnerColor: 'primary'
+    });
+
+    console.log('Código de barras ingresado:', codigoBarra.value);
+    const pedidoEnc = await obtenerPedidoEncPorNumero(parseInt(codigoBarra.value))
+
+    if (!pedidoEnc) {
+      $q.notify({
+        type: "negative",
+        message: `Pedido con numero ${codigoBarra.value} no encontrado.`,
+        position: "top",
+        color: "green",
+        timeout: 2000,
+      });
+      return;
+    }
+
+    console.log(pedidoEnc)
+    await continuarPedido(pedidoEnc)
+
+    modalCodigoRompefilas.value = false;
+    codigoBarra.value = '';
+
+  } catch (error) {
+    console.log('Error al obtener pedido: ', error)
+    $q.notify({
+      type: "negative",
+      message: `Pedido con numero ${codigoBarra.value} no encontrado.`,
+      position: "top",
+      timeout: 2000,
+    });
+  } finally {
+    $q.loading.hide()
+  }
+};
+
+// Función para manejar el clic en el botón "Cancelar"
+const handleCancelar = () => {
+  modalCodigoRompefilas.value = false;
+  codigoBarra.value = '';
+};
+
 </script>
 
 <style scoped>
