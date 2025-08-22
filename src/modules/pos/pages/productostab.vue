@@ -727,7 +727,6 @@
 
 <script setup>
 
-
 import { useQuasar } from "quasar";
 import { useQueryClient } from "@tanstack/vue-query";
 import {
@@ -1586,7 +1585,6 @@ const certificarFactura = async (id) => {
     spinnerSize: 50,
   });
   //console.log('yo soy id"', id);
-  //console.log('yo soy id"', id);
 
   // Usar Promise para manejar la mutación de certificación
   mutateCertificar(
@@ -1637,25 +1635,9 @@ const certificarFactura = async (id) => {
 
         await imprimirFactura(id)
 
-        
-        $q.notify({
-          type: "negative",
-          message: `Error en certificación: ${error.message}, imprimiendo en contingencia`,
-          position: "top-right",
-          timeout: 5000,
-          icon: "error",
-        });
-
-        contingencia.value = true
-
-        await mutateAgregarContingencia(id)
-
-        nextTick() 
-
-        await imprimirFactura(id)
-
       },
-    });
+    }
+  );
 };
 
 // modal factura
@@ -1744,7 +1726,6 @@ const imprimirFactura = async (data) => {
   console.log("imprimir factura2:", factura2);
 
   // console.log('yo soy contingencia:', contingencia.value)
-  // console.log('yo soy contingencia:', contingencia.value)
   // console.log("data certificada con exito: ", data)
 
   const detalle = await obtenerDetalleFactura(idFacturaEnc.value);
@@ -1811,7 +1792,6 @@ const imprimirFactura = async (data) => {
     qrCodeData: data.Uuid,
   };
 
-  // console.log(" yo soy data:", dataFactura);
   // console.log(" yo soy data:", dataFactura);
   await nextTick();
   console.log("Imprimiendo 3...");
