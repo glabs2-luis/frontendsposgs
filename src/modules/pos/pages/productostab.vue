@@ -31,6 +31,14 @@
             @click="confirmarContingencia"
           />
           <q-btn
+            v-if="tipoPedido === 'cotización'"
+            icon="print"
+            color="indigo"
+            class="color: black"
+            @click="imprimirCotizacion"
+            :disable="tipoPedido === 'pedido'"
+          />
+          <q-btn
             icon="restart_alt"
             color="amber-9"
             class="color: black"
@@ -64,12 +72,13 @@
           dense
           @keyup.enter="buscarProductoEscaneado"
           class="col-12 col-md-5"
+          :disable="errorAgregarProducto"
         >
-          <template #prepend>
-            <q-icon name="view_headline" color="primary" />
-          </template>
           <template #append>
-            <q-btn round dense flat icon="search" color="primary" />
+            <q-icon name="search" color="primary" />
+          </template>
+          <template #prepend>
+            <q-btn round dense flat icon="view_headline" color="primary" @click="abrirCatalogo2" />
           </template>
         </q-input>
 
@@ -737,6 +746,8 @@ import {
   showErrorNotificationInside,
   showSuccessNotificationInside,
   runWithLoading,
+  mostrarNotificacionCorrectoSonido,
+  mostrarNotificacionErrorSonido,
 } from "@/common/helper/notification";
 
 import { useProductos } from "@/modules/Productos/composables/useProductos";
@@ -755,6 +766,9 @@ import { useCupones } from "@/modules/cupones/composables/useCupones";
 import useFormat from "@/common/composables/useFormat";
 import { useStoreSucursal } from "@/stores/sucursal";
 import { cleanAllStores } from "@/common/helper/cleanStore";
+import { usePdfCotizacion } from "@/modules/cotizacion_pdf/composable/useCotizacion";
+import { obtenerDetallePedido, obtenerPedidoEncPorIdAction } from "@/modules/pedidos_enc/action/pedidosEncAction";
+import { useClienteStore } from "@/stores/cliente";
 
 /*
 ==========================================================
@@ -828,9 +842,22 @@ const props = defineProps({
     type: Function,
     required: true,
   },
+  tipoPedido: {
+    type: String,
+    required: true,
+  }
 });
 
 const idPedidoEnc = computed(() => props.pedidoId);
+const tipoPedido = computed(() => props.tipoPedido)
+
+// Emits
+const emit = defineEmits(['updateEstado']);
+
+const updateEstadoPedido = (nuevoEstado) => {
+  emit('updateEstado', nuevoEstado);
+}
+
 
 /*
 ==========================================================
@@ -854,32 +881,36 @@ const {
 } = usePedidoDet();
 const configuracionStore = useConfiguracionStore();
 const { mutateCrearFacturaEnc2 } = useFacturasEnc();
-const { obtenerPedidoPorId } = usePedidosEnc();
-const { todosProductos, refetchTodosProductos, precioReal } = useProductos();
-
-const pedidoStore = usePedidoStore();
-const totalStore = useTotalStore();
-const userStore = useUserStore();
-const queryClient = useQueryClient();
-const { consultarCodigoM } = useCodigo();
+const { obtenerPedidoPorId, obtenerPedidosPendientes } = usePedidosEnc();
+const {
+  todosProductos,
+  refetchTodosProductos,
+  obtenerProductosId,
+  precioReal,
+} = useProductos();
+const { obtenerPorCodigo } = useCodigo();
 const $q = useQuasar();
 const { mutateAnularPedidoPendiente } = usePedidosEnc();
+const { generarCotizacionPDF } = usePdfCotizacion()
+const clienteStore = useClienteStore();
+const { nombreVendedor } = useUserStore();
+const { totalItems } = useTotalStore();
 
 //USE COMPOSABLES
-const { data: pedidoData, refetchObtenerPedidoID } =
-  obtenerPedidoPorId(idPedidoEnc);
-const { refetch: refetchObtenerPedidoDetID } =
-  useListaProductosPedidoDet(idPedidoEnc);
+const {  data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedidoEnc);
+const {  refetch: refetchObtenerPedidoDetID } = useListaProductosPedidoDet(idPedidoEnc);
 
 const modalFacturacion = ref(false);
 const modalCuponazo = ref(false);
+
+
 
 /*
 ==========================================================
                 VARIABLES GENERALES
 ==========================================================
 */
-const allowAutoFocusProduct = ref(true); // Controla si el input de código puede auto-enfocarse
+const allowAutoFocusProduct = ref(true);  // Controla si el input de código puede auto-enfocarse
 const btnConfirmarFactura = ref(null);
 const calcularCambio = ref(0);
 const cantidad = ref(1); // Cantidad en el boton
@@ -905,8 +936,14 @@ const modalProductos2 = ref(false);
 const montoEfectivo = ref(null);
 const montoTarjeta = ref(null);
 const opcionesPago2 = ["EFECTIVO", "TARJETA", "MIXTO"];
-const refCupon = ref();
 const tipoPago = ref("EFECTIVO");
+const errorAgregarProducto = ref(false);
+const refCupon = ref();
+const pedidoStore = usePedidoStore();
+const { consultarCodigo, consultarCodigoM } = useCodigo();
+const totalStore = useTotalStore();
+const userStore = useUserStore();
+const queryClient = useQueryClient();
 
 // Paginación del catálogo
 const paginacionCatalogo = ref({
@@ -918,7 +955,7 @@ const paginacionCatalogo = ref({
 
 /*
 ==========================================================
-                    REFERENCIAS (FORMS)
+                    VARIABLES COMPUTED
 ==========================================================
 */
 const buscadorProductoRef = ref(null);
@@ -1338,6 +1375,101 @@ const actualizarCantidad = () => {
   }
 };
 
+const truncateDosDecimales = (numero) => {
+  return Math.trunc(numero * 100) / 100;
+}
+
+// Preparar actualizacion para pedido
+const prepararDataCotizacion = async (idPedido) => {
+  const apiResponseDetallePedido = await obtenerDetallePedido(idPedido);
+  const pedidoEnc = await obtenerPedidoEncPorIdAction(idPedido)
+
+  const items = apiResponseDetallePedido.map((item) => {
+    return {
+      cantidad: item.CANTIDAD_PEDIDA,
+      descripcion: item.DESCRIPCION_PROD,
+      precio: formatCurrency(item.PRECIO_UNIDAD_VENTA, 2),
+      subtotal: formatCurrency(item.SUBTOTAL_VENTAS + item.MONTO_IVA, 2),
+    };
+  });
+
+  const totalItems = items.reduce((acc, item) => acc + item.cantidad, 0);
+  const subtotal = items.reduce((acc, item) => acc + parseFloat(item.subtotal.replace("Q.", "")), 0);
+
+  const dataCotizacion = {
+    encabezado: {
+      numeroInterno: `${pedidoStore.numeroDePedido}`,
+      tipoDocumento: "COTIZACION",
+      fechaEmision: formatearFecha(pedidoEnc.FECHA_PEDIDO),
+    },
+
+    observacion: '',
+
+    cliente: {
+      nombre: clienteStore.nombre,
+      nit: String(clienteStore.documento ?? "CF"),
+      direccion: clienteStore.direccion,
+    },
+
+    items,
+
+    resumen: {
+      subtotal: formatCurrency(subtotal, 2),
+      totalPagar: `Q.${truncateDosDecimales(totalStore.totalGeneral).toFixed(2)}`,
+      totalItems,
+    },
+    nombreVendedor: nombreVendedor,
+  };
+
+  return dataCotizacion;
+}
+
+const imprimirCotizacion = async () => {
+  if (pedidoStore.numeroDePedido <= 0) {
+    $q.notify({
+      type: 'warning',
+      message: 'Crear una cotización para imprimir.',
+      position: 'top',
+      timeout: 3000
+    });
+    return;
+  }
+
+  if (!totalStore) {
+    $q.notify({
+      type: 'warning',
+      message: 'Agregue un producto antes de imprimir la cotización.',
+      position: 'top',
+      timeout: 3000
+    });
+    return;
+  }
+
+  try {
+    $q.loading.show({
+      message: 'Imprimiendo cotización',
+      boxClass: 'bg-grey-2 text-grey-9',
+      spinnerColor: 'primary'
+    });
+
+    const datosCotizacion = await prepararDataCotizacion(pedidoStore.idPedidoEnc)
+
+    const success = await generarCotizacionPDF(datosCotizacion);
+
+    if (success) {
+      console.log("Cotización generada con exito.")
+    } else {
+      console.log("Fallo al genera cotización.")
+    }
+    
+    $q.loading.hide();
+  } catch (error) {
+    console.log('Error al imprimir la cotización: ', error)
+  } finally {
+    $q.loading.hide()
+  }
+}
+
 const limpiarPedido = async () => {
   if (!pedidoStore.idPedidoEnc) {
     showErrorNotification("Error", "No hay un pedido seleccionado");
@@ -1345,12 +1477,13 @@ const limpiarPedido = async () => {
   }
 
   const confirmado = await showConfirmationDialog(
-    "Limpiar Pedido",
-    "¿Estás seguro de que deseas limpiar el pedido?"
+    `Limpiar ${tipoPedido.value}`,
+    `¿Estás seguro de que deseas limpiar ${tipoPedido.value === 'pedido' ? 'el ' + tipoPedido.value : 'la ' + tipoPedido.value}?`
   );
 
   if (confirmado) {
     cleanAllStores();
+    updateEstadoPedido('pedido')
   }
 };
 
@@ -1364,13 +1497,11 @@ const limpiar = async () => {
     return;
   }
 
-  const tipoPedido = pedidoStore.estadoPedido === "P" ? "Pedido" : "Cotización";
-
   const confirmado = await showConfirmationDialog(
-    `Anular ${tipoPedido}`,
-    `¿Estás seguro de que deseas anular ${tipoPedido}?`
+    `Anular ${tipoPedido.value}`,
+    `¿Estás seguro de que deseas anular ${tipoPedido.value === 'pedido' ? 'el ' + tipoPedido.value : 'la ' + tipoPedido.value}?`
   );
-
+  
   if (confirmado) {
     mutateAnularPedidoPendiente(
       {
@@ -1381,9 +1512,7 @@ const limpiar = async () => {
         onSuccess: () => {
           $q.notify({
             type: "positive",
-            message: `${tipoPedido} anulad${
-              tipoPedido === "Pedido" ? "o" : "a"
-            } con éxito`,
+            message: `Anulado con éxito`,
             position: "top-right",
             timeout: 3000,
             icon: "check",
@@ -1392,9 +1521,8 @@ const limpiar = async () => {
       }
     );
 
-    console.log("Estado del pedido before: ", pedidoStore.estadoPedido);
     cleanAllStores();
-    console.log("Estado del pedido after: ", pedidoStore.estadoPedido);
+    updateEstadoPedido('pedido')
   }
 };
 
@@ -1452,7 +1580,7 @@ const certificarFactura = async (id) => {
       serie: factura.SERIE,
       numero: factura.NUMERO_FACTURA,
     },
-    {
+    { 
       onSuccess: async (data) => {
         console.log("Factura certificada exitosamente");
 
@@ -1557,7 +1685,6 @@ const confirmarFactura = async () => {
       // Asignar este valor para llenar la factura
       idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
       // Ahora sí espera a que termine la certificación
-      console.log(' Que trae respuesta:', respuesta);
 
       if (contingencia.value === true) {
         await imprimirFactura(respuesta);
@@ -1618,7 +1745,9 @@ const imprimirFactura = async (data) => {
     });
   }
 
+
   console.log("Imprimiendo 2...");
+
 
   const dataFactura = {
     encabezado: {
@@ -1688,13 +1817,17 @@ const buscarProductoEscaneado = async () => {
   if (!codigoProducto.value) return;
 
   if (!pedidoStore.idPedidoEnc) {
-    showErrorNotification("No hay pedido", "Debe de crear un pedido primero");
+    await errorAgregarProductoConSonido(
+      "No hay un pedido activo. Por favor, crea un nuevo pedido."
+    );
     return;
   }
 
+  
+
   loadingPorCodigo.value = true;
   let resultado = null;
-
+  
   // 1. buscar por código de barras
   try {
     resultado = await consultarCodigoM(codigoProducto.value, cantidad2.value);
@@ -1704,20 +1837,9 @@ const buscarProductoEscaneado = async () => {
 
   // 2. buscar por ID de producto
   if (!resultado || !resultado.producto) {
+    
     try {
       const productoDirecto = await precioReal(
-        codigoProducto.value,
-        cantidad2.value
-      );
-
-      console.log(
-        "mandando a consultar el precio: ",
-        codigoProducto.value,
-        cantidad2.value
-      );
-      // datos a consultar
-      console.log(
-        "mandando a consultar el precio: ",
         codigoProducto.value,
         cantidad2.value
       );
@@ -1726,12 +1848,14 @@ const buscarProductoEscaneado = async () => {
         productoDirecto.PRECIO_FINAL === 0 ||
         productoDirecto.PRECIO_FINAL === null
       ) {
-        showErrorNotification(
-          "Producto sin precio",
-          `El código ${codigoProducto.value} no tiene precio`
+        await errorAgregarProductoConSonido(
+          `Producto sin precio, El código ${codigoProducto.value} no tiene precio`
         );
         codigoProducto.value = "";
         loadingPorCodigo.value = false;
+        nextTick(() => {
+          inputCodigo.value?.focus();
+        });
         return;
       }
 
@@ -1748,7 +1872,7 @@ const buscarProductoEscaneado = async () => {
 
       resultado = {
         producto: {
-          //PRODUCT0: codigoProducto.value,
+          PRODUCT0: codigoProducto.value,
         },
         precio: {
           PRECIO_FINAL: prod.PRECIO_FINAL,
@@ -1757,15 +1881,18 @@ const buscarProductoEscaneado = async () => {
 
       console.log("resultado2: ", resultado);
     } catch (err) {
-      showErrorNotification(
-        "Producto no encontrado",
-        `El código ${codigoProducto.value} no existe`
+      await errorAgregarProductoConSonido(
+        `Error al buscar producto (${codigoProducto.value}) por código: ${err.message || "Error desconocido"}`
       );
       codigoProducto.value = "";
       loadingPorCodigo.value = false;
+      nextTick(() => {
+         inputCodigo.value?.focus();
+      });
       return;
     }
   }
+    console.log("Buscando producto por código:", codigoProducto.value);
 
   //console.log('Este es el resultado',resultado)
 
@@ -1784,8 +1911,7 @@ const buscarProductoEscaneado = async () => {
     NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido,
   };
 
-  // console.log("Este es el detalle: ", detalle);
-
+  
   mutateCrearPedidoDet(detalle, {
     onSuccess: async (data) => {
       detallesPedido.value.push(data);
@@ -1795,24 +1921,20 @@ const buscarProductoEscaneado = async () => {
       totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0);
       // relistaDet2(); // Refrescar lista de detalles
       cantidad2.value = 1; // Resetear cantidad del modal
-
-      $q.notify({
-        type: "success",
-        message: `${detalle.DESCRIPCION_PROD_AUX} agregado con éxito`,
-        position: "bottom-right",
-        color: "green",
-        timeout: 2000,
-        group: false,
-        progress: true,
-        icon: "check",
-      });
+      console.log("Producto agregado con éxito:", data);
+      
+      mostrarNotificacionCorrectoSonido(`${detalle.PRODUCT0} agregado con éxito`);
     },
-    onError: (err) => {
-      console.error("Error al guardar producto:", err);
-      $q.notify({ type: "negative", message: "Error al guardar producto" });
+    onError: async (err) => {
+      await errorAgregarProductoConSonido(
+        `Error al guardar producto: ${err.message || "Error desconocido"}`
+      );
     },
     onSettled: () => {
       loadingPorCodigo.value = false;
+      nextTick(() => {
+        inputCodigo.value?.focus();
+      });
     },
   });
 };
@@ -1875,11 +1997,10 @@ const agregarProductoAlPedido2 = async (producto) => {
 
         //console.log('detalle2',detalle2)
       },
-      onError: (error) => {
+      onError: async (error) => {
         console.error("Error al guardar producto en BD:", error);
-        showErrorNotificationInside(
-          "No hay pedido",
-          "Debe de crear un pedido primero"
+        await errorAgregarProductoConSonido(
+          `Error al agregar producto: ${error.message || "Error desconocido"}`
         );
         throw new Error(error);
       },
@@ -1940,6 +2061,12 @@ const seleccionarProducto2 = async (producto, index) => {
   } catch (error) {
     console.error("Error in seleccionarProducto2:", error);
   }
+};
+
+const errorAgregarProductoConSonido = async (mensajeError) => {
+  errorAgregarProducto.value = true;
+  errorAgregarProducto.value = await mostrarNotificacionErrorSonido(mensajeError);
+
 };
 
 /*

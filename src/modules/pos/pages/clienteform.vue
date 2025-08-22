@@ -7,11 +7,11 @@
         <div class="tipo-transaccion-container">
           <div class="q-gutter-y-md">
             <q-btn-toggle
-              v-model="tipoTransaccion"
+              v-model="estadoPedido"
               unelevated
               spread
               no-caps
-              toggle-color="green"
+              toggle-color="indigo"
               color="grey-1"
               text-color="black"
               :options="[
@@ -19,6 +19,7 @@
                 { label: 'Cotizacion', value: 'cotización' },
               ]"
               class="tipo-transaccion-toggle"
+              :disable="!!mostrarNumPedido"
             />
           </div>
         </div>
@@ -185,82 +186,179 @@
 
           <!-- Modal de Pedidos Pendientes -->
           <q-dialog v-model="modalPendientes">
-            <q-card class="q-pa-md" style="min-width: 750px">
+            <q-card class="q-pa-md" style="min-width: 900px">
               <q-card-section class="row items-center q-pb-none">
                 <q-icon name="assignment" color="deep-orange-6" />
-                <span class="q-ml-md text-subtitle1">Pedidos Pendientes</span>
+                <span class="q-ml-md text-subtitle1">Pedidos y Cotizaciones Pendientes</span>
 
                 <q-space />
 
                 <q-btn icon="close" flat dense round v-close-popup />
               </q-card-section>
 
-              <q-card-section>
-                <p class="text-caption">Lista de pedidos no facturados</p>
+              <q-tabs
+                v-model="tab"
+                dense
+                class="text-grey-7"
+                active-color="primary"
+                indicator-color="primary"
+                align="justify"
+              >
+                <q-tab name="pedidos" label="Pedidos" />
+                <q-tab name="cotizaciones" label="Cotizaciones" />
+              </q-tabs>
 
-                <q-markup-table flat bordered class="q-mt-sm tabla-elegante">
-                  <thead>
-                    <tr>
-                      <th class="text-left"><strong># Pedido</strong></th>
-                      <th class="text-left"><strong>Cliente</strong></th>
-                      <th class="text-left"><strong>Nit</strong></th>
-                      <th class="text-left"><strong>Total</strong></th>
-                      <th class="text-center"><strong>Anular</strong></th>
-                      <th class="text-center"><strong>continuar</strong></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="pedido in pedidosPendientes"
-                      :key="pedido.NUMERO_DE_PEDIDO"
-                    >
-                      <td>{{ pedido.NUMERO_DE_PEDIDO }}</td>
-                      <td>{{ pedido.NOMBRE_A_FACTURAR }}</td>
-                      <td>{{ pedido.NIT_A_FACTURAR }}</td>
-                      <td>Q. {{ pedido.TOTAL_GENERAL_PEDIDO.toFixed(2) }}</td>
-                      <td class="text-center">
-                        <q-btn
-                          icon="close"
-                          color="red-6"
-                          flat
-                          dense
-                          label=""
-                          @click="anularPedido(pedido)"
-                        ></q-btn>
-                      </td>
-                      <td class="text-center">
-                        <q-btn
-                          icon="input"
-                          color="green-8"
-                          flat
-                          dense
-                          label=""
-                          @click="continuarPedido(pedido)"
-                        ></q-btn>
-                      </td>
-                    </tr>
-                  </tbody>
-                </q-markup-table>
-              </q-card-section>
+              <q-separator />
+
+              <q-tab-panels v-model="tab" animated>
+                <q-tab-panel name="pedidos">
+                  <!-- <p class="text-caption">Lista de pedidos no facturados</p> -->
+
+                  <q-input
+                    dense
+                    debounce="300"
+                    v-model="filtroPedidos"
+                    placeholder="Buscar pedidos..."
+                    class="q-mb-md"
+                  >
+                    <template v-slot:append>
+                      <q-icon name="search" />
+                    </template>
+                  </q-input>
+
+                  <q-markup-table flat bordered class="q-mt-sm tabla-elegante">
+                    <thead>
+                      <tr>
+                        <th class="text-left"><strong># Pedido</strong></th>
+                        <th class="text-left"><strong>Cliente</strong></th>
+                        <th class="text-left"><strong>Nit</strong></th>
+                        <th class="text-left"><strong>Total</strong></th>
+                        <th class="text-center"><strong>Anular</strong></th>
+                        <th class="text-center"><strong>Continuar</strong></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="pedido in filteredPedidos"
+                        :key="pedido.NUMERO_DE_PEDIDO"
+                      >
+                        <td>{{ pedido.NUMERO_DE_PEDIDO }}</td>
+                        <td>{{ pedido.NOMBRE_A_FACTURAR }}</td>
+                        <td>{{ pedido.NIT_A_FACTURAR }}</td>
+                        <td>Q. {{ pedido.TOTAL_GENERAL_PEDIDO.toFixed(2) }}</td>
+                        <td class="text-center">
+                          <q-btn
+                            icon="close"
+                            color="red-6"
+                            flat
+                            dense
+                            label=""
+                            @click="anularPedido(pedido)"
+                          ></q-btn>
+                        </td>
+                        <td class="text-center">
+                          <q-btn
+                            icon="input"
+                            color="green-8"
+                            flat
+                            dense
+                            label=""
+                            @click="continuarPedido(pedido)"
+                          ></q-btn>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </q-markup-table>
+                </q-tab-panel>
+
+                <q-tab-panel name="cotizaciones">
+                  <!-- <p class="text-caption">Lista de cotizaciones pendientes</p> -->
+                  
+                  <q-input
+                    dense
+                    debounce="300"
+                    v-model="filtroCotizaciones"
+                    placeholder="Buscar cotizaciones..."
+                    class="q-mb-md"
+                  >
+                    <template v-slot:append>
+                      <q-icon name="search" />
+                    </template>
+                  </q-input>
+
+                  <q-markup-table flat bordered class="q-mt-sm tabla-elegante">
+                    <thead>
+                      <tr>
+                        <th class="text-left"><strong># Cotización</strong></th>
+                        <th class="text-left"><strong>Cliente</strong></th>
+                        <th class="text-left"><strong>Nit</strong></th>
+                        <th class="text-left"><strong>Total</strong></th>
+                        <th class="text-center"><strong>Anular</strong></th>
+                        <th class="text-center"><strong>Continuar</strong></th>
+                        <th class="text-center"><strong>Imprimir</strong></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="pedido in filteredCotizaciones"
+                        :key="pedido.NUMERO_DE_PEDIDO"
+                      >
+                        <td>{{ pedido.NUMERO_DE_PEDIDO }}</td>
+                        <td>{{ pedido.NOMBRE_A_FACTURAR }}</td>
+                        <td>{{ pedido.NIT_A_FACTURAR }}</td>
+                        <td>Q. {{ pedido.TOTAL_GENERAL_PEDIDO.toFixed(2) }}</td>
+                        <td class="text-center">
+                          <q-btn
+                            icon="close"
+                            color="red-6"
+                            flat
+                            dense
+                            label=""
+                            @click="anularPedido(pedido)"
+                          ></q-btn>
+                        </td>
+                        <td class="text-center">
+                          <q-btn
+                            icon="input"
+                            color="green-8"
+                            flat
+                            dense
+                            label=""
+                            @click="continuarPedido(pedido)"
+                          ></q-btn>
+                        </td>
+                        <td class="text-center">
+                          <q-btn
+                            icon="print"
+                            color="primary"
+                            flat
+                            dense
+                            label=""
+                            @click="imprimirCotizacion(pedido)"
+                          ></q-btn>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </q-markup-table>
+                </q-tab-panel>
+              </q-tab-panels>
 
               <q-card-actions align="right">
                 <q-btn flat label="Cerrar" color="primary" v-close-popup />
               </q-card-actions>
             </q-card>
           </q-dialog>
+
+
+
         </div>
 
         <!-- Boton para modal pedidos/cotizaciones pendientes -->
         <div class="btn-pendientes-container">
           <q-btn
-            flat
-            dense
             icon="assignment"
-            size="xl"
             color="red"
-            class="text-caption"
-            unelevated
-            rounded
+            class="color: black"
             @click="abrirModalPedidosPendientes"
           />
         </div>
@@ -315,6 +413,8 @@
     ref="productosTabRef"
     :pedidoId="idPedidoEnc"
     :onNuevoPedido="nuevoPedido"
+    :tipoPedido="estadoPedido"
+    @update-estado="handleActualizarPedido"
   />
   <TablaProductos
     ref="tablaProductosRef"
@@ -373,6 +473,10 @@ import { useBodegas } from "@/modules/bodegas/composables/useBodegas";
 import { useStoreSucursal } from "@/stores/sucursal";
 import { useConfiguracionPos } from "@/modules/configuracion_pos/composables/useConfiguracionPos";
 import { runWithLoading } from "@/common/helper/notification";
+import { PedidosEnc } from "@/modules/pedidos_enc/interfaces/pedidoEncInterface";
+import { usePdfCotizacion } from "@/modules/cotizacion_pdf/composable/useCotizacion";
+import type { DataCotizacion } from "@/modules/cotizacion_pdf/interfaces/cotizacion.interface";
+import { obtenerDetallePedido } from "@/modules/pedidos_enc/action/pedidosEncAction";
 
 const { ObtenerBodegasId2 } = useBodegas();
 const storeSucursal = useStoreSucursal();
@@ -411,12 +515,13 @@ const idPedidoEnc = computed(() => pedidoStore.idPedidoEnc || 0); // Aseguramos 
 const { data: pedidoEnc } = obtenerPedidoPorId(idPedidoEnc);
 const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
-const estadoPedido = computed(() =>
-  pedidoStore.estadoPedido === "P" ? "Pedido" : "Cotización"
-);
 const focus2 = ref<HTMLInputElement | null>(null);
 let espera: ReturnType<typeof setTimeout> | null = null; // Para la busqueda automatica
-const tipoTransaccion = ref(pedidoStore.tipoPedido); // Valor inicial
+const estadoPedido = ref(!pedidoStore.estadoPedido || pedidoStore.estadoPedido === 'P' ? 'pedido' : 'cotización');
+const tab = ref('pedidos')
+const { generarCotizacionPDF } = usePdfCotizacion()
+const filtroPedidos = ref('');
+const filtroCotizaciones = ref('');
 
 // abrir expansion item y focus a nit
 watch(
@@ -451,8 +556,6 @@ watch(abrirModalCliente, async (isOpen, wasOpen) => {
   }
 });
 
-watch(mostrarNumPedido, async () => [(pedidoStore.estadoPedido = "P")]);
-
 //crear pedido
 const crearPedidod2 = () => {
   crearPedido();
@@ -479,6 +582,12 @@ watch(idPedidoEnc, (nuevoId) => {
   }
 });
 
+watch(estadoPedido, (newEstado) => {
+  if (newEstado) {
+    focus.value.focus();
+  }
+})
+
 //busqueda automatica
 const busquedaAutomatica = () => {
   if (espera) clearTimeout(espera); // Limpir tiempo
@@ -491,14 +600,18 @@ const busquedaAutomatica = () => {
   }
 };
 
+// Funcion para manejar el estado del pedido
+const handleActualizarPedido = (nuevoEstado: string) => {
+  estadoPedido.value = nuevoEstado;
+}
+
 // Anular pedido pendiente
-const anularPedido = async (pedido) => {
-  console.log(tipoTransaccion.value);
+const anularPedido = async (pedido: PedidosEnc) => {
+  const tipoPedido = pedido.ESTADO_PEDIDO === 'P' ? 'pedido' : 'cotización'
+
   const confirmado = await showConfirmationInsideModal(
-    `Anular ${estadoPedido.value}`,
-    `¿Está seguro que desea anular ${
-      estadoPedido.value === "Pedido" ? "el" : "la"
-    } ${estadoPedido.value} #${pedido.NUMERO_DE_PEDIDO}?`
+    `Anular ${tipoPedido}`,
+    `¿Está seguro que desea anular ${tipoPedido === "pedido" ? "el" : "la"} ${tipoPedido}?`
   );
 
   if (!confirmado) return;
@@ -508,14 +621,16 @@ const anularPedido = async (pedido) => {
     usuario: userStore.nombreVendedor,
   });
 
-  tipoTransaccion.value = "pedido";
+  estadoPedido.value = "pedido";
 };
 
 // continuar pedido pendiente
 const continuarPedido = async (pedido) => {
+  const tipoPedido = pedido.ESTADO_PEDIDO === 'P' ? 'pedido' : 'cotización'
+
   const confirmado = await showConfirmationInsideModal(
-    "Continuar Pedido",
-    `¿Está seguro que desea continuar con el pedido N° ${pedido.NUMERO_DE_PEDIDO}?`
+    `Continuar ${tipoPedido}`,
+    `¿Está seguro que desea continuar con ${tipoPedido === "pedido" ? "el" : "la"} ${tipoPedido} N° ${pedido.NUMERO_DE_PEDIDO}?`
   );
 
   if (!confirmado) return;
@@ -532,7 +647,7 @@ const continuarPedido = async (pedido) => {
     pedido.ID_PEDIDO_ENC,
     pedido.NUMERO_DE_PEDIDO,
     pedido.CODIGO_VENDEDOR,
-    pedido.ESTADO_PEDIDO
+    pedido.ESTADO_PEDIDO,
   );
 
   // set cliente
@@ -544,12 +659,106 @@ const continuarPedido = async (pedido) => {
     email: pedido.EMAIL_CLIENTE || null, // no viene la info
   });
 
+  estadoPedido.value = tipoPedido
+
   // Cerrar modal de pendientes
   modalPendientes.value = false;
 
   // Enfocar productosTab para continuar
   await productosTabRef.value?.enfocarCodigo();
 };
+
+const truncateDosDecimales = (numero) => {
+  return Math.trunc(numero * 100) / 100;
+}
+
+const formatearFecha = (fecha) => {
+  return new Date(fecha).toLocaleString("es-GT", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+};
+
+// Preparar actualizacion para pedido
+const prepararDataCotizacion = async (pedido: PedidosEnc): Promise<DataCotizacion> => {
+  const apiResponseDetallePedido = await obtenerDetallePedido(pedido.ID_PEDIDO_ENC);
+
+  const items = apiResponseDetallePedido.map((item: any) => {
+    return {
+      cantidad: item.CANTIDAD_PEDIDA,
+      descripcion: item.DESCRIPCION_PROD,
+      precio: formatCurrency(item.PRECIO_UNIDAD_VENTA, 2),
+      subtotal: formatCurrency(item.SUBTOTAL_VENTAS + item.MONTO_IVA, 2),
+    };
+  });
+
+  const totalItems = items.reduce((acc, item) => acc + item.cantidad, 0);
+  const subtotal = items.reduce((acc, item) => acc + parseFloat(item.subtotal.replace("Q.", "")), 0);
+
+  const dataCotizacion: DataCotizacion = {
+    encabezado: {
+      numeroInterno: `${pedido.NUMERO_DE_PEDIDO}`,
+      tipoDocumento: "COTIZACION",
+      fechaEmision: formatearFecha(pedido.FECHA_PEDIDO),
+    },
+
+    observacion: pedido.OBSERVACIONES,
+
+    cliente: {
+      nombre: pedido.NOMBRE_A_FACTURAR,
+      nit: String(pedido.NIT_A_FACTURAR ?? "CF"),
+      direccion: pedido.DIRECCION_FACTURAR,
+    },
+
+    items,
+
+    resumen: {
+      subtotal: formatCurrency(subtotal, 2),
+      totalPagar: `Q.${truncateDosDecimales(pedido.TOTAL_GENERAL_PEDIDO).toFixed(2)}`,
+      totalItems,
+    },
+    nombreVendedor: pedido.USUARIO_INGRESO_PEDI,
+  };
+
+  return dataCotizacion;
+}
+
+// Imprimir cotizacion
+const imprimirCotizacion = async (pedido) => {
+  if (!pedido.TOTAL_GENERAL_PEDIDO) {
+    $q.notify({
+      type: 'warning',
+      message: 'Agregue un producto antes de imprimir la cotización.',
+      position: 'top',
+      timeout: 3000
+    });
+    return;
+  }
+
+  try {
+    $q.loading.show({
+      message: 'Imprimiendo cotización',
+      boxClass: 'bg-grey-2 text-grey-9',
+      spinnerColor: 'primary'
+    });
+
+    const datosCotizacion = await prepararDataCotizacion(pedido)
+
+    const success = await generarCotizacionPDF(datosCotizacion);
+
+    if (success) {
+      console.log("Cotización generada con éxito.")
+    } else {
+      console.log("Fallo al genera cotización.")
+    }
+
+    $q.loading.hide();
+  } catch (error) {
+    console.log('Error al imprimir la cotización: ', error)
+  } finally {
+    $q.loading.hide()
+  }
+}
 
 // signo menos
 onMounted(() => {
@@ -648,6 +857,42 @@ const {
   userStore.codigoVendedor
 );
 
+// Propiedad computada para filtrar la lista de pedidos
+const filteredPedidos = computed(() => {
+  if (!pedidosPendientes.value) {
+    return [];
+  }
+  const searchTerm = filtroPedidos.value.toLowerCase();
+  
+  return pedidosPendientes.value.filter(p => {
+    const isPending = p.ESTADO_PEDIDO === 'P';
+    const matchesSearch = 
+      String(p.NUMERO_DE_PEDIDO).toLowerCase().includes(searchTerm) ||
+      p.NOMBRE_A_FACTURAR.toLowerCase().includes(searchTerm) ||
+      p.NIT_A_FACTURAR.toLowerCase().includes(searchTerm);
+      
+    return isPending && matchesSearch;
+  });
+});
+
+// Propiedad computada para filtrar la lista de cotizaciones
+const filteredCotizaciones = computed(() => {
+  if (!pedidosPendientes.value) {
+    return [];
+  }
+  const searchTerm = filtroCotizaciones.value.toLowerCase();
+  
+  return pedidosPendientes.value.filter(p => {
+    const isQuote = p.ESTADO_PEDIDO === 'C';
+    const matchesSearch =
+      String(p.NUMERO_DE_PEDIDO).toLowerCase().includes(searchTerm) ||
+      p.NOMBRE_A_FACTURAR.toLowerCase().includes(searchTerm) ||
+      p.NIT_A_FACTURAR.toLowerCase().includes(searchTerm);
+      
+    return isQuote && matchesSearch;
+  });
+});
+
 const abrirModalPedidosPendientes = () => {
   refetchPedidosPendientes();
   modalPendientes.value = true;
@@ -711,7 +956,7 @@ const crearPedido = () => {
     USUARIO_INGRESO_PEDI: userStore.nombreVendedor.substring(0, 10),
     CODIGO_VENDEDOR: userStore.codigoVendedor,
     CODIGO_DE_CLIENTE: obtenerConfiguracionPos.value.CODIGO_CLIENTE_CF, // Cliente Ticket
-    ESTADO_PEDIDO: tipoTransaccion.value === "pedido" ? "P" : "C",
+    ESTADO_PEDIDO: estadoPedido.value === "pedido" ? "P" : "C",
   };
 
   mutateCrearPedidoEnc(pedidoEnc, {
@@ -726,7 +971,7 @@ const crearPedido = () => {
         data.ID_PEDIDO_ENC,
         data.NUMERO_DE_PEDIDO,
         data.CODIGO_VENDEDOR,
-        data.ESTADO_PEDIDO
+        data.ESTADO_PEDIDO,
       );
 
       mostrarCardPedidoCreado.value = true;
@@ -751,7 +996,7 @@ const crearPedido = () => {
         "Error al crear",
         error.message ||
           `No se pudo registrar ${
-            estadoPedido.value === "Pedido" ? "el" : "la"
+            estadoPedido.value === "pedido" ? "el" : "la"
           } ${estadoPedido.value}`
       );
     },
@@ -1028,10 +1273,16 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 }
 
 .tipo-transaccion-toggle {
-  border-radius: 50px;
+  border-radius: 10px;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
 }
 
 .btn-pendientes-container {
-  margin: 8px 0px 0px;
+  margin: 16px 0px 0px 8px;  
+}
+
+.btn-pendientes {
+  padding: 8px 15px;
+  border-radius: 10px;
 }
 </style>

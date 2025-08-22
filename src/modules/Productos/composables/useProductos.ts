@@ -32,8 +32,8 @@ export const useProductos = () => {
             // console.log('composable: ', productoPrecio)
             return productoPrecio
         } catch (error) {
-            //console.log('Error obteniendo precio del producto', error)
-            showErrorNotification('Error', 'Error obteniendo precio del producto')
+            console.log('Error obteniendo precio del producto', error)
+            // showErrorNotification('Error', 'Error obteniendo precio del producto')
         }
     }
 

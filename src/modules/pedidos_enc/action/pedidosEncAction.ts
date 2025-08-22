@@ -1,6 +1,8 @@
 import posApi from "@/api/apiPos";
 import { getAxiosErrorMessage } from "@/common/helper/geterrordb";
 import { PedidosEnc } from "../interfaces/pedidoEncInterface";
+import { PedidosDet } from "@/modules/pedidos_det/interfaces/pedidosDetInterface";
+import { Vendedor } from "@/modules/notas_credito/interfaces/NotaCredito";
 
 //  Crear pedido
 export const crearPedidoEncAction = async (
@@ -111,3 +113,17 @@ export const obtenerPedidoEncPorIdAction2 = async (
     throw new Error(message);
   }
 };
+
+// Obtener detalle de pedido
+export const obtenerDetallePedido = async (idPedidoEnc: number): Promise<PedidosDet[]> => {
+  try {
+    const { data } = await posApi.get(`pedidos-det/pedidoEncDetalle/${idPedidoEnc}`);
+    return data;
+  } catch (error) {
+    const message = getAxiosErrorMessage(
+      error,
+      "Hubo un error al obtener detalle del pedido."
+    );
+    throw new Error(message);
+  }
+}
