@@ -706,6 +706,7 @@
 </template>
 
 <script setup>
+
 import { useQuasar } from "quasar";
 import { useQueryClient } from "@tanstack/vue-query";
 import {
@@ -742,11 +743,7 @@ import { useCertification } from "@/modules/certification/composables/useCertifi
 import { useCupones } from "@/modules/cupones/composables/useCupones";
 import useFormat from "@/common/composables/useFormat";
 import { useStoreSucursal } from "@/stores/sucursal";
-
 import { cleanAllStores } from "@/common/helper/cleanStore";
-
-
-
 
 
 /*
@@ -831,6 +828,7 @@ const idPedidoEnc = computed(() => props.pedidoId);
 ==========================================================
 */
 
+const { mutateAgregarContingencia } = useFacturasEnc();
 const { formatNumber, formatCurrency } = useFormat();
 const storeSucursal = useStoreSucursal();
 const { mutateAplicarCupon } = useCupones();
@@ -910,7 +908,7 @@ const paginacionCatalogo = ref({
   sortBy: "PRODUCTO",
   descending: false,
   page: 1,
-  rowsPerPage: 100,
+  rowsPerPage: 50,
 });
 
 /*
@@ -1430,7 +1428,7 @@ const certificarFactura = async (id) => {
     spinnerColor: "green",
     spinnerSize: 50,
   });
-  console.log('yo soy id"', id);
+  //console.log('yo soy id"', id);
 
   // Usar Promise para manejar la mutación de certificación
   mutateCertificar(
@@ -1460,10 +1458,27 @@ const certificarFactura = async (id) => {
           icon: "check",
         });
       },
-      onError: (error) => {
+
+      onError: async (error) => {
         console.error("Error en certificación:", error);
         $q.loading.hide();
-        //TODO: Implementar factura en contingencia en el caso que hay algun error en certificacion, lanzar un mensaje de que no se certificó
+        
+        $q.notify({
+          type: "negative",
+          message: `Error en certificación: ${error.message}, imprimiendo en contingencia`,
+          position: "top-right",
+          timeout: 5000,
+          icon: "error",
+        });
+
+        contingencia.value = true
+
+        await mutateAgregarContingencia(id)
+
+        nextTick() 
+
+        await imprimirFactura(id)
+
       },
     }
   );
@@ -1527,7 +1542,7 @@ const confirmarFactura = async () => {
       // Asignar este valor para llenar la factura
       idFacturaEnc.value = respuesta.ID_FACTURA_ENC;
       // Ahora sí espera a que termine la certificación
-      
+      console.log(' Que trae respuesta:', respuesta);
       if (contingencia.value === true) {
         await imprimirFactura(respuesta);
         return;
@@ -1557,7 +1572,7 @@ const imprimirFactura = async (data) => {
   // console.log("este es data:", data);
   console.log('imprimir factura2:', factura2)
 
-  // console.log('yo soy contingencia xd:', contingencia.value)
+  // console.log('yo soy contingencia:', contingencia.value)
   // console.log("data certificada con exito: ", data)
 
   const detalle = await obtenerDetalleFactura(idFacturaEnc.value);
@@ -1589,7 +1604,9 @@ const imprimirFactura = async (data) => {
       numero: factura2.NUMERO_FACTURA,
     });
   }
+
   console.log("Imprimiendo 2...");
+
   const dataFactura = {
     encabezado: {
       serie: data.SerieFacturaFel,
@@ -1620,7 +1637,7 @@ const imprimirFactura = async (data) => {
     qrCodeData: data.Uuid,
   };
 
-  // console.log(" yo soy data xd:", dataFactura);
+  // console.log(" yo soy data:", dataFactura);
   await nextTick();
   console.log("Imprimiendo 3...");
   await generarFacturaPDF(dataFactura);
