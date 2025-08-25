@@ -372,6 +372,20 @@ const { data, DatosSat2 } = useValidation(
   empresa.value
 );
 
+const deboucedSearch = debounce((val: string) => {
+  if (val.length > 0) {
+    buscarClienteSat();
+  } else {
+    // Limpiar los campos
+    mostrarNuevoNit.value = "";
+    mostrarNuevoNombre.value = "";
+  }
+}, 600);
+
+watch(nuevoNit, (val) => {
+  deboucedSearch(val);
+});
+
 // Función para alternar la dirección del splitter
 const toggleSplitterDirection = () => {
   if (splitter.value <= 50) {
@@ -451,6 +465,12 @@ const cancelar2 = () => {
 };
 
 const buscarClienteSat = async () => {
+  if (nuevoNit.value.length === 0) {
+    mostrarNuevoNit.value = "";
+    mostrarNuevoNombre.value = "";
+    return;
+  }
+
   $q.loading.show({
     message: "Buscando NIT en SAT...",
     spinnerColor: "green",
@@ -472,15 +492,8 @@ const buscarClienteSat = async () => {
     mostrarNuevoNit.value = result.data.nit;
     mostrarNuevoNombre.value = result.data.nombre;
   } else {
-    mostrarNuevoNit.value = "";
-    mostrarNuevoNombre.value = "";
-    nuevoNit.value = "";
-
-    // Si no hay datos, mostrar error
-    showErrorNotificationInside(
-      "NIT no encontrado",
-      "Verifique el NIT ingresado"
-    );
+    mostrarNuevoNit.value = "NIT no encontrado";
+    mostrarNuevoNombre.value = "NIT no encontrado";
     return;
   }
 };
