@@ -40,14 +40,14 @@ export const certificacionPendientesAction = async (datos: {
       serie: datos.serie,
       numeroFactura: datos.numero,
     });
-    console.log("devolviendo pendientes desde action", data);
+    //console.log("devolviendo pendientes desde action", data);
     return data;
   } catch (error) {
     const message = getAxiosErrorMessage(
       "Hubo un error creando un pendientes desde action",
       error
     );
-    console.log("error: ", message);
+    //console.log("error: ", message);
     throw new Error(message);
   }
 };

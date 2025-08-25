@@ -1688,6 +1688,9 @@ const confirmarFactura = async () => {
       // Ahora sí espera a que termine la certificación
 
       if (contingencia.value === true) {
+
+        // Aumentar contingencia
+        await mutateAgregarContingencia(idFacturaEnc.value);
         await imprimirFactura(respuesta);
         return;
       } else {
