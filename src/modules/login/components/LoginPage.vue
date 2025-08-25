@@ -131,6 +131,7 @@ import { nextTick } from 'vue'
 
 const StoreSucursal = useStoreSucursal()
 const { loginMutation } = useUserStore()
+const userStore = useUserStore()
 const { obtenerSucursal } = useSucursales()
 const { obtenerBodegasId } = useBodegas()
 const { ObtenerBodegasId2 } = useBodegas()
@@ -171,11 +172,11 @@ const realizarLogin = () => {
     {
       USUARIO: usuario.value,
       PASSWORD: password.value,
-      TIPO_USUARIO: tipoUsuario.value,
     },
     {
       // Login exitoso
-      onSuccess: (data, tipo) => {
+      onSuccess: (data) => {
+        userStore.tipoUsuarioStore = tipoUsuario.value
         // Rrecordar usuario
         if (recordarUsuario.value) {
           localStorage.setItem("usuarioRecordado", usuario.value)

@@ -1241,7 +1241,7 @@ onBeforeUnmount(() => {
 
 // Modal para escanear codigo generado en rompefilas
 const handleModalCodigo = (event: KeyboardEvent) => {
-  if (event.key === 'F9') {
+  if (event.key === 'F9' && userStore.tipoUsuarioStore === 'POS') {
     if (numPedido2.value > 0) {
       $q.notify({
         type: "negative",
