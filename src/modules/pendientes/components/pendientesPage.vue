@@ -148,7 +148,7 @@
     </q-splitter>
 
     <!-- Modal de contraseña -->
-    <q-dialog v-model="mostrarModalCambiarNit" style="z-index: auto" persistent>
+    <q-dialog v-model="mostrarModalCambiarNit" style="z-index: 1" persistent>
       <q-card style="width: 340px; height: 210px">
         <q-card-section class="q-pa-md q-pl-md q-ma-none title-card">
           <div class="text-h6 text-bold">

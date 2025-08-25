@@ -16,7 +16,7 @@ export const useValidation = (
     retry: false,
   });
 
-  // función simple para usar cuando quieras llamar directo
+  // función simple para usar directo
   const DatosSat2 = async (n: string, t: string, v: boolean, e: string) =>
    await validationAction(n, t, v, e);
 

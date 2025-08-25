@@ -9,7 +9,8 @@ import {
   obtenerFacturasFechaAction,
   obtenerFacturaNumeroSerieAction,
   actualizarContingenciaAction,
-  actualizarNitAction
+  actualizarNitAction,
+  obtenerDetalleFacturaPorIdAction3
 } from "../action/facturasEncAction";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
 import { showErrorNotification } from "@/common/helper/notification";
@@ -55,6 +56,11 @@ export const useFacturasEnc = () => {
   // Función normal para obtener el detalle de una factura por ID (sin useQuery)
   const obtenerDetalleFactura = async (idFacturaEnc: number) => {
     return await obtenerDetalleFacturaPorIdAction(idFacturaEnc);
+  };
+
+  // Para impresion xd
+    const obtenerDetalleFactura3 = async (idFacturaEnc: number) => {
+    return await obtenerDetalleFacturaPorIdAction3(idFacturaEnc);
   };
 
   //obtener datos Fel
@@ -117,8 +123,6 @@ export const useFacturasEnc = () => {
     }
   })
 
-  
-
   const { mutate: mutateActualizarNit } = useMutation<FacturaEnc, Error, ActualizarNitVars>({
      mutationFn: ({ id, nit, nombre }) => actualizarNitAction(id, nit, nombre),
     onSuccess: () => {
@@ -141,7 +145,8 @@ export const useFacturasEnc = () => {
     obtenerFacturasPorNumeroSerie,
     mutateCambiarNitFacturaACF,
     mutateAgregarContingencia,
-    mutateActualizarNit
+    mutateActualizarNit,
+    obtenerDetalleFactura3
   }
 }
 

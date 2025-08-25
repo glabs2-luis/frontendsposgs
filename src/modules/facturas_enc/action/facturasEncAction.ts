@@ -4,6 +4,7 @@ import { FacturaEnc } from "../interfaces/facturaEncInterface";
 import { FacturaEnc2 } from "../interfaces/facturaEnc2Interface";
 import { DatosFel } from "../interfaces/datosFelInterface";
 import { FacturaEnc3 } from "../interfaces/facturaEnc3Interface";
+import { Detalle, Enc } from '../interfaces/detalleInterface';
 
 // Obtener todas las Facturas enc
 export const obtenerFacturasEncAction = async (): Promise<FacturaEnc[]> => {
@@ -20,9 +21,7 @@ export const obtenerFacturasEncAction = async (): Promise<FacturaEnc[]> => {
 };
 
 // Obtener factura Enc por id
-export const obtenerFacturasEncIdAction = async (
-  id: number
-): Promise<FacturaEnc> => {
+export const obtenerFacturasEncIdAction = async (id: number): Promise<FacturaEnc> => {
   try {
     const { data } = await posApi.get<FacturaEnc>(`/facturas-enc/${id}`);
     return data;
@@ -37,9 +36,7 @@ export const obtenerFacturasEncIdAction = async (
 };
 
 //obtener det por factura enc id
-export const obtenerDetalleFacturaPorIdAction = async (
-  idFacturaEnc: number
-) => {
+export const obtenerDetalleFacturaPorIdAction = async (idFacturaEnc: number) => {
   try {
     const { data } = await posApi.get(`/facturas-enc/detalles/${idFacturaEnc}`);
     return data.ENC.DET;
@@ -51,6 +48,21 @@ export const obtenerDetalleFacturaPorIdAction = async (
     // console.log(message);
   }
 };
+
+// Para impresion xd
+export const obtenerDetalleFacturaPorIdAction3 = async (idFacturaEnc: number) :Promise<Detalle> => {
+  try {
+    const { data } = await posApi.get(`/facturas-enc/detalles/${idFacturaEnc}`);
+    return data.ENC.DES;
+  } catch (error) {
+    const message = getAxiosErrorMessage(
+      error,
+      "Hubo un error obteniendo los detalles de la factura"
+    );
+    // console.log(message);
+  }
+};
+
 
 // Por alguna razon esta xd
 export const crearFacturaEncAction = async () => {
