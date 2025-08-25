@@ -189,7 +189,9 @@
             <q-card class="q-pa-md" style="min-width: 900px">
               <q-card-section class="row items-center q-pb-none">
                 <q-icon name="assignment" color="deep-orange-6" />
-                <span class="q-ml-md text-subtitle1">Pedidos y Cotizaciones Pendientes</span>
+                <span class="q-ml-md text-subtitle1"
+                  >Pedidos y Cotizaciones Pendientes</span
+                >
 
                 <q-space />
 
@@ -273,7 +275,7 @@
 
                 <q-tab-panel name="cotizaciones">
                   <!-- <p class="text-caption">Lista de cotizaciones pendientes</p> -->
-                  
+
                   <q-input
                     dense
                     debounce="300"
@@ -348,9 +350,6 @@
               </q-card-actions>
             </q-card>
           </q-dialog>
-
-
-
         </div>
 
         <!-- Boton para modal pedidos/cotizaciones pendientes -->
@@ -517,11 +516,15 @@ const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
 const focus2 = ref<HTMLInputElement | null>(null);
 let espera: ReturnType<typeof setTimeout> | null = null; // Para la busqueda automatica
-const estadoPedido = ref(!pedidoStore.estadoPedido || pedidoStore.estadoPedido === 'P' ? 'pedido' : 'cotización');
-const tab = ref('pedidos')
-const { generarCotizacionPDF } = usePdfCotizacion()
-const filtroPedidos = ref('');
-const filtroCotizaciones = ref('');
+const estadoPedido = ref(
+  !pedidoStore.estadoPedido || pedidoStore.estadoPedido === "P"
+    ? "pedido"
+    : "cotización"
+);
+const tab = ref("pedidos");
+const { generarCotizacionPDF } = usePdfCotizacion();
+const filtroPedidos = ref("");
+const filtroCotizaciones = ref("");
 
 // abrir expansion item y focus a nit
 watch(
@@ -586,7 +589,7 @@ watch(estadoPedido, (newEstado) => {
   if (newEstado) {
     focus.value.focus();
   }
-})
+});
 
 //busqueda automatica
 const busquedaAutomatica = () => {
@@ -603,15 +606,17 @@ const busquedaAutomatica = () => {
 // Funcion para manejar el estado del pedido
 const handleActualizarPedido = (nuevoEstado: string) => {
   estadoPedido.value = nuevoEstado;
-}
+};
 
 // Anular pedido pendiente
 const anularPedido = async (pedido: PedidosEnc) => {
-  const tipoPedido = pedido.ESTADO_PEDIDO === 'P' ? 'pedido' : 'cotización'
+  const tipoPedido = pedido.ESTADO_PEDIDO === "P" ? "pedido" : "cotización";
 
   const confirmado = await showConfirmationInsideModal(
     `Anular ${tipoPedido}`,
-    `¿Está seguro que desea anular ${tipoPedido === "pedido" ? "el" : "la"} ${tipoPedido}?`
+    `¿Está seguro que desea anular ${
+      tipoPedido === "pedido" ? "el" : "la"
+    } ${tipoPedido}?`
   );
 
   if (!confirmado) return;
@@ -626,11 +631,13 @@ const anularPedido = async (pedido: PedidosEnc) => {
 
 // continuar pedido pendiente
 const continuarPedido = async (pedido) => {
-  const tipoPedido = pedido.ESTADO_PEDIDO === 'P' ? 'pedido' : 'cotización'
+  const tipoPedido = pedido.ESTADO_PEDIDO === "P" ? "pedido" : "cotización";
 
   const confirmado = await showConfirmationInsideModal(
     `Continuar ${tipoPedido}`,
-    `¿Está seguro que desea continuar con ${tipoPedido === "pedido" ? "el" : "la"} ${tipoPedido} N° ${pedido.NUMERO_DE_PEDIDO}?`
+    `¿Está seguro que desea continuar con ${
+      tipoPedido === "pedido" ? "el" : "la"
+    } ${tipoPedido} N° ${pedido.NUMERO_DE_PEDIDO}?`
   );
 
   if (!confirmado) return;
@@ -647,7 +654,7 @@ const continuarPedido = async (pedido) => {
     pedido.ID_PEDIDO_ENC,
     pedido.NUMERO_DE_PEDIDO,
     pedido.CODIGO_VENDEDOR,
-    pedido.ESTADO_PEDIDO,
+    pedido.ESTADO_PEDIDO
   );
 
   // set cliente
@@ -659,7 +666,7 @@ const continuarPedido = async (pedido) => {
     email: pedido.EMAIL_CLIENTE || null, // no viene la info
   });
 
-  estadoPedido.value = tipoPedido
+  estadoPedido.value = tipoPedido;
 
   // Cerrar modal de pendientes
   modalPendientes.value = false;
@@ -670,7 +677,7 @@ const continuarPedido = async (pedido) => {
 
 const truncateDosDecimales = (numero) => {
   return Math.trunc(numero * 100) / 100;
-}
+};
 
 const formatearFecha = (fecha) => {
   return new Date(fecha).toLocaleString("es-GT", {
@@ -680,8 +687,12 @@ const formatearFecha = (fecha) => {
 };
 
 // Preparar actualizacion para pedido
-const prepararDataCotizacion = async (pedido: PedidosEnc): Promise<DataCotizacion> => {
-  const apiResponseDetallePedido = await obtenerDetallePedido(pedido.ID_PEDIDO_ENC);
+const prepararDataCotizacion = async (
+  pedido: PedidosEnc
+): Promise<DataCotizacion> => {
+  const apiResponseDetallePedido = await obtenerDetallePedido(
+    pedido.ID_PEDIDO_ENC
+  );
 
   const items = apiResponseDetallePedido.map((item: any) => {
     return {
@@ -693,7 +704,10 @@ const prepararDataCotizacion = async (pedido: PedidosEnc): Promise<DataCotizacio
   });
 
   const totalItems = items.reduce((acc, item) => acc + item.cantidad, 0);
-  const subtotal = items.reduce((acc, item) => acc + parseFloat(item.subtotal.replace("Q.", "")), 0);
+  const subtotal = items.reduce(
+    (acc, item) => acc + parseFloat(item.subtotal.replace("Q.", "")),
+    0
+  );
 
   const dataCotizacion: DataCotizacion = {
     encabezado: {
@@ -714,51 +728,47 @@ const prepararDataCotizacion = async (pedido: PedidosEnc): Promise<DataCotizacio
 
     resumen: {
       subtotal: formatCurrency(subtotal, 2),
-      totalPagar: `Q.${truncateDosDecimales(pedido.TOTAL_GENERAL_PEDIDO).toFixed(2)}`,
+      totalPagar: `Q.${truncateDosDecimales(
+        pedido.TOTAL_GENERAL_PEDIDO
+      ).toFixed(2)}`,
       totalItems,
     },
     nombreVendedor: pedido.USUARIO_INGRESO_PEDI,
   };
 
   return dataCotizacion;
-}
+};
 
 // Imprimir cotizacion
 const imprimirCotizacion = async (pedido) => {
   if (!pedido.TOTAL_GENERAL_PEDIDO) {
     $q.notify({
-      type: 'warning',
-      message: 'Agregue un producto antes de imprimir la cotización.',
-      position: 'top',
-      timeout: 3000
+      type: "warning",
+      message: "Agregue un producto antes de imprimir la cotización.",
+      position: "top",
+      timeout: 3000,
     });
     return;
   }
 
   try {
     $q.loading.show({
-      message: 'Imprimiendo cotización',
-      boxClass: 'bg-grey-2 text-grey-9',
-      spinnerColor: 'primary'
+      message: "Imprimiendo cotización",
+      boxClass: "bg-grey-2 text-grey-9",
+      spinnerColor: "primary",
     });
 
-    const datosCotizacion = await prepararDataCotizacion(pedido)
+    const datosCotizacion = await prepararDataCotizacion(pedido);
 
     const success = await generarCotizacionPDF(datosCotizacion);
 
-    if (success) {
-      console.log("Cotización generada con éxito.")
-    } else {
-      console.log("Fallo al genera cotización.")
-    }
-
     $q.loading.hide();
   } catch (error) {
-    console.log('Error al imprimir la cotización: ', error)
+    console.log("Error al imprimir la cotización: ", error);
   } finally {
-    $q.loading.hide()
+    $q.loading.hide();
   }
-}
+};
 
 // signo menos
 onMounted(() => {
@@ -790,7 +800,6 @@ const crearPedidoConF3 = (e: KeyboardEvent) => {
   if (e.key === "F3") {
     e.preventDefault();
     crearPedido();
-    expansion.value?.hide();
   }
 };
 
@@ -863,14 +872,14 @@ const filteredPedidos = computed(() => {
     return [];
   }
   const searchTerm = filtroPedidos.value.toLowerCase();
-  
-  return pedidosPendientes.value.filter(p => {
-    const isPending = p.ESTADO_PEDIDO === 'P';
-    const matchesSearch = 
+
+  return pedidosPendientes.value.filter((p) => {
+    const isPending = p.ESTADO_PEDIDO === "P";
+    const matchesSearch =
       String(p.NUMERO_DE_PEDIDO).toLowerCase().includes(searchTerm) ||
       p.NOMBRE_A_FACTURAR.toLowerCase().includes(searchTerm) ||
       p.NIT_A_FACTURAR.toLowerCase().includes(searchTerm);
-      
+
     return isPending && matchesSearch;
   });
 });
@@ -881,14 +890,14 @@ const filteredCotizaciones = computed(() => {
     return [];
   }
   const searchTerm = filtroCotizaciones.value.toLowerCase();
-  
-  return pedidosPendientes.value.filter(p => {
-    const isQuote = p.ESTADO_PEDIDO === 'C';
+
+  return pedidosPendientes.value.filter((p) => {
+    const isQuote = p.ESTADO_PEDIDO === "C";
     const matchesSearch =
       String(p.NUMERO_DE_PEDIDO).toLowerCase().includes(searchTerm) ||
       p.NOMBRE_A_FACTURAR.toLowerCase().includes(searchTerm) ||
       p.NIT_A_FACTURAR.toLowerCase().includes(searchTerm);
-      
+
     return isQuote && matchesSearch;
   });
 });
@@ -961,6 +970,8 @@ const crearPedido = () => {
 
   mutateCrearPedidoEnc(pedidoEnc, {
     onSuccess: async (data) => {
+      // cerrar expansion
+      expansion.value?.hide();
       // Actualizar variables reactivas
       numPedido.value = data.NUMERO_DE_PEDIDO;
       totalReal.value = data.TOTAL_GENERAL_PEDIDO;
@@ -971,7 +982,7 @@ const crearPedido = () => {
         data.ID_PEDIDO_ENC,
         data.NUMERO_DE_PEDIDO,
         data.CODIGO_VENDEDOR,
-        data.ESTADO_PEDIDO,
+        data.ESTADO_PEDIDO
       );
 
       mostrarCardPedidoCreado.value = true;
@@ -1062,25 +1073,24 @@ const buscarClienteDPINIT2 = async () => {
 
     // 2) SEGUNDO: SAT (si el validador está activo)
     if (validador.value) {
-      // Loadingsd
-      const result = await runWithLoading(
-        () =>
-          DatosSat2(
-            nit.value,
-            tipoDocumento.value,
-            validador.value,
-            empresa.value
-          ),
-        "Consultando datos en SAT…"
+      $q.loading.show({
+        message: "Consultando datos en SAT…",
+        boxClass: "bg-grey-2 text-grey-9",
+        spinnerColor: "primary",
+      });
+      console.log("nit", nit.value);
+      console.log("tipo", tipoDocumento.value);
+      console.log("validador", validador.value);
+      console.log("empresa", empresa.value);
+
+      const result = await DatosSat2(
+        nit.value,
+        tipoDocumento.value,
+        validador.value,
+        empresa.value
       );
 
-      // Consolar los resultados
-      // console.log("Tipo de documento:", tipoDocumento.value);
-      // console.log(
-      //   "Este es el resultado de consultar datos en la sat: ",
-      //   result.data
-      // );
-      // console.log("valor booleano sat", result.isCertified);
+      $q.loading.hide();
 
       const nombreSat = result.data.nombre; // Guardar el nombre retornado de sat
 
@@ -1114,7 +1124,19 @@ const buscarClienteDPINIT2 = async () => {
     clienteTemp.value.NIT = doc;
     clienteTemp.value.DIRECCION = "Ciudad";
   } catch (err) {
-    showConfirmationDialog("Error:", err);
+    abrirModalCliente.value = true;
+    $q.notify({
+      type: "negative",
+      message: "Error al validar el documento del clientes",
+      caption: err.message || "No se pudo validar el documento",
+      position: "top",
+      color: "red",
+      icon: "error",
+      timeout: 2000,
+    });
+    $q.loading.hide();
+    focus.value?.focus();
+    focus.value?.select();
   }
 };
 
@@ -1278,7 +1300,7 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
 }
 
 .btn-pendientes-container {
-  margin: 16px 0px 0px 8px;  
+  margin: 16px 0px 0px 8px;
 }
 
 .btn-pendientes {

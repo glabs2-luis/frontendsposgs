@@ -476,24 +476,32 @@ const buscarClienteSat = async () => {
     spinnerColor: "green",
     spinnerSize: 50,
   });
+  try {
+    const result = await DatosSat2(
+      nuevoNit.value,
+      tipoDocumento.value,
+      validador.value,
+      empresa.value
+    );
+    $q.loading.hide();
+    //console.log('Resultado de la búsqueda SAT:', result);
 
-  const result = await DatosSat2(
-    nuevoNit.value,
-    tipoDocumento.value,
-    validador.value,
-    empresa.value
-  );
-
-  $q.loading.hide();
-  //console.log('Resultado de la búsqueda SAT:', result);
-
-  if (result.isCertified === true) {
-    // Si hay datos, asignarlos a los campos
-    mostrarNuevoNit.value = result.data.nit;
-    mostrarNuevoNombre.value = result.data.nombre;
-  } else {
-    mostrarNuevoNit.value = "NIT no encontrado";
-    mostrarNuevoNombre.value = "NIT no encontrado";
+    if (result.isCertified === true) {
+      // Si hay datos, asignarlos a los campos
+      mostrarNuevoNit.value = result.data.nit;
+      mostrarNuevoNombre.value = result.data.nombre;
+    } else {
+      mostrarNuevoNit.value = "NIT no encontrado";
+      mostrarNuevoNombre.value = "NIT no encontrado";
+      return;
+    }
+  } catch (error) {
+    console.log("Error al buscar cliente en SAT:", error);
+    showErrorNotificationInside(
+      "Error al buscar cliente en SAT",
+      error.message
+    );
+    $q.loading.hide();
     return;
   }
 };
@@ -566,7 +574,7 @@ const actualizarNit = async () => {
   });
 
   // Llamar a la mutación para actualizar el NIT
-  await mutateActualizarNit(
+  mutateActualizarNit(
     {
       id: id_factura_enc.value,
       nit: mostrarNuevoNit.value,

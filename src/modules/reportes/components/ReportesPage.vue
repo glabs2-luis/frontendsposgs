@@ -247,7 +247,7 @@ const localeEspanol = {
 
 // Mostrar el modal al iniciar la página
 onMounted(() => {
-  if (facturasErrores.value.length > 0) {
+  if (facturasErrores.value) {
     $q.notify({
       icon: "warning",
       message: "No puede acceder a este modulo",
