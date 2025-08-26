@@ -6,5 +6,6 @@ export interface Login {
     ESTADO_VENDEDOR?: string;
     TIPO_VENDEDOR?:   string;
     token?:           string;
+    TIPO_USUARIO?:    string;
 }
 

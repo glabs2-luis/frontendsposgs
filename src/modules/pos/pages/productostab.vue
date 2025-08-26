@@ -52,10 +52,19 @@
             @click="limpiar"
           />
 
+          <!-- v-if="userStore.tipoUsuarioStore === 'POS'" -->
           <q-btn
             label="Terminar Venta (F4)"
             icon="point_of_sale"
             @click="terminarVenta"
+            class="boton-amarillo"
+          />
+
+          <!-- v-if="userStore.tipoUsuarioStore === 'ROMPEFILA'" -->
+          <q-btn
+            label="Generar ticket"
+            icon="theaters"
+            @click="terminarPedidoRompefilas"
             class="boton-amarillo"
           />
         </div>
@@ -769,6 +778,7 @@ import { cleanAllStores } from "@/common/helper/cleanStore";
 import { usePdfCotizacion } from "@/modules/cotizacion_pdf/composable/useCotizacion";
 import { obtenerDetallePedido, obtenerPedidoEncPorIdAction } from "@/modules/pedidos_enc/action/pedidosEncAction";
 import { useClienteStore } from "@/stores/cliente";
+import { usePdfTicket } from "@/modules/ticket_pdf/composable/useTicket";
 
 /*
 ==========================================================
@@ -895,6 +905,7 @@ const { generarCotizacionPDF } = usePdfCotizacion()
 const clienteStore = useClienteStore();
 const { nombreVendedor } = useUserStore();
 const { totalItems } = useTotalStore();
+const { generarTicketPDF } = usePdfTicket();
 
 //USE COMPOSABLES
 const {  data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedidoEnc);
@@ -1307,7 +1318,9 @@ watch(modalProductos, async (val) => {
       loadingProductos.value = true;
       await refetchTodosProductos();
     } catch (error) {
-      $q.notify({ type: "negative", message: "Error al cargar productos" });
+      $q.notify(
+        {
+          type: "negative", message: "Error al cargar productos" });
     } finally {
       loadingProductos.value = false;
     }
@@ -1703,6 +1716,66 @@ const confirmarFactura = async () => {
   // LIMPIAR STORES DESPUÉS DE COMPLETAR EXITOSAMENTE
   // Esto se ejecuta solo si todo el proceso de facturación fue exitoso
   cleanAllStores();
+};
+
+// modal generar ticket rompefilas
+const terminarPedidoRompefilas = async () => {
+  await nextTick(); // Cargar los productos
+
+  // si no existe pedido
+  if (!pedidoStore.idPedidoEnc) {
+    showErrorNotification(
+      "No existe un pedido",
+      "Debes de crear un pedido primero"
+    );
+    return;
+  }
+
+  try {
+    const confirmado = await showConfirmationInsideModal(
+      "Confirmar Pedido",
+      "¿Estás seguro de que deseas generar el pedido?"
+    );
+    if (!confirmado) {
+      return;
+    }
+
+    $q.loading.show({
+      message: "Generando ticket...",
+      spinnerColor: "primary",
+      spinnerSize: 50,
+    });
+
+    console.log("Generano ticket...")
+
+    const success = await generarTicketPDF(pedidoStore.numeroDePedido)
+    
+    if (success) {
+      console.log("Ticket generado con exito.")
+      $q.notify
+    } else {
+      console.log("Fallo al genera ticket.")
+    }
+
+    $q.notify({
+      type: 'positive',
+      message: 'Ticket generado correctamente.',
+      position: 'top',
+      timeout: 3000
+    });
+
+    cleanAllStores();
+  } catch (error) {
+    console.error("Error al generar ticket:", error);
+    $q.notify({
+      type: 'negative',
+      message: 'Error al generar ticket: ', error,
+      position: 'top',
+      timeout: 3000
+    });
+  } finally {
+    $q.loading.hide();
+  }
 };
 
 const imprimirFactura = async (data) => {

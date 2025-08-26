@@ -8,6 +8,10 @@ export function sonidoProceso(tipo: string = "correcto"): void {
   const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
   const oscillator = ctx.createOscillator();
   const gainNode = ctx.createGain();
+  
+  if (ctx.state === 'suspended') {
+    ctx.resume();
+  }
 
   oscillator.type = tipoSonido;
   oscillator.frequency.value = frecuencia;

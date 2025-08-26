@@ -127,3 +127,17 @@ export const obtenerDetallePedido = async (idPedidoEnc: number): Promise<Pedidos
     throw new Error(message);
   }
 }
+
+// Obtener pedidoEnc por numero
+export const obtenerPedidoEncPorNumero = async (numeroPedido: number): Promise<PedidosEnc> => {
+  try {
+    const { data } = await posApi.get(`pedidos-enc/numeroPedido/${numeroPedido}`);
+    return data;
+  } catch (error) {
+    const message = getAxiosErrorMessage(
+      error,
+      "Hubo un error al obtener pedido enc."
+    );
+    throw new Error(message);
+  }
+}

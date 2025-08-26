@@ -11,6 +11,7 @@ export const useUserStore = defineStore(
     const nombreVendedor = ref("");
     const codigoVendedor = ref<number | null>(null);
     const token = ref("");
+    const tipoUsuarioStore = ref("");
 
     const router = useRouter();
 
@@ -18,6 +19,7 @@ export const useUserStore = defineStore(
       nombreVendedor.value = "";
       codigoVendedor.value = null;
       token.value = "";
+      tipoUsuarioStore.value = '';
       localStorage.clear();
       delete axios.defaults.headers.common["Authorization"];
       router.push("/login");
@@ -53,6 +55,7 @@ export const useUserStore = defineStore(
       nombreVendedor,
       codigoVendedor,
       token,
+      tipoUsuarioStore,
       loginMutation: mutation.mutate,
       isLoading: computed(() => mutation.status.value === "pending"),
       cerrarSesion,
