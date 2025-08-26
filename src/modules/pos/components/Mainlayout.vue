@@ -8,41 +8,17 @@
       class="drawer-elegante"
     >
       <q-list padding>
-        <q-item clickable v-ripple @click="router.push('/ventas')">
-          <q-item-section avatar
-            ><q-icon name="point_of_sale"
-          /></q-item-section>
-          <q-item-section>Ventas </q-item-section>
-        </q-item>
-
-        <q-item clickable v-ripple @click="router.push('/clientes')">
-          <q-item-section avatar><q-icon name="person" /></q-item-section>
-          <q-item-section>Clientes</q-item-section>
-        </q-item>
-
-        <q-item clickable v-ripple @click="router.push('/facturas')">
-          <q-item-section avatar><q-icon name="description" /></q-item-section>
-          <q-item-section>Facturas</q-item-section>
-        </q-item>
-
-        <q-item clickable v-ripple @click="router.push('/notas')">
-          <q-item-section avatar><q-icon name="edit_note" /></q-item-section>
-          <q-item-section>Notas de Crédito</q-item-section>
-        </q-item>
-
-        <q-item clickable v-ripple @click="router.push('/reportes')">
-          <q-item-section avatar><q-icon name="bar_chart" /></q-item-section>
-          <q-item-section>Reportes</q-item-section>
-        </q-item>
-
-        <q-item clickable v-ripple @click="router.push('/pendientes')">
-          <q-item-section avatar><q-icon name="schedule" /></q-item-section>
-          <q-item-section>Pendientes</q-item-section>
-        </q-item>
-
-        <q-item clickable v-ripple @click="router.push('/configuracion')">
-          <q-item-section avatar><q-icon name="settings" /></q-item-section>
-          <q-item-section>Configuracion</q-item-section>
+        <q-item
+          v-for="item in menuFiltrado"
+          :key="item.route"
+          clickable
+          v-ripple
+          @click="router.push(item.route)"
+        >
+        <q-item-section avatar>
+          <q-icon :name="item.icon" />
+        </q-item-section>
+        <q-item-section>{{ item.label }}</q-item-section>
         </q-item>
       </q-list>
     </q-drawer>
@@ -183,6 +159,7 @@ const route = useRoute();
 const menuAbierto = ref(false);
 const configuracionStore = useConfiguracionStore();
 const $q = useQuasar();
+const userStore = useUserStore();
 
 // Usar el nuevo sistema de sincronización
 const {
@@ -199,6 +176,25 @@ const {
   formatDate,
   loadLastSyncDates,
 } = useSyncManager();
+
+// Opciones del menu
+const menuOptions = [
+  { label: "Ventas", icon: "point_of_sale", route: "/ventas" },
+  { label: "Clientes", icon: "person", route: "/clientes" },
+  { label: "Facturas", icon: "description", route: "/facturas" },
+  { label: "Notas de Crédito", icon: "edit_note", route: "/notas" },
+  { label: "Reportes", icon: "bar_chart", route: "/reportes" },
+  { label: "Pendientes", icon: "schedule", route: "/pendientes" },
+  { label: "Configuración", icon: "settings", route: "/configuracion" },
+];
+
+const menuFiltrado = computed(() => {
+  if (userStore.tipoUsuarioStore === 'ROMPEFILA') {
+    return menuOptions.filter(option => option.route === '/ventas');
+  }
+
+  return menuOptions;
+})
 
 // Variables para sincronización automática (mantener compatibilidad)
 const ultimaSincronizacion = ref<Date | null>(null);

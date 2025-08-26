@@ -79,6 +79,16 @@
                   </template>
                 </q-input>
 
+                <q-select
+                  v-model="tipoUsuario"
+                  :options="opcionesTipoUsuario"
+                  label="Tipo de usuario"
+                  outlined
+                  dense
+                  class="input-campo q-mb-md"
+                  color="primary"
+                />
+
                 <q-checkbox
                   v-model="recordarUsuario"
                   label="Recordar usuario"
@@ -121,6 +131,7 @@ import { nextTick } from 'vue'
 
 const StoreSucursal = useStoreSucursal()
 const { loginMutation } = useUserStore()
+const userStore = useUserStore()
 const { obtenerSucursal } = useSucursales()
 const { obtenerBodegasId } = useBodegas()
 const { ObtenerBodegasId2 } = useBodegas()
@@ -133,6 +144,8 @@ const focusContra = ref(null)
 const focusUsuario = ref(null)
 const $q = useQuasar()
 const isPwd = ref(true)
+const opcionesTipoUsuario = ref<string[]>(['POS', 'ROMPEFILA']);
+const tipoUsuario = ref<string>('POS');
 
 const mostrarBodega = async () => {
   const result = await ObtenerBodegasId2();
@@ -163,6 +176,7 @@ const realizarLogin = () => {
     {
       // Login exitoso
       onSuccess: (data) => {
+        userStore.tipoUsuarioStore = tipoUsuario.value
         // Rrecordar usuario
         if (recordarUsuario.value) {
           localStorage.setItem("usuarioRecordado", usuario.value)
