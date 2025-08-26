@@ -267,7 +267,6 @@ onMounted(() => {
 
 watch(rangoFechas, (nuevo, viejo) => {
   fecha.value = nuevo;
-  //console.log('guardando valor desde nuevo', fecha.value  )
 });
 
 const valorUnaFecha = ref(null);

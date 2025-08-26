@@ -23,8 +23,6 @@ export const usePedidosEnc = () => {
     id_sucursal: number,
     codigo_vendedor: number
   ) => {
-    //  console.log("id_sucursal", id_sucursal);
-    // console.log("codigo_vendedor", codigo_vendedor);
     return useQuery({
       queryKey: ["pedidos-pendientes", id_sucursal, codigo_vendedor],
       queryFn: () =>

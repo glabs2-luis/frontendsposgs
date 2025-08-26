@@ -69,7 +69,6 @@ export const usePedidoDet = () => {
 
   // obtener lista pedidos det
   // const ListaDet1 = (idPedidoEnc: Ref<number | null>) => {
-  //   console.log("ListaDet1 - idPedidoEnc:", idPedidoEnc.value);
     
   //   return useQuery({
   //      este es el que falla
@@ -80,7 +79,6 @@ export const usePedidoDet = () => {
   // };
 
   // const ListaDet2 = (idPedidoEnc: Ref<number | null>) => {    
-  //   console.log("ListaDet2 - idPedidoEnc:", idPedidoEnc.value);
   //   return useQuery({
   //     queryKey: computed(() => ["pedido-det", idPedidoEnc.value]),
   //     queryFn: () => obtenerListaPedidosDet(idPedidoEnc.value),

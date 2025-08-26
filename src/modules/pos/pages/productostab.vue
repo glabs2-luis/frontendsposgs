@@ -1746,15 +1746,13 @@ const terminarPedidoRompefilas = async () => {
       spinnerSize: 50,
     });
 
-    console.log("Generano ticket...")
-
     const success = await generarTicketPDF(pedidoStore.numeroDePedido)
     
     if (success) {
-      console.log("Ticket generado con exito.")
+      //console.log("Ticket generado con exito.")
       $q.notify
     } else {
-      console.log("Fallo al genera ticket.")
+      //console.log("Fallo al genera ticket.")
     }
 
     $q.notify({
@@ -1766,7 +1764,6 @@ const terminarPedidoRompefilas = async () => {
 
     cleanAllStores();
   } catch (error) {
-    console.error("Error al generar ticket:", error);
     $q.notify({
       type: 'negative',
       message: 'Error al generar ticket: ', error,

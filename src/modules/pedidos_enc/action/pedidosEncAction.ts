@@ -47,7 +47,6 @@ export const AnularPedidosPendientesAction = async (
   id: number,
   usuario: string
 ): Promise<PedidosEnc> => {
-  //console.log("usuario", usuario);
   try {
     const { data } = await posApi.post<PedidosEnc>(
       `/pedidos-enc/anular/${id}`,
@@ -56,7 +55,6 @@ export const AnularPedidosPendientesAction = async (
 
     return data;
   } catch (error) {
-    //console.error("Error al anular el pedido:", error);
     const message = getAxiosErrorMessage(
       error,
       "Hubo un error al anular el pedido"

@@ -86,7 +86,7 @@ const generarTicketPDF = async (numeroPedido: string): Promise<boolean> => {
         try {
           iframe.contentWindow!.print();
         } catch (error) {
-          console.error("Error al intentar imprimir automáticamente:", error);
+          //console.error("Error al intentar imprimir automáticamente:", error);
         }
       };
       document.body.appendChild(iframe);
@@ -102,7 +102,7 @@ const generarTicketPDF = async (numeroPedido: string): Promise<boolean> => {
     pdfMessage.value = "Ticket generado e impreso automáticamente.";
     return true;
   } catch (error: any) {
-    console.error("Error al generar ticket:", error);
+    //console.error("Error al generar ticket:", error);
     pdfSuccess.value = false;
     pdfMessage.value = `Error: ${error.message}`;
     return false;
