@@ -13,7 +13,6 @@ export const obtenerFacturasErroresAction = async (): Promise<
       error,
       "Hubo un error obteniendo la facturas fel con error"
     );
-    console.log(message);
     throw new Error(message);
   }
 };

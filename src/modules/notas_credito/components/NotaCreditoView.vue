@@ -424,7 +424,7 @@ function formatDate(date: Date | string | undefined | null): string {
     }
     return d.toLocaleDateString('es-GT', { year: 'numeric', month: '2-digit', day: '2-digit' });
   } catch (e) {
-    console.error('Error formatting date:', e);
+    //console.error('Error formatting date:', e);
     return 'Fecha inválida';
   }
 }
@@ -509,7 +509,7 @@ async function loadNotaForEdit(nota: DevolucionEnc) {
     notify('positive', `Nota de Crédito ${numeroDevolucionNC.value} cargada para edición.`, 3000);
 
   } catch (error: any) {
-    console.error('Error al cargar nota para edición:', error);
+    //console.error('Error al cargar nota para edición:', error);
     notify('negative', `Error al cargar la nota para edición: ${error.message || 'Error desconocido'}.`, 5000);
     closeDialog();
   } finally {
@@ -637,7 +637,7 @@ async function buscarFactura() {
     notify('positive', 'Factura encontrada y encabezado de devolucion creado. Procede a seleccionar productos.', 3000);
 
   } catch (error: any) {
-    console.error('Error buscando factura o creando encabezado:', error);
+    //console.error('Error buscando factura o creando encabezado:', error);
     notify('negative', `Ocurrió un error: ${error.message || 'Error desconocido'}. Intente de nuevo más tarde.`, 5000);
     factura.value = null;
     productosFactura.value = [];
@@ -765,7 +765,7 @@ async function agregarProducto(event?: KeyboardEvent) {
     cantidadInput.value = 1;
 
   } catch (error: any) {
-    console.error('Error al agregar/actualizar detalle de producto:', error);
+    //console.error('Error al agregar/actualizar detalle de producto:', error);
     notify('negative', `Error inesperado al agregar/actualizar el producto: ${error.message || 'Error desconocido'}`, 5000);
   } finally {
     hideLoading();
@@ -845,7 +845,7 @@ async function updateCantidadFromTable(producto: ProductoNotaCredito) {
 
     notify('positive', `Cantidad de ${producto.producto} actualizada a ${producto.cantidadNC}.`, 2000);
   } catch (error: any) {
-    console.error('Error al actualizar cantidad de producto:', error);
+    //console.error('Error al actualizar cantidad de producto:', error);
     notify('negative', `Error al actualizar la cantidad del producto: ${error.message || 'Error desconocido'}`, 5000);
   } finally {
     hideLoading();
@@ -884,7 +884,7 @@ async function eliminarProducto(id: number | null) {
         }
 
       } catch (error: any) {
-        console.error('Error al eliminar detalle de producto:', error);
+        //console.error('Error al eliminar detalle de producto:', error);
         notify('negative', `Error al eliminar el producto del sistema: ${error.message || 'Error desconocido'}`, 5000);
       } finally {
         hideLoading();
@@ -928,7 +928,7 @@ async function emitirNota() {
 
     try {
 
-      console.log("Generar NC...")
+      //console.log("Generar NC...")
 
       const updateEncPayload: Partial<DevolucionEnc> = {
         OBSERVACIONES: observaciones.value || 'Sin observaciones.',
@@ -940,7 +940,7 @@ async function emitirNota() {
         throw new Error('Error al actualizar el encabezado de la nota de crédito. No se recibió una respuesta válida.');
       }
 
-      console.log(observaciones.value)
+     // console.log(observaciones.value)
 
       const notaFinalizada: DevolucionEnc = {
         NUMERO_DEVOLUCION: numeroDevolucionNC.value,
@@ -965,7 +965,7 @@ async function emitirNota() {
   
       const response = await certificarDevolucion(numeroDevolucionNC.value)
 
-      console.log("Certificado:", response);
+      //console.log("Certificado:", response);
 
       if (response) {
         const notaDeCredito = await obtenerDtoCertificado('NCRE', numeroDevolucionNC.value)
@@ -973,23 +973,23 @@ async function emitirNota() {
         const success = await generarFacturaPDF(datosNotasDeCredito);
 
         if (success) {
-          console.log("Nota de credito generado con exito.")
+          //console.log("Nota de credito generado con exito.")
         } else {
-          console.log("Fallo al genera nota de credito.")
+          //console.log("Fallo al genera nota de credito.")
         }
 
         const reSuccess = await generarFacturaPDF(datosNotasDeCredito);
         if (reSuccess) {
-          console.log("Nota de credito generado con exito.")
+          //console.log("Nota de credito generado con exito.")
         } else {
-          console.log("Fallo al genera nota de credito.")
+          //console.log("Fallo al genera nota de credito.")
         }
       }
 
       closeDialog();
 
     } catch (error: any) {
-      console.error('Error al emitir/guardar nota de crédito:', error);
+      //console.error('Error al emitir/guardar nota de crédito:', error);
       notify('negative', `Error inesperado al finalizar/guardar la nota de crédito: ${error.message || 'Error desconocido'}`, 7000);
     } finally {
       hideLoading();
@@ -1028,7 +1028,8 @@ const prepararDataNotaDeCredito = async (nota: DevolucionEnc, dtoCertificado: Dt
       serie: dtoCertificado.SERIE_FACTURA_FEL,
       numero: String(dtoCertificado.NUMERO_FACTURA_FEL),
       uuid: dtoCertificado.UUID,
-      numeroInterno: `${"NCRE"} | ${enc.NUMERO_DEVOLUCION}`,
+      serieInterna: 'NCRE',
+      numeroInterno: enc.NUMERO_DEVOLUCION, 
       tipoDocumento: "NOTA DE CREDITO",
       fechaEmision: new Date().toISOString(),
     },
@@ -1061,13 +1062,13 @@ const certificarDevolucion = async (numeroDevolucion: number) => {
 
     if (!devolucion || devolucion.DEVOLUCION_ENC.DEVOLUCION_DET.length === 0) return
 
-    console.log('Datos de la devolucion:', devolucion.DEVOLUCION_ENC.NUMERO_DEVOLUCION)
+    //console.log('Datos de la devolucion:', devolucion.DEVOLUCION_ENC.NUMERO_DEVOLUCION)
 
     const result = crearCertificacionNcAction({ sucursal: '1', numeroDevolucion: devolucion.DEVOLUCION_ENC.NUMERO_DEVOLUCION })
 
     return result
   } catch (error) {
-    console.error('Error al certificar la nota de credito: ', error)
+    //console.error('Error al certificar la nota de credito: ', error)
   }
 }
 

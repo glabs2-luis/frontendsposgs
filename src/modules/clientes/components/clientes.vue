@@ -89,7 +89,7 @@ const pagination = ref({
 })
 
 const verCliente = (cliente: any) => {
-  console.log('Ver cliente:', cliente)
+ // console.log('Ver cliente:', cliente)
 }
 
 const eliminarCliente = (id: number) => {

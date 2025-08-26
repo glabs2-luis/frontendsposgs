@@ -339,7 +339,7 @@
                           try {
                             cantidadInputs.value[props.rowIndex] = el;
                           } catch (error) {
-                            console.warn('Error assigning ref:', error);
+                            //console.warn('Error assigning ref:', error);
                           }
                         }
                       }
@@ -1111,7 +1111,7 @@ watch(modalProductos2, async (val) => {
       }
     }
   } catch (error) {
-    console.error("Error in modalProductos2 watch:", error);
+    //console.error("Error in modalProductos2 watch:", error);
   }
 });
 
@@ -1179,7 +1179,7 @@ const refetchProductosFactura = async () => {
     await refetchObtenerPedidoID();
     await refetchObtenerPedidoDetID();
   } catch (error) {
-    console.error("Error al refrescar productos en facturación:", error);
+    //console.error("Error al refrescar productos en facturación:", error);
   }
 };
 
@@ -1473,14 +1473,14 @@ const imprimirCotizacion = async () => {
     const success = await generarCotizacionPDF(datosCotizacion);
 
     if (success) {
-      console.log("Cotización generada con exito.")
+      //console.log("Cotización generada con exito.")
     } else {
-      console.log("Fallo al genera cotización.")
+      //console.log("Fallo al genera cotización.")
     }
     
     $q.loading.hide();
   } catch (error) {
-    console.log('Error al imprimir la cotización: ', error)
+    //console.log('Error al imprimir la cotización: ', error)
   } finally {
     $q.loading.hide()
   }
@@ -1558,7 +1558,7 @@ const abrirCatalogo2 = async () => {
     await refetchTodosProductos();
     modalProductos2.value = true;
   } catch (error) {
-    console.error("Error al cargar productos:", error);
+    //console.error("Error al cargar productos:", error);
     showErrorNotification("Error", "No se pudieron cargar los productos");
   }
 };
@@ -1577,7 +1577,6 @@ const formatearFecha = (fecha) => {
 };
 
 const certificarFactura = async (id) => {
-  console.log("Iniciando certificacion de factura...");
 
   // Obtener datos de la factura
   const factura = await obtenerFacturaId3(id);
@@ -1587,7 +1586,6 @@ const certificarFactura = async (id) => {
     spinnerColor: "green",
     spinnerSize: 50,
   });
-  //console.log('yo soy id"', id);
 
   // Usar Promise para manejar la mutación de certificación
   mutateCertificar(
@@ -1598,13 +1596,11 @@ const certificarFactura = async (id) => {
     },
     { 
       onSuccess: async (data) => {
-        console.log("Factura certificada exitosamente");
 
         // Ocultar loading antes de imprimir
         $q.loading.hide();
 
         // Si se certifica la factura, se debe de sincronizar
-        console.log('yo soy id"', id);
         await mutateCrearSincronizacion(id);
 
         await imprimirFactura(data);
@@ -1619,7 +1615,7 @@ const certificarFactura = async (id) => {
       },
 
       onError: async (error) => {
-        console.error("Error en certificación:", error);
+        //console.error("Error en certificación:", error);
         $q.loading.hide();
         
         $q.notify({
@@ -1689,7 +1685,7 @@ const confirmarFactura = async () => {
 
   mutateCrearFacturaEnc2(datos, {
     onSuccess: async (respuesta) => {
-      console.log("Pedido facturado correctamente");
+
       modalFacturacion.value = false;
 
       // Guardar último cambio para mostrarlo en clienteform luego de cerrar el modal
@@ -1713,7 +1709,7 @@ const confirmarFactura = async () => {
       }
     },
     onError: (error) => {
-      console.error("Error creando factura:", error);
+      //console.error("Error creando factura:", error);
       modalFacturacion.value = false;
       $q.loading.hide();
     },
@@ -1752,15 +1748,13 @@ const terminarPedidoRompefilas = async () => {
       spinnerSize: 50,
     });
 
-    console.log("Generano ticket...")
-
     const success = await generarTicketPDF(pedidoStore.numeroDePedido)
     
     if (success) {
-      console.log("Ticket generado con exito.")
+      //console.log("Ticket generado con exito.")
       $q.notify
     } else {
-      console.log("Fallo al genera ticket.")
+      //console.log("Fallo al genera ticket.")
     }
 
     $q.notify({
@@ -1772,7 +1766,6 @@ const terminarPedidoRompefilas = async () => {
 
     cleanAllStores();
   } catch (error) {
-    console.error("Error al generar ticket:", error);
     $q.notify({
       type: 'negative',
       message: 'Error al generar ticket: ', error,
@@ -1785,14 +1778,8 @@ const terminarPedidoRompefilas = async () => {
 };
 
 const imprimirFactura = async (data) => {
-  console.log("imprimiendo factura...");
+
   const factura2 = await obtenerFacturaId3(idFacturaEnc.value);
-
-  // console.log("este es data:", data);
-  console.log("imprimir factura2:", factura2);
-
-  // console.log('yo soy contingencia:', contingencia.value)
-  // console.log("data certificada con exito: ", data)
 
   const detalle = await obtenerDetalleFactura3(idFacturaEnc.value);
 
@@ -1812,8 +1799,6 @@ const imprimirFactura = async (data) => {
     subtotal: item.SUBTOTAL_GENERAL.toFixed(4), // 
   }));
 
-  //console.log("detalle 2: ", detalle);
-
   const totalItems = itemsFactura.reduce(
     (total, item) => total + Number(item.cantidad),
     0
@@ -1831,10 +1816,6 @@ const imprimirFactura = async (data) => {
       numero: factura2.NUMERO_FACTURA,
     });
   }
-
-
-  console.log("Imprimiendo 2...");
-
 
   const dataFactura = {
     encabezado: {
@@ -1866,9 +1847,8 @@ const imprimirFactura = async (data) => {
     qrCodeData: data.Uuid,
   };
 
-  // console.log(" yo soy data:", dataFactura);
   await nextTick();
-  console.log("Imprimiendo 3...");
+
   await generarFacturaPDF(dataFactura);
 
   // NOTA: cleanAllStores() se ejecutará DESPUÉS de que todo esté completo
@@ -1878,12 +1858,12 @@ const imprimirFactura = async (data) => {
   // limpiar campos de pago
   montoEfectivo.value = null;
   montoTarjeta.value = null;
-  console.log("Imprimiendo 4...");
+
   // Invalidate pedidos pendientes y refetch
   queryClient.invalidateQueries({
     queryKey: ["pedidos-pendientes"],
   });
-  console.log("Finalizando impresion de factura");
+  //console.log("Finalizando impresion de factura");
 };
 
 // mostrar total
@@ -1919,7 +1899,7 @@ const buscarProductoEscaneado = async () => {
   try {
     resultado = await consultarCodigoM(codigoProducto.value, cantidad2.value);
   } catch (error) {
-    console.warn("Código no encontrado por código de barras:", error);
+    //console.warn("Código no encontrado por código de barras:", error);
   }
 
   // 2. buscar por ID de producto
@@ -1951,8 +1931,6 @@ const buscarProductoEscaneado = async () => {
         ? productoDirecto[0]
         : productoDirecto;
 
-      console.log("yo soy prod", prod);
-
       if (!prod) {
         throw new Error("No encontrado");
       }
@@ -1966,7 +1944,7 @@ const buscarProductoEscaneado = async () => {
         },
       };
 
-      console.log("resultado2: ", resultado);
+
     } catch (err) {
       await errorAgregarProductoConSonido(
         `Error al buscar producto (${codigoProducto.value}) por código: ${err.message || "Error desconocido"}`
@@ -1979,12 +1957,6 @@ const buscarProductoEscaneado = async () => {
       return;
     }
   }
-    console.log("Buscando producto por código:", codigoProducto.value);
-
-  //console.log('Este es el resultado',resultado)
-
-  // console.log("Este es codigo PRoducto", codigoProducto.value);
-  // console.log("Este es el resultado", resultado);
 
   // 3. Insertar producto al pedido
   const detalle = {
@@ -2008,7 +1980,6 @@ const buscarProductoEscaneado = async () => {
       totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0);
       // relistaDet2(); // Refrescar lista de detalles
       cantidad2.value = 1; // Resetear cantidad del modal
-      console.log("Producto agregado con éxito:", data);
       
       mostrarNotificacionCorrectoSonido(`${detalle.PRODUCT0} agregado con éxito`);
     },
@@ -2033,7 +2004,7 @@ const agregarProductoAlPedido2 = async (producto) => {
 
     // Validación
     if (!producto || !producto.PRODUCT0 || cantidadFinal <= 0) {
-      console.error("Producto inválido o cantidad no válida");
+      //console.error("Producto inválido o cantidad no válida");
       return;
     }
 
@@ -2046,7 +2017,6 @@ const agregarProductoAlPedido2 = async (producto) => {
       throw new Error("No se pudo obtener el precio real del producto");
     }
 
-    //console.log('Si se guarda en precio xd: ', precio)
     // Armar detalle para guardar
     const detalle2 = {
       ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
@@ -2082,10 +2052,9 @@ const agregarProductoAlPedido2 = async (producto) => {
           progress: false,
         });
 
-        //console.log('detalle2',detalle2)
       },
       onError: async (error) => {
-        console.error("Error al guardar producto en BD:", error);
+        //console.error("Error al guardar producto en BD:", error);
         await errorAgregarProductoConSonido(
           `Error al agregar producto: ${error.message || "Error desconocido"}`
         );
@@ -2096,7 +2065,7 @@ const agregarProductoAlPedido2 = async (producto) => {
       },
     });
   } catch (error) {
-    console.error("Error al agregar producto:", error);
+    //console.error("Error al agregar producto:", error);
     loadingAgregar.value = false;
   }
 };
@@ -2104,10 +2073,10 @@ const agregarProductoAlPedido2 = async (producto) => {
 // Mover foco al siguiente producto en el catálogo
 const moverFocoAlSiguienteProducto = (indexActual) => {
   if (typeof indexActual !== "number" || indexActual < 0) {
-    console.warn(
-      "Invalid index for moverFocoAlSiguienteProducto:",
-      indexActual
-    );
+    //console.warn(
+      //"Invalid index for moverFocoAlSiguienteProducto:",
+      //indexActual
+    //);
     return;
   }
 
@@ -2131,7 +2100,7 @@ const moverFocoAlSiguienteProducto = (indexActual) => {
           }
         }
       } catch (error) {
-        console.warn("Error moving focus to next product:", error);
+        //console.warn("Error moving focus to next product:", error);
       }
     });
   }
@@ -2146,7 +2115,7 @@ const seleccionarProducto2 = async (producto, index) => {
     await nextTick();
     moverFocoAlSiguienteProducto(index);
   } catch (error) {
-    console.error("Error in seleccionarProducto2:", error);
+    //console.error("Error in seleccionarProducto2:", error);
   }
 };
 

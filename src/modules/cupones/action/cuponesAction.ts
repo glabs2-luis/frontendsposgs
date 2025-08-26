@@ -9,7 +9,6 @@ export const AplicarDescuentoAction = async ( params: Cupon) : Promise<respuesta
         return data
     }  catch ( error ) {
         const message = getAxiosErrorMessage(error, 'Hubo un error aplicando el cupon')
-        console.log(message)
         throw new Error(message)
     }
 }

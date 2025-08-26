@@ -16,7 +16,6 @@ export const crearSincronizacionAction = async (idFacturaEnc: number): Promise<S
     const { data } = await posApi.post<SyncFac>(`/sync/export-transfer-background/factura/${idFacturaEnc}`)
     return data
     } catch (error) {           
-   console.error('Error al crear sincronización:', error)
    const message = getAxiosErrorMessage(error, "Hubo un error al crear la sincronización")
    throw new Error(message)
     }
@@ -28,7 +27,6 @@ export const statusSincronizacionAction = async (): Promise<SyncStatus> => {
         const { data } = await posApi.get<SyncStatus>(`/sync/status`)
         return data
     } catch (error) {
-        console.error('Error al sincronizar datos:', error)
         const message = getAxiosErrorMessage(error, "Hubo un error al sincronizar los datos")
         throw new Error(message)
     }
@@ -40,7 +38,6 @@ export const obtenerConfigSincronizacionAction = async (): Promise<SyncConfig> =
         const { data } = await posApi.get<SyncConfig>(`/sync/config`)
         return data
     } catch (error) {
-        console.error('Error al obtener configuración de sincronización:', error)
         const message = getAxiosErrorMessage(error, "Hubo un error al obtener la configuración de sincronización")
         throw new Error(message)
     }
@@ -52,7 +49,6 @@ export const obtenerConfigTransferenciaAction = async (): Promise<TransferConfig
         const { data } = await posApi.get<TransferConfig>(`/sync/transfer/config`)
         return data
     } catch (error) {
-        console.error('Error al obtener configuración de transferencia:', error)
         const message = getAxiosErrorMessage(error, "Hubo un error al obtener la configuración de transferencia")
         throw new Error(message)
     }
@@ -64,7 +60,6 @@ export const obtenerEstadoConexionAction = async (): Promise<ConexionStatus> => 
         const { data } = await posApi.get<ConexionStatus>(`/sync/transfer/conectionStatus`)
         return data
     } catch (error) {
-        console.error('Error al obtener estado de conexión:', error)
         const message = getAxiosErrorMessage(error, "Hubo un error al obtener el estado de conexión")
         throw new Error(message)
     }
@@ -76,7 +71,6 @@ export const obtenerArchivosCreadosAction = async (): Promise<FilesCreated> => {
         const { data } = await posApi.get<FilesCreated>(`/sync/files/created`)
         return data
     } catch (error) {
-        console.error('Error al obtener archivos creados:', error)
         const message = getAxiosErrorMessage(error, "Hubo un error al obtener los archivos creados")
         throw new Error(message)
     }
@@ -88,7 +82,6 @@ export const obtenerArchivosTransferidosAction = async (): Promise<FilesTransfer
         const { data } = await posApi.get<FilesTransferred>(`/sync/files/transferred`)
         return data
     } catch (error) {
-        console.error('Error al obtener archivos transferidos:', error)
         const message = getAxiosErrorMessage(error, "Hubo un error al obtener los archivos transferidos")
         throw new Error(message)
     }
@@ -100,7 +93,6 @@ export const obtenerArchivosErroresAction = async (): Promise<FilesError> => {
         const { data } = await posApi.get<FilesError>(`/sync/files/error`)
         return data
     } catch (error) {
-        console.error('Error al obtener archivos con errores:', error)
         const message = getAxiosErrorMessage(error, "Hubo un error al obtener los archivos con errores")
         throw new Error(message)
     }
@@ -112,7 +104,6 @@ export const reintentarEnviarArchivosAction = async (): Promise<RetryErrors> => 
         const { data } = await posApi.post<RetryErrors>(`/sync/retry/error-files`)
         return data
     } catch (error) {
-        console.error('Error al obtener archivos reintentados:', error)
         const message = getAxiosErrorMessage(error, "Hubo un error al obtener los archivos reintentados")
         throw new Error(message)
     }

@@ -309,7 +309,6 @@ watchEffect(() => {
   }, 0);
   items.value = total;
   totalStore.setItems(items.value);
-  //console.log('Total store items: ', totalStore.totalItems); 
 });
 
 // Mostrar la descripcion del producto o descripcion actualizada
@@ -325,7 +324,7 @@ const forzarActualizacionTabla = async () => {
     await refetchObtenerPedidoID();
     await nextTick();
   } catch (error) {
-    console.error("Error forzando actualización:", error);
+    //console.error("Error forzando actualización:", error);
   }
 };
 
@@ -377,7 +376,6 @@ const eliminarProducto = async (detalle) => {
         if (pedidoData.value) {
           const nuevoTotal = Number(pedidoData.value.TOTAL_GENERAL_PEDIDO) || 0;
           totalStore.setTotal(nuevoTotal);
-          // console.log("Nuevo total actualizado desde backend:", nuevoTotal);
         }
 
         // Mostrar notificación de éxito
@@ -390,15 +388,12 @@ const eliminarProducto = async (detalle) => {
 
         // Llamar al callback para mover el foco al input de código
         if (props.onProductoEliminado) {
-          console.log(
-            "Producto eliminado, llamando callback para enfocar input"
-          );
           props.onProductoEliminado();
         }
       },
     });
   } catch (error) {
-    console.error("Error eliminando producto:", error);
+
     showErrorNotification(
       "Error",
       "No se pudo eliminar el producto. Intente nuevamente."

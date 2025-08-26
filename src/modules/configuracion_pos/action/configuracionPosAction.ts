@@ -8,7 +8,6 @@ export const configuracionPosAction = async() : Promise<ConfiguracionPos> => {
         return data
     } catch (error) {
         const message = getAxiosErrorMessage(error, 'Hubo un error obteniendo la configuracion pos')
-        console.log(message)
         throw new Error(message)
     }
 }

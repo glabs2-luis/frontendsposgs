@@ -228,7 +228,7 @@ async function loadNotasDeCredito() {
     allNotas.value = data;
     filterNotes();
   } catch (error) {
-    console.error('Error al obtener notas de crédito:', error);
+    //console.error('Error al obtener notas de crédito:', error);
     $q.notify({
       type: 'negative',
       message: 'Error al cargar las notas de crédito. Por favor, inténtalo de nuevo.'
@@ -338,7 +338,7 @@ async function deleteNota(nota: DevolucionEnc) {
       timeout: 3000
     });
   } catch (error: any) {
-    console.error('Error al eliminar nota de crédito:', error);
+    //console.error('Error al eliminar nota de crédito:', error);
     $q.notify({
       type: 'negative',
       message: `Error al eliminar la Nota de Crédito ${nota.NUMERO_DEVOLUCION}: ${error.message || 'Error desconocido'}.`,
@@ -374,9 +374,9 @@ async function certificarNota(nota: DevolucionEnc) {
         const success = await generarFacturaPDF(datosNotasDeCredito);
 
         if (success) {
-          console.log("Nota de credito generado con exito.")
+          //console.log("Nota de credito generado con exito.")
         } else {
-          console.log("Fallo al genera nota de credito.")
+          //console.log("Fallo al genera nota de credito.")
         }
 
         loadNotasDeCredito();
@@ -390,7 +390,7 @@ async function certificarNota(nota: DevolucionEnc) {
       }
 
     } catch (error) {
-      console.error('Error al certificar la nota de crédito:', error);
+      //console.error('Error al certificar la nota de crédito:', error);
       $q.notify({
         type: 'negative',
         message: `Error al certificar la nota. Por favor, inténtalo de nuevo. ${error}`,
@@ -434,7 +434,8 @@ const prepararDataNotaDeCredito = async (nota: DevolucionEnc, dtoCertificado: Dt
       serie: dtoCertificado.SERIE_FACTURA_FEL,
       numero: String(dtoCertificado.NUMERO_FACTURA_FEL),
       uuid: dtoCertificado.UUID,
-      numeroInterno: `${"NCRE"} | ${enc.NUMERO_DEVOLUCION}`,
+      serieInterna: 'NCRE',
+      numeroInterno: enc.NUMERO_DEVOLUCION,
       tipoDocumento: "NOTA DE CREDITO",
       fechaEmision: new Date().toISOString(),
     },
@@ -486,14 +487,14 @@ async function printNota(nota: DevolucionEnc) {
     const success = await generarFacturaPDF(datosNotasDeCredito);
 
     if (success) {
-      console.log("Nota de credito generado con exito.")
+      //console.log("Nota de credito generado con exito.")
     } else {
-      console.log("Fallo al genera nota de credito.")
+      //console.log("Fallo al genera nota de credito.")
     }
 
     $q.loading.hide();
   } catch (error) {
-    console.log('Error al imprimir nota: ', error);
+    //console.log('Error al imprimir nota: ', error);
     $q.notify({
       type: 'negative',
       message: `Error al imprimir la nota de credito con numero: ${nota.NUMERO_DEVOLUCION}.`
@@ -513,7 +514,7 @@ const certificarDevolucion = async (numeroDevolucion: number) => {
 
     return result
   } catch (error) {
-    console.error('Error al certificar la nota de credito: ', error)
+    //console.error('Error al certificar la nota de credito: ', error)
   }
 }
 

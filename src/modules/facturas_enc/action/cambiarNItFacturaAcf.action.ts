@@ -9,7 +9,6 @@ export const cambiarNitFacturaACFAction = async (datosFactura:Partial<FacturaEnc
   } catch (error) {
     const message = getAxiosErrorMessage( error, "Hubo un error cambiando el nit de la factura a CF"
     );
-    console.log(message);
     throw new Error(message);
   }
 };

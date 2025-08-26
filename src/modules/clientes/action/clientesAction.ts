@@ -7,7 +7,6 @@ export const obtenerClientesAction = async (): Promise<Cliente[]> => {
         const { data } = await posApi.get<Cliente[]>(`/clientes/`)
         return data
     } catch (error) {
-        console.log('error', error)
         const message = getAxiosErrorMessage(error, "Hubo un error al obtener los clientes")
         throw new Error(message)
     }
@@ -29,7 +28,6 @@ export const obtenerClientesAction = async (): Promise<Cliente[]> => {
         const { data } = await posApi.get<Cliente>(`/clientes/cf`)
         return data
     } catch (error){
-        console.log('error', error)
         const message = getAxiosErrorMessage(error, "Hubo un error al obtener consumidor final");
         throw new Error(message);
     }
@@ -41,7 +39,6 @@ Promise<Cliente> => {
         const { data } = await posApi.get<Cliente>(`clientes/${id}`)
         return data
     } catch (error){
-        console.log('Error', error)
         const message = getAxiosErrorMessage(error, "Hubo un error obteniendo cliente por ID");
         throw new Error(message)
     }
@@ -49,11 +46,11 @@ Promise<Cliente> => {
 
 export const actualizarClienteIdAction = async (id: number, datos: Partial<Cliente>): Promise<Cliente> => {
   try {
-    const { data } = await posApi.patch<Cliente>(`/clientes/${id}`, datos)
-    return data
+        const { data } = await posApi.patch<Cliente>(`/clientes/${id}`, datos)
+        return data
   } catch (error) {
-    const message = getAxiosErrorMessage(error, "Hubo un error actualizando cliente por ID")
-    throw new Error(message)
+        const message = getAxiosErrorMessage(error, "Hubo un error actualizando cliente por ID")
+        throw new Error(message)
   }
 }
 

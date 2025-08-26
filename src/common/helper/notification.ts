@@ -189,7 +189,7 @@ export const showLoading = (message = 'Procesando…', insideModal = false) => {
       }
     });
   } catch (err) {
-    console.error('showLoading error:', err);
+    //console.error('showLoading error:', err);
   }
 };
 
@@ -200,7 +200,7 @@ export const hideLoading = () => {
   try {
     if (Swal.isVisible()) Swal.close();
   } catch (err) {
-    console.error('hideLoading error:', err);
+    //console.error('hideLoading error:', err);
   }
 };
 

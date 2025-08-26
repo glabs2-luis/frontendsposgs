@@ -14,7 +14,6 @@ export const validationAction = async (
     const { data } = await posApi.get<Validation>(`/validation`, {params: { nit, tipo, validar, empresa }, })
     return data
   } catch (error) {
-    console.log("Error en validationAction: ", error);
     const err: any = error;
     const respError = err?.response?.data?.error;
     const personalizado = respError?.message_personalizado;

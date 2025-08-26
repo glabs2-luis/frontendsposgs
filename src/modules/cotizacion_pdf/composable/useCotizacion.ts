@@ -76,9 +76,9 @@ const generarCotizacionPDF = async (data: DataCotizacion): Promise<boolean> => {
       );
     }
     if (!data.items.length) {
-      console.warn(
-        "La cotización no contiene ítems. Se generará un PDF sin detalle de productos."
-      );
+      //console.warn(
+      //   "La cotización no contiene ítems. Se generará un PDF sin detalle de productos."
+      // );
     }
 
     const paperWidthInInches = 3.14;
@@ -410,7 +410,7 @@ const generarCotizacionPDF = async (data: DataCotizacion): Promise<boolean> => {
             URL.revokeObjectURL(url);
           }, 1000);
         } catch (error) {
-          console.error("Error al intentar imprimir: ", error);
+          //console.error("Error al intentar imprimir: ", error);
         }
       };
       document.body.appendChild(iframe);
@@ -420,7 +420,7 @@ const generarCotizacionPDF = async (data: DataCotizacion): Promise<boolean> => {
     });
     return true;
   } catch (error: any) {
-    console.error("Error general al generar el PDF:", error);
+    //console.error("Error general al generar el PDF:", error);
     pdfSuccess.value = false;
     pdfMessage.value = `Error al generar el PDF: ${
       error.message || "Error desconocido"

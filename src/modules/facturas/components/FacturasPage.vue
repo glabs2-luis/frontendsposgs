@@ -340,7 +340,6 @@ const reimprimirFactura = async (idFactura: number) => {
     )
 
   } catch (error) {
-    console.error('Error reimprimiendo factura:', error)
     showErrorNotification('Error al reimprimir factura', 'Error')
   }
 }

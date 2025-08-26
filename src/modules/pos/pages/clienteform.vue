@@ -790,9 +790,14 @@ const imprimirCotizacion = async (pedido) => {
 
     const success = await generarCotizacionPDF(datosCotizacion);
 
+    if (success) {
+      //console.log("Cotización generada con éxito.")
+    } else {
+      //console.log("Fallo al genera cotización.")
+    }
+
     $q.loading.hide();
   } catch (error) {
-    console.log("Error al imprimir la cotización: ", error);
   } finally {
     $q.loading.hide();
   }
@@ -878,10 +883,6 @@ watchEffect(() => {
   if (pedidoEnc.value) {
     numPedido.value = pedidoEnc.value.NUMERO_DE_PEDIDO || 0;
     totalReal.value = pedidoEnc.value.TOTAL_GENERAL_PEDIDO || 0;
-    // console.log("Pedido actualizado desde query:", {
-    //   numero: numPedido.value,
-    //   total: totalReal.value,
-    // });
   }
 });
 
@@ -1106,10 +1107,6 @@ const buscarClienteDPINIT2 = async () => {
         boxClass: "bg-grey-2 text-grey-9",
         spinnerColor: "primary",
       });
-      console.log("nit", nit.value);
-      console.log("tipo", tipoDocumento.value);
-      console.log("validador", validador.value);
-      console.log("empresa", empresa.value);
 
       const result = await DatosSat2(
         nit.value,
@@ -1238,7 +1235,7 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
       });
     },
     onError: (error: any) => {
-      console.error("Error creando cliente:", error);
+      //console.error("Error creando cliente:", error);
       showErrorNotification(
         "Error",
         error.message || "No se pudo registrar el cliente"
@@ -1283,7 +1280,7 @@ const handleAceptarCodigo = async () => {
       spinnerColor: 'primary'
     });
 
-    console.log('Código de barras ingresado:', codigoBarra.value);
+    //console.log('Código de barras ingresado:', codigoBarra.value);
     const pedidoEnc = await obtenerPedidoEncPorNumero(parseInt(codigoBarra.value))
 
     if (!pedidoEnc) {
@@ -1297,14 +1294,13 @@ const handleAceptarCodigo = async () => {
       return;
     }
 
-    console.log(pedidoEnc)
     await continuarPedido(pedidoEnc)
 
     modalCodigoRompefilas.value = false;
     codigoBarra.value = '';
 
   } catch (error) {
-    console.log('Error al obtener pedido: ', error)
+
     $q.notify({
       type: "negative",
       message: `Pedido con numero ${codigoBarra.value} no encontrado.`,

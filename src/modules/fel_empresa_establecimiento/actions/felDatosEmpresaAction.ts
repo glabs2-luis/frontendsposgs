@@ -10,7 +10,6 @@ export const obtenerDatosEmpresaAction = async (id: number) : Promise<Empresa> =
         return data
     }catch(error){
         const message = getAxiosErrorMessage(error, 'Hubo un error obteniendo los datos de la empresa')
-        console.log(message)
         throw new Error(message)
     }
 }
@@ -22,7 +21,6 @@ export const obtenerDatosEstablecimientoAction = async (id: number) : Promise<Es
         return data
     }catch(error){
         const message = getAxiosErrorMessage(error, 'Hubo un error obteniendo los datos del establecimiento')
-        console.log(message)
         throw new Error(message)
     }
 }

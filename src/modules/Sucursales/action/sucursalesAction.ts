@@ -8,7 +8,6 @@ export const obtenerSucursalAction = async(): Promise<Sucursal[]> => {
         const { data } = await posApi.get<Sucursal[]>(`/sucursales/`);
         return data;
     } catch (error){
-        console.log('error', error)
         const message = getAxiosErrorMessage(error, "hubo un error obteniendo sucursales");
         throw new Error(message);
     }

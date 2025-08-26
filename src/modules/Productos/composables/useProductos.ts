@@ -2,6 +2,7 @@ import { Productos } from "../interfaces/productosInterface"
 import { useQuery, useQueryClient } from "@tanstack/vue-query"
 import { obtenerProductosAction, obtenerProductosIdAction, ObtenerProductosPrecioAction } from '../action/productosAction';
 import { showConfirmationDialog, showErrorNotification } from "@/common/helper/notification";
+import { getAxiosErrorMessage } from "@/helper/geterrordb";
 
 export const useProductos = () => {
 
@@ -19,9 +20,8 @@ export const useProductos = () => {
             const producto = await obtenerProductosIdAction(codigo)
             return producto
         } catch(error){
-            console.log('Error buscando por producto', error)
-            showErrorNotification('Error','Error consultando producto')
-            return null
+            const message = getAxiosErrorMessage(error, 'Error consultando producto')
+            throw new Error(message)
         }
     }
 
@@ -29,11 +29,11 @@ export const useProductos = () => {
     const precioReal = async (codigo: string, cantidad: number): Promise<Productos> => {
         try {
             const productoPrecio = await ObtenerProductosPrecioAction(codigo, cantidad)
-            // console.log('composable: ', productoPrecio)
+             //console.log('composable: ', productoPrecio)
             return productoPrecio
         } catch (error) {
-            console.log('Error obteniendo precio del producto', error)
-            // showErrorNotification('Error', 'Error obteniendo precio del producto')
+            const message = getAxiosErrorMessage(error, 'Error obteniendo el precio del producto')
+            throw new Error(message)
         }
     }
 

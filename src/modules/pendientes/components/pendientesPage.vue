@@ -307,6 +307,7 @@
 </template>
 
 <script setup lang="ts">
+
 import { ref, computed, watch, nextTick } from "vue";
 import { debounce, Notify } from "quasar";
 import { QTableColumn, useQuasar } from "quasar";
@@ -484,7 +485,8 @@ const buscarClienteSat = async () => {
       empresa.value
     );
     $q.loading.hide();
-    //console.log('Resultado de la búsqueda SAT:', result);
+
+  $q.loading.hide();
 
     if (result.isCertified === true) {
       // Si hay datos, asignarlos a los campos
@@ -545,7 +547,7 @@ const abrirActualizarNit = async () => {
     return;
   }
 
-  console.log("Factura seleccionada:", facturaSeleccionada.value);
+  //console.log("Factura seleccionada:", facturaSeleccionada.value);
 
   // obtener los datos actuales
   const [numero, serie] = facturaSeleccionada.value.split("-");
@@ -565,7 +567,7 @@ const abrirActualizarNit = async () => {
 
 // actualizar Nit
 const actualizarNit = async () => {
-  console.log("Actualizar Nit para factura ID:", id_factura_enc.value);
+  //console.log("Actualizar Nit para factura ID:", id_factura_enc.value);
 
   $q.loading.show({
     message: "Actualizando NIT...",
@@ -771,7 +773,7 @@ const imprimirFactura = async (idFactura: number) => {
     await generarFacturaPDF(dataFactura);
     $q.loading.hide();
   } catch (error) {
-    console.error("Error reimprimiendo factura:", error);
+    //console.error("Error reimprimiendo factura:", error);
     showErrorNotification("Error al reimprimir factura", "Error");
   }
 };
@@ -793,7 +795,6 @@ const certificarAgain = async () => {
   const datosFac = await obtenerFacturasPorNumeroSerie(numero2, serie);
 
   const idFacturaEnc = datosFac[0].ID_FACTURA_ENC;
-  //console.log("idFacturaEnc", idFacturaEnc);
 
   // Mostrar loading para certificación
   $q.loading.show({
@@ -920,6 +921,7 @@ const columnasErrores: QTableColumn[] = [
     style: "width: 400px; min-width: 350px;",
   },
 ];
+
 </script>
 
 <style scoped>
