@@ -1,14 +1,12 @@
-import { ref, type Ref } from "vue";
-import pdfMake from "pdfmake/build/pdfmake";
-import * as pdfFonts from "pdfmake/build/vfs_fonts";
-import JsBarcode from "jsbarcode";
+import jsPDF from 'jspdf';
+import JsBarcode from 'jsbarcode';
+import { ref } from 'vue';
 import { useDatosFel } from "@/modules/fel_empresa_establecimiento/composables/useFelDatos.js";
 
-(pdfMake as any).vfs = pdfFonts.vfs;
-
-const isGeneratingPdf: Ref<boolean> = ref(false);
-const pdfMessage: Ref<string> = ref("");
-const pdfSuccess: Ref<boolean> = ref(false);
+// Funciones y datos que puedes necesitar
+const isGeneratingPdf = ref(false);
+const pdfMessage = ref('');
+const pdfSuccess = ref(false);
 
 const fmtFechaGT = new Intl.DateTimeFormat("es-GT", {
   timeZone: "America/Guatemala",
@@ -21,16 +19,15 @@ const fmtFechaGT = new Intl.DateTimeFormat("es-GT", {
   hour12: false,
 });
 
-// 🔹 Generador de código de barras con número debajo
-function generarCodigoBarras(numeroPedido: string): Promise<string> {
+async function generarCodigoBarras(numeroPedido: string) {
   return new Promise((resolve, reject) => {
     try {
       const canvas = document.createElement("canvas");
       JsBarcode(canvas, numeroPedido, {
         format: "CODE128",
-        displayValue: true, // 👈 muestra el número debajo del código
-        fontSize: 14,       // tamaño del texto debajo
-        textMargin: 2,      // espacio entre código y número
+        displayValue: false,
+        fontSize: 14,
+        textMargin: 2,
         width: 2,
         height: 60,
       });
@@ -41,67 +38,83 @@ function generarCodigoBarras(numeroPedido: string): Promise<string> {
   });
 }
 
-// 🔹 Generar ticket básico
-const generarTicketPDF = async (numeroPedido: string): Promise<boolean> => {
+export async function generarTicketPDF(numeroPedido: number) {
   isGeneratingPdf.value = true;
   pdfMessage.value = "Generando ticket...";
   pdfSuccess.value = false;
 
   try {
     const datosEmpresa = await useDatosFel().obtenerDatosEmpresa(1);
+    
     const nombreComercial = datosEmpresa.NOMBRE_COMERCIAL;
+    const barcodeDataUrl = await generarCodigoBarras(numeroPedido.toString());
 
-    // Código de barras
-    const barcodeDataUrl = await generarCodigoBarras(numeroPedido);
+    const ticketWidth = 80;
+    const marginX = 5;
+    let currentY = 10;
+    
+    let contentY = currentY;
+    contentY += 5;
+    contentY += 60 + 5;
+    contentY += 5;
+    contentY += 5;
+    contentY += 10;
+    const finalHeight = contentY;
 
-    // Ancho del papel térmico 80mm = 226.77 puntos
-    const ticketWidth = 80 * 2.83465;
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: [ticketWidth, finalHeight],
+    });
 
-    const docDefinition: any = {
-      pageSize: { width: ticketWidth, height: "auto" },
-      pageMargins: [10, 10, 10, 10],
-      content: [
-        { text: "TICKET DE PEDIDO", style: "header", alignment: "center" },
-        { image: barcodeDataUrl, alignment: "center", width: 100, margin: [0, 10, 0, 10] },
-        { text: `No. Pedido: ${numeroPedido}`, style: "orderText", alignment: "center" },
-        { text: `Fecha: ${fmtFechaGT.format(new Date())}`, style: "orderText", alignment: "center" },
-      ],
-      styles: {
-        header: { fontSize: 14, bold: true },
-        orderText: { fontSize: 10, margin: [0, 5, 0, 0] },
-      },
-      defaultStyle: { fontSize: 9 },
-    };
+    currentY = 10;
 
-    // Crear PDF
-    const pdfDocGenerator = pdfMake.createPdf(docDefinition);
+    doc.setFontSize(14);
+    doc.text(nombreComercial.toUpperCase(), doc.internal.pageSize.width / 2, currentY, { align: 'center' });
+    currentY += 5;
+    doc.setFontSize(10);
+    doc.text('TICKET DE PEDIDO', doc.internal.pageSize.width / 2, currentY, { align: 'center' });
+    currentY += 5;
 
-    // 🔹 Imprimir automáticamente
-    pdfDocGenerator.getBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      const iframe = document.createElement("iframe");
-      iframe.style.display = "none";
-      iframe.src = url;
-      iframe.onload = () => {
-        try {
-          iframe.contentWindow!.print();
-        } catch (error) {
-          console.error("Error al intentar imprimir automáticamente:", error);
-        }
-      };
-      document.body.appendChild(iframe);
+    const barcodeImageWidth = doc.internal.pageSize.width - marginX * 2;
+    const barcodeImageHeight = 30;
+    doc.addImage(barcodeDataUrl as string, 'PNG', marginX, currentY, barcodeImageWidth, barcodeImageHeight);
+    currentY += barcodeImageHeight + 5;
+    
+    doc.text(`No. Pedido: ${numeroPedido}`, doc.internal.pageSize.width / 2, currentY, { align: 'center' });
+    currentY += 5;
 
-      // Liberar memoria después
+    doc.text(`Fecha: ${fmtFechaGT.format(new Date())}`, doc.internal.pageSize.width / 2, currentY, { align: 'center' });
+    currentY += 5;
+
+    // IMPRESIÓN
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    const iframe = document.createElement("iframe");
+    
+    iframe.style.display = "none";
+    iframe.src = url;
+
+    iframe.onload = () => {
+      try {
+        iframe.contentWindow.print();
+      } catch (error) {
+        console.error("Error al intentar imprimir automáticamente:", error);
+        pdfMessage.value = "Error al imprimir. Por favor, revisa la consola para más detalles.";
+      }
+      
       setTimeout(() => {
         document.body.removeChild(iframe);
         URL.revokeObjectURL(url);
-      }, 3000);
-    });
-
+      }, 1000);
+    };
+    
+    document.body.appendChild(iframe);
+    
     pdfSuccess.value = true;
     pdfMessage.value = "Ticket generado e impreso automáticamente.";
     return true;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error al generar ticket:", error);
     pdfSuccess.value = false;
     pdfMessage.value = `Error: ${error.message}`;
@@ -109,7 +122,7 @@ const generarTicketPDF = async (numeroPedido: string): Promise<boolean> => {
   } finally {
     isGeneratingPdf.value = false;
   }
-};
+}
 
 export function usePdfTicket() {
   return {
@@ -119,4 +132,3 @@ export function usePdfTicket() {
     generarTicketPDF,
   };
 }
-
