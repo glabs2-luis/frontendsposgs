@@ -16,6 +16,7 @@
     "axios": "^1.10.0",
     "escpos": "^3.0.0-alpha.6",
     "jsbarcode": "^3.12.1",
+    "jspdf": "^3.0.2",
     "pdfmake": "^0.2.20",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.3.0",

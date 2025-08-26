@@ -54,6 +54,7 @@
 
           <!-- v-if="userStore.tipoUsuarioStore === 'POS'" -->
           <q-btn
+            v-if="userStore.tipoUsuarioStore === 'POS'"
             label="Terminar Venta (F4)"
             icon="point_of_sale"
             @click="terminarVenta"
@@ -62,6 +63,7 @@
 
           <!-- v-if="userStore.tipoUsuarioStore === 'ROMPEFILA'" -->
           <q-btn
+            v-if="userStore.tipoUsuarioStore === 'ROMPEFILA'"
             label="Generar ticket"
             icon="theaters"
             @click="terminarPedidoRompefilas"
