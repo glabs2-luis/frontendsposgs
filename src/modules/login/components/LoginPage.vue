@@ -144,7 +144,7 @@ const mostrarBodega = async () => {
       bodega.value.DESCRIPCION_BODEGA,
       bodega.value.ID_SUCURSAL
     )
-    console.log(bodega.value)
+    //console.log(bodega.value)
   } else {
     showErrorNotification(
       "Error",

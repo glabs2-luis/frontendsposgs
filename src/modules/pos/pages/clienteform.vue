@@ -747,14 +747,14 @@ const imprimirCotizacion = async (pedido) => {
     const success = await generarCotizacionPDF(datosCotizacion);
 
     if (success) {
-      console.log("Cotización generada con éxito.")
+      //console.log("Cotización generada con éxito.")
     } else {
-      console.log("Fallo al genera cotización.")
+      //console.log("Fallo al genera cotización.")
     }
 
     $q.loading.hide();
   } catch (error) {
-    console.log('Error al imprimir la cotización: ', error)
+    //console.log('Error al imprimir la cotización: ', error)
   } finally {
     $q.loading.hide()
   }
@@ -1074,14 +1074,6 @@ const buscarClienteDPINIT2 = async () => {
         "Consultando datos en SAT…"
       );
 
-      // Consolar los resultados
-      // console.log("Tipo de documento:", tipoDocumento.value);
-      // console.log(
-      //   "Este es el resultado de consultar datos en la sat: ",
-      //   result.data
-      // );
-      // console.log("valor booleano sat", result.isCertified);
-
       const nombreSat = result.data.nombre; // Guardar el nombre retornado de sat
 
       // result = texto
@@ -1188,7 +1180,7 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
       });
     },
     onError: (error: any) => {
-      console.error("Error creando cliente:", error);
+      //console.error("Error creando cliente:", error);
       showErrorNotification(
         "Error",
         error.message || "No se pudo registrar el cliente"

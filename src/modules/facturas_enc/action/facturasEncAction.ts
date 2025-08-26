@@ -16,7 +16,7 @@ export const obtenerFacturasEncAction = async (): Promise<FacturaEnc[]> => {
       error,
       "Hubo un error al obtener las facturas enc"
     );
-    console.log(message);
+    throw new Error(message);
   }
 };
 
@@ -30,8 +30,7 @@ export const obtenerFacturasEncIdAction = async (id: number): Promise<FacturaEnc
       error,
       "Hubo un error obteniendo facturas enc por Id"
     );
-    //console.log(message)
-    // throw new Error(error)
+    throw new Error(error)
   }
 };
 
@@ -45,7 +44,7 @@ export const obtenerDetalleFacturaPorIdAction = async (idFacturaEnc: number) => 
       error,
       "Hubo un error obteniendo los detalles de la factura"
     );
-    // console.log(message);
+    throw new Error(message); 
   }
 };
 
@@ -59,7 +58,7 @@ export const obtenerDetalleFacturaPorIdAction3 = async (idFacturaEnc: number) :P
       error,
       "Hubo un error obteniendo los detalles de la factura"
     );
-    // console.log(message);
+    throw new Error(message);
   }
 };
 
@@ -70,14 +69,13 @@ export const crearFacturaEncAction = async () => {
     const { data } = await posApi.post<FacturaEnc[]>(
       `/facturas-enc/facturacion`
     );
-    console.log("📤 Enviando a backend:", data);
     return data;
   } catch (error) {
     const message = getAxiosErrorMessage(
       error,
       "Hubo un error creando la factura Enc"
     );
-    console.log(message);
+    throw new Error(message)
   }
 };
 
@@ -97,7 +95,6 @@ export const crearFacturaEncAction2 = async (
       "Hubo un error creando la factura Enc"
     );
     throw new Error(message);
-    console.log(message);
   }
 };
 
@@ -113,7 +110,7 @@ export const obtenerDatosFelAction = async (
       error,
       " Hubo un error obteniendo los Datos Fel"
     );
-    console.log(message);
+    throw new Error(message);
   }
 };
 
@@ -130,7 +127,6 @@ export const obtenerFacturasFechaAction = async (
     return data;
   } catch (error) {
     const message = getAxiosErrorMessage(error, "Hubo un error obteniendo facturas por fecha" );
-    console.log(message);
     throw new Error(message);
   }
 };
@@ -142,7 +138,6 @@ export const obtenerFacturaNumeroSerieAction = async (serie: string, numero: num
     } catch (error) {
     const message = getAxiosErrorMessage(error, "Hubo un error obteniendo facturas por numero y serie"
     );
-    console.log(message);
     throw new Error(message);
   }
 }
@@ -150,11 +145,9 @@ export const obtenerFacturaNumeroSerieAction = async (serie: string, numero: num
   export const actualizarContingenciaAction = async (id: number): Promise<FacturaEnc> => {
     try {
       const { data } = await posApi.patch(`/facturas-enc/contingencia`, {ID_FACTURA_ENC: id, CONTINGENCIA: true})
-      console.log('Datos desde action', data)
       return data
     } catch (error) {
       const message = getAxiosErrorMessage(error, "Hubo un error actualizando la contingencia")
-      console.log(message)
       throw new Error(message)
     }   
 
@@ -163,11 +156,9 @@ export const obtenerFacturaNumeroSerieAction = async (serie: string, numero: num
 export const actualizarNitAction = async (id: number, nit: string, nombre:string): Promise<FacturaEnc> => {
   try {
     const { data } = await posApi.patch(`/facturas-enc/actualizarNit`, {ID_FACTURA_ENC: id, NIT_CLIEN_A_FACTURAR: nit, NOMBRE_CLI_A_FACTUAR: nombre})
-    console.log('Datos desde action', data)
     return data
   } catch (error) {
     const message = getAxiosErrorMessage(error, "Hubo un error actualizando el NIT")
-    console.log(message)
     throw new Error(message)
   }
 }

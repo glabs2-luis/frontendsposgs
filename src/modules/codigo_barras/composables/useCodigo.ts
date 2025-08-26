@@ -25,7 +25,7 @@ export const useCodigo = () => {
       return data
     } catch (error) {
       const message = getAxiosErrorMessage(error, 'El producto no tiene codigo de barras')
-      console.log(message)
+      throw new Error(message)
     }
   }
 

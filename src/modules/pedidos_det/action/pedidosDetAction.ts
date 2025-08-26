@@ -19,7 +19,6 @@ export const obtenerPedidoDetIdAction = async (id: number): Promise<PedidosDet[]
         const { data } = await posApi.get<PedidosDet[]>(`pedidos-det/${id}`)
         return data
     } catch(error){
-        console.log('error', error)
         const message = getAxiosErrorMessage(error,"Hubo un error obteniendo Pedido Detalle por Id")
         throw new Error(message)
     }
@@ -31,7 +30,6 @@ export const eliminarPedidoDetId = async (id: number) : Promise<PedidosDet[]> =>
         const { data } = await posApi.delete(`/pedidos-det/${id}`)
         return data
           } catch (error) {
-        console.log(error, 'error')
         const message = getAxiosErrorMessage(error, "Hubo un error eliminar Pedido Detalle por Id")
         throw new Error(message)
     }
@@ -44,7 +42,6 @@ export const actualizarDescripcionPedidoDetAction = async (id: number, descripci
         const { data } = await posApi.patch<PedidosDet>(`/pedidos-det/cambiarDescripcion/${id}/${desc}`)
         return data
     } catch (error){
-        console.log(error, 'error')
         const message = getAxiosErrorMessage(error, 'Hubo un error actualizando la descripcion de Pedido Detalle por Id')
         throw new Error(message)
     }
@@ -53,13 +50,11 @@ export const actualizarDescripcionPedidoDetAction = async (id: number, descripci
 // obtener lista de pedido det
 export const obtenerListaPedidosDet = async (idPedidoEnc:number) : Promise<PedidosDet[]> => {
     try {
-      
-      const { data } = await posApi.get<PedidosDet[]>(`/pedidos-det/pedidoEncDetalle/${idPedidoEnc}`)
-      
-      return data
+        const { data } = await posApi.get<PedidosDet[]>(`/pedidos-det/pedidoEncDetalle/${idPedidoEnc}`)
+        return data
     } catch(error){
-      const message = getAxiosErrorMessage(error, "hubo un error obteniendo la lista de pedidos det")
-      console.log(message)
+        const message = getAxiosErrorMessage(error, "hubo un error obteniendo la lista de pedidos det")
+        throw new Error(message)
     }
 }
 

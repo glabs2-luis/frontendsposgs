@@ -162,7 +162,6 @@ function guardarCliente(cliente: Cliente) {
         modalEditar.value = false
       },
       onError: (error) => {
-        console.error('Error creando cliente:', error)
         showErrorNotification('Error', 'No se pudo crear el cliente')
       }
     })

@@ -266,9 +266,6 @@ onMounted(() => {
 });
 
 watch(rangoFechas, (nuevo, viejo) => {
-  //console.log('Este es el valor nuevo', nuevo)
-  //console.log('Este es el valor viejo', viejo)
-
   fecha.value = nuevo;
   //console.log('guardando valor desde nuevo', fecha.value  )
 });
@@ -276,10 +273,7 @@ watch(rangoFechas, (nuevo, viejo) => {
 const valorUnaFecha = ref(null);
 
 watchEffect(() => {
-  //console.log('Valor detectado: ', rangoFechas.value)
   valorUnaFecha.value = rangoFechas.value;
-  //console.log('este es valor de rangoFechas en watchEffect', rangoFechas.value.from)
-  //console.log('este es valor de rangoFechas en watchEffect', rangoFechas.value.to)
 });
 
 // Comparar clave para ingresar
@@ -351,8 +345,6 @@ const buscarFacturas = async () => {
         (buscar.fecha_final = new Date(valorUnaFecha.value + "T23:59:59"));
     }
 
-    //console.log('buscar datos:', buscar)
-
     const facturas = await runWithLoading(
       async () =>
         await obtenerFacturasPorFecha(
@@ -362,7 +354,6 @@ const buscarFacturas = async () => {
         ),
       "Cargando Facturas"
     );
-    //console.log('facturas: ', facturas)
 
     listaFacturas.value = (facturas as any[]) || [];
 

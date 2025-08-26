@@ -28,12 +28,12 @@ export const useClientes = () => {
             if (cliente) {
             return cliente
             } else {
-            console.log('No se encontró cliente.')
+            //console.log('No se encontró cliente.')
             return null
             }
              } catch (error) {
             const message = ('NIT no existente, se creara el cliente')
-            console.log(message)
+            //console.log(message)
             return null
         }
     }
@@ -65,7 +65,6 @@ export const useClientes = () => {
   })
 
         const eliminarClienteId = async  (id: number) => { 
-            console.log('ID a eliminar:', id)
                 const confirmar = await showConfirmationDialog('Eliminar cliente', '¿Estás seguro de que deseas eliminar este cliente? ')
 
                 if (confirmar) {

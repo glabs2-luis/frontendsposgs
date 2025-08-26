@@ -88,14 +88,14 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
       );
     }
     if (!data.items.length) {
-      console.warn(
-        "La factura no contiene ítems. Se generará un PDF sin detalle de productos."
-      );
+      //console.warn(
+       // "La factura no contiene ítems. Se generará un PDF sin detalle de productos."
+      //);
     }
     if (!data.qrCodeData) {
-      console.warn(
-        "No se proporcionaron datos para el código QR. El QR podría estar vacío o mostrar un fallback."
-      );
+      //console.warn(
+        //"No se proporcionaron datos para el código QR. El QR podría estar vacío o mostrar un fallback."
+      //);
     }
 
     const fechaEmisionDate = new Date();
@@ -181,12 +181,10 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
           scale: 4,
         });
       } else {
-        console.warn("`data.qrCodeData` está vacío. Usando QR de fallback.");
         qrDataUrl =
           "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
       }
     } catch (err: any) {
-      console.error("Error al generar el QR:", err);
       pdfMessage.value = `Error al generar el PDF (QR): ${
         err.message || "Error desconocido"
       }`;
@@ -704,7 +702,7 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
             URL.revokeObjectURL(url);
           }, 1000);
         } catch (error) {
-          console.error("Error al intentar imprimir: ", error);
+          //console.error("Error al intentar imprimir: ", error);
         }
       };
 
@@ -717,7 +715,7 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
 
     return true;
   } catch (error: any) {
-    console.error("Error general al generar el PDF:", error);
+    //console.error("Error general al generar el PDF:", error);
     pdfSuccess.value = false;
     pdfMessage.value = `Error al generar el PDF: ${
       error.message || "Error desconocido"

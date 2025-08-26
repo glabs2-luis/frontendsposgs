@@ -64,7 +64,7 @@ export const useBodegas = () => {
         refetchBobtenerBodegasId: refetchBbtenerBodegasId,
       };
     } catch (error) {
-      console.error("Error en ObtenerBodegasId2:", error);
+      //console.error("Error en ObtenerBodegasId2:", error);
       return null;
     }
   };

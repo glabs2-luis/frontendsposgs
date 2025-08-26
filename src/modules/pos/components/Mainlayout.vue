@@ -281,7 +281,7 @@ const iniciarSincronizacionAutomatica = () => {
   if (syncTasks.value.every((task) => !task.lastSync)) {
     setTimeout(async () => {
       if (!isSyncing.value) {
-        console.log("Iniciando primera sincronización automática...");
+        //console.log("Iniciando primera sincronización automática...");
         await executeAllTasks();
       }
     }, 5000);
@@ -289,7 +289,7 @@ const iniciarSincronizacionAutomatica = () => {
 
   intervaloAutomatico.value = window.setInterval(async () => {
     if (!isSyncing.value) {
-      console.log("Ejecutando sincronización automática...");
+      //console.log("Ejecutando sincronización automática...");
       await executeAllTasks();
     }
   }, intervalo);
@@ -300,7 +300,7 @@ const detenerSincronizacionAutomatica = () => {
   if (intervaloAutomatico.value) {
     clearInterval(intervaloAutomatico.value);
     intervaloAutomatico.value = null;
-    console.log("Sincronización automática detenida");
+    //console.log("Sincronización automática detenida");
   }
 };
 

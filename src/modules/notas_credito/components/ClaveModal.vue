@@ -128,7 +128,7 @@ async function aceptar() {
     visible.value = false;
 
   } catch (error) {
-    console.log("Error en la funcion aceptar:", error);
+    //console.log("Error en la funcion aceptar:", error);
     
     $q.notify({
       type: 'negative',

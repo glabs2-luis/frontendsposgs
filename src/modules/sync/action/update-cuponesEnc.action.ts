@@ -6,7 +6,6 @@ export const updateCuponesEncAction = async (): Promise<void> => {
     const { data } = await posApi.post(`/sync/update-cupones-enc`);
     return data;
   } catch (error) {
-    console.log(error);
     const message = getAxiosErrorMessage(
       error,
       "Hubo un error al momento de sincronizar los cupones de encabezado al sistema local de ventas"

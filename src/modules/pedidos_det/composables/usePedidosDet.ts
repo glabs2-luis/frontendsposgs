@@ -32,7 +32,6 @@ export const usePedidoDet = () => {
       const ped = await obtenerPedidoDetIdAction(id);
       return ped ?? null;
     } catch (error) {
-      console.error("Error buscando Pedido Detalle", error);
       return null;
     }
   };
@@ -73,7 +72,7 @@ export const usePedidoDet = () => {
   //   console.log("ListaDet1 - idPedidoEnc:", idPedidoEnc.value);
     
   //   return useQuery({
-  //     // este es el que falla
+  //      este es el que falla
   //     queryKey: computed(() => ["pedido-det", idPedidoEnc.value]),
   //     queryFn: () => obtenerListaPedidosDet(idPedidoEnc.value),
   //     enabled: computed(() => !!idPedidoEnc.value && idPedidoEnc.value > 0),

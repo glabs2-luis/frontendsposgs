@@ -23,7 +23,6 @@ export const crearCertificationAction = async (datos: {
       error,
       "Hubo un error creando la certification"
     );
-    console.log("Error:", message);
     throw new Error(message);
   }
 };
@@ -40,14 +39,12 @@ export const certificacionPendientesAction = async (datos: {
       serie: datos.serie,
       numeroFactura: datos.numero,
     });
-    //console.log("devolviendo pendientes desde action", data);
     return data;
   } catch (error) {
     const message = getAxiosErrorMessage(
       "Hubo un error creando un pendientes desde action",
       error
     );
-    //console.log("error: ", message);
     throw new Error(message);
   }
 };
@@ -61,10 +58,6 @@ export const crearCertificacionNcAction = async (datos: {
       `/certification/devolucion`,
       { ID_SUCURSAL: datos.sucursal, NUMERO_DEVOLUCION: datos.numeroDevolucion }
     );
-    console.log(
-      "retornando crear certificacion de nota de credito desde action: ",
-      data
-    );
 
     return data;
   } catch (error) {
@@ -72,7 +65,6 @@ export const crearCertificacionNcAction = async (datos: {
       error,
       "Hubo un error creando la certification de la Nota de Credito."
     );
-    console.log(message);
     throw new Error(message);
   }
 };
@@ -92,7 +84,6 @@ export const obtenerDtoCertificado = async (
       error,
       "Hubo un error obtener Dto Certificado."
     );
-    console.log(message);
     throw new Error(message);
   }
 };

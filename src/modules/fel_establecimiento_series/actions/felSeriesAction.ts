@@ -31,7 +31,6 @@ export const obtenerSeriesPorSucursalAction = async (id: number) : Promise<FelSe
         const { data } = await posApi.get<FelSeries[]>(`/fel-establecimiento-series/by-sucursal/${id}`)
         return data
     } catch ( error){
-        console.log(error, 'error en el action')
         const message = getAxiosErrorMessage(error, 'Hubo un error obteniendo series por id sucursal')
         throw new Error(message)
     }
