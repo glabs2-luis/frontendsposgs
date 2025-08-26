@@ -881,7 +881,7 @@ const storeSucursal = useStoreSucursal();
 const { mutateAplicarCupon } = useCupones();
 const contingencia = ref(false);
 const { mutateCertificar, mutateFacturaContingencia } = useCertification();
-const { obtenerDetalleFactura, obtenerFacturaId3 } = useFacturasEnc();
+const { obtenerDetalleFactura, obtenerFacturaId3, obtenerDetalleFactura3 } = useFacturasEnc();
 const { generarFacturaPDF } = usePdfFactura();
 const { mutateCrearSincronizacion } = useSync();
 const {
@@ -1443,6 +1443,7 @@ const imprimirCotizacion = async () => {
       type: 'warning',
       message: 'Crear una cotización para imprimir.',
       position: 'top',
+      color: 'orange-8',
       timeout: 3000
     });
     return;
@@ -1700,6 +1701,9 @@ const confirmarFactura = async () => {
       // Ahora sí espera a que termine la certificación
 
       if (contingencia.value === true) {
+
+        // Aumentar contingencia
+        await mutateAgregarContingencia(idFacturaEnc.value);
         await imprimirFactura(respuesta);
         return;
       } else {
@@ -1788,17 +1792,25 @@ const imprimirFactura = async (data) => {
   // console.log('yo soy contingencia:', contingencia.value)
   // console.log("data certificada con exito: ", data)
 
-  const detalle = await obtenerDetalleFactura(idFacturaEnc.value);
+  const detalle = await obtenerDetalleFactura3(idFacturaEnc.value);
+
   if (!detalle || detalle.length === 0) return;
 
-  const itemsFactura = detalle.map((item) => ({
-    cantidad: item.CANTIDAD_VENDIDA,
-    descripcion: item.producto.DESCRIPCION_PROD,
-    precio: item.PRECIO_UNITARIO_VTA.toFixed(4),
-    subtotal: item.SUBTOTAL_GENERAL.toFixed(4),
+  // const itemsFactura = detalle.map((item) => ({
+  //   cantidad: item.CANTIDAD_VENDIDA, // Cantidad Pedida
+  //   descripcion: item.producto.DESCRIPCION_PROD, // Descripcion real
+  //   precio: item.PRECIO_UNITARIO_VTA.toFixed(4), // Precio Unidad Venta
+  //   subtotal: item.SUBTOTAL_GENERAL.toFixed(4), // 
+  // }));
+
+    const itemsFactura = detalle.map((item) => ({
+    cantidad: item.CANTIDAD_PEDIDA, // Cantidad Pedida
+    descripcion: item.DESCRIPCION_PROD, // Descripcion real
+    precio: item.PRECIO_UNIDAD_VENTA.toFixed(4), // Precio Unidad Venta
+    subtotal: item.SUBTOTAL_GENERAL.toFixed(4), // 
   }));
 
-  console.log("detalle: ", detalle);
+  //console.log("detalle 2: ", detalle);
 
   const totalItems = itemsFactura.reduce(
     (total, item) => total + Number(item.cantidad),

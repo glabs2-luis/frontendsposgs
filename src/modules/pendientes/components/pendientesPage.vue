@@ -148,7 +148,7 @@
     </q-splitter>
 
     <!-- Modal de contraseña -->
-    <q-dialog v-model="mostrarModalCambiarNit" style="z-index: auto" persistent>
+    <q-dialog v-model="mostrarModalCambiarNit" style="z-index: 1" persistent>
       <q-card style="width: 340px; height: 210px">
         <q-card-section class="q-pa-md q-pl-md q-ma-none title-card">
           <div class="text-h6 text-bold">
@@ -372,6 +372,20 @@ const { data, DatosSat2 } = useValidation(
   empresa.value
 );
 
+const deboucedSearch = debounce((val: string) => {
+  if (val.length > 0) {
+    buscarClienteSat();
+  } else {
+    // Limpiar los campos
+    mostrarNuevoNit.value = "";
+    mostrarNuevoNombre.value = "";
+  }
+}, 600);
+
+watch(nuevoNit, (val) => {
+  deboucedSearch(val);
+});
+
 // Función para alternar la dirección del splitter
 const toggleSplitterDirection = () => {
   if (splitter.value <= 50) {
@@ -451,36 +465,43 @@ const cancelar2 = () => {
 };
 
 const buscarClienteSat = async () => {
+  if (nuevoNit.value.length === 0) {
+    mostrarNuevoNit.value = "";
+    mostrarNuevoNombre.value = "";
+    return;
+  }
+
   $q.loading.show({
     message: "Buscando NIT en SAT...",
     spinnerColor: "green",
     spinnerSize: 50,
   });
-
-  const result = await DatosSat2(
-    nuevoNit.value,
-    tipoDocumento.value,
-    validador.value,
-    empresa.value
-  );
-
-  $q.loading.hide();
-  //console.log('Resultado de la búsqueda SAT:', result);
-
-  if (result.isCertified === true) {
-    // Si hay datos, asignarlos a los campos
-    mostrarNuevoNit.value = result.data.nit;
-    mostrarNuevoNombre.value = result.data.nombre;
-  } else {
-    mostrarNuevoNit.value = "";
-    mostrarNuevoNombre.value = "";
-    nuevoNit.value = "";
-
-    // Si no hay datos, mostrar error
-    showErrorNotificationInside(
-      "NIT no encontrado",
-      "Verifique el NIT ingresado"
+  try {
+    const result = await DatosSat2(
+      nuevoNit.value,
+      tipoDocumento.value,
+      validador.value,
+      empresa.value
     );
+    $q.loading.hide();
+    //console.log('Resultado de la búsqueda SAT:', result);
+
+    if (result.isCertified === true) {
+      // Si hay datos, asignarlos a los campos
+      mostrarNuevoNit.value = result.data.nit;
+      mostrarNuevoNombre.value = result.data.nombre;
+    } else {
+      mostrarNuevoNit.value = "NIT no encontrado";
+      mostrarNuevoNombre.value = "NIT no encontrado";
+      return;
+    }
+  } catch (error) {
+    console.log("Error al buscar cliente en SAT:", error);
+    showErrorNotificationInside(
+      "Error al buscar cliente en SAT",
+      error.message
+    );
+    $q.loading.hide();
     return;
   }
 };
@@ -553,7 +574,7 @@ const actualizarNit = async () => {
   });
 
   // Llamar a la mutación para actualizar el NIT
-  await mutateActualizarNit(
+  mutateActualizarNit(
     {
       id: id_factura_enc.value,
       nit: mostrarNuevoNit.value,
