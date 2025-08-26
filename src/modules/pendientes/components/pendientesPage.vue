@@ -498,7 +498,6 @@ const buscarClienteSat = async () => {
       return;
     }
   } catch (error) {
-    console.log("Error al buscar cliente en SAT:", error);
     showErrorNotificationInside(
       "Error al buscar cliente en SAT",
       error.message
@@ -546,8 +545,6 @@ const abrirActualizarNit = async () => {
     );
     return;
   }
-
-  //console.log("Factura seleccionada:", facturaSeleccionada.value);
 
   // obtener los datos actuales
   const [numero, serie] = facturaSeleccionada.value.split("-");
