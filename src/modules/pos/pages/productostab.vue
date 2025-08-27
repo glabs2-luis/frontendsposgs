@@ -2280,6 +2280,7 @@ defineExpose({
 }
 
 .catalogo-modal {
+  z-index: 1;
   border-radius: 12px;
 }
 

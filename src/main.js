@@ -30,9 +30,11 @@ app.use(Quasar, {
   plugins: {Notify, Dialog, Loading} 
 })
 
+// solo usar vuequery en desarrollo
 app.use(VueQueryPlugin, {
-  enableDevtoolsV6Plugin: true,
+  enableDevtoolsV6Plugin: import.meta.env.DEV
 })
+
 app.use(pinia)
 app.use(router)
 app.mount('#app')

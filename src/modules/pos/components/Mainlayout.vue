@@ -120,7 +120,9 @@
       <router-view />
     </q-page-container>
 
-    <q-footer>
+    <q-footer
+      v-if="route.path !== '/ventas'"
+    >
       <div class="bg-yellow-8 text-black text-center q-pa-sm">
         <strong> Libreria San Bartolome - 2025 </strong>
       </div>
@@ -152,7 +154,7 @@ import SyncResultsModal from "@/modules/sync/components/SyncResultsModal.vue";
 import { useStoreSucursal } from "@/stores/sucursal";
 
 const StoreSucursal = useStoreSucursal();
-const { obtenerSucursal } = useSucursales();
+// const { obtenerSucursal } = useSucursales();
 const { nombreVendedor, codigoVendedor } = useUserStore();
 const router = useRouter();
 const route = useRoute();

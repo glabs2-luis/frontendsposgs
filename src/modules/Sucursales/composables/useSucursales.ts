@@ -14,11 +14,11 @@ export const useSucursales = () => {
         queryFn: () => obtenerSucursalAction()
     }) 
 
-    const { data: obtenerSucursal, refetch: refetchObtenerSucursales } = useQuery ({
-        queryKey: ['sucursales-id' ], 
-        queryFn: () => obtenerSucursalIdAction('1')
+    // const { data: obtenerSucursal, refetch: refetchObtenerSucursales } = useQuery ({
+    //     queryKey: ['sucursales-id' ], 
+    //     queryFn: () => obtenerSucursalIdAction('1')
 
-    })
+    // })
 
     // Eliminar sucursal
     const { mutate: mutateEliminarSucursal } = useMutation({
@@ -29,8 +29,8 @@ export const useSucursales = () => {
         todasSucursales,
         refetchTodasSucursales,
         mutateEliminarSucursal,
-        obtenerSucursal,
-        refetchObtenerSucursales
+        // obtenerSucursal,
+        // refetchObtenerSucursales
     }
 
 

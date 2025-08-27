@@ -450,7 +450,7 @@
     :-pedido-id="idPedidoEnc"
     :onProductoEliminado="enfocarInputCodigo"
   />
-  <q-footer class="z-max">
+  <q-footer>
     <div class="bg-yellow-8 text-black q-pa-sm row items-center justify-center">
       <div class="q-pr-md">
         <div class="text-weight-bold">Libreria San Bartolome - 2025</div>
@@ -1407,4 +1407,5 @@ const handleCancelar = () => {
   padding: 8px 15px;
   border-radius: 10px;
 }
+
 </style>
