@@ -132,7 +132,7 @@ import { nextTick } from 'vue'
 const StoreSucursal = useStoreSucursal()
 const { loginMutation } = useUserStore()
 const userStore = useUserStore()
-const { obtenerSucursal } = useSucursales()
+//const { obtenerSucursal } = useSucursales()
 const { obtenerBodegasId } = useBodegas()
 const { ObtenerBodegasId2 } = useBodegas()
 const router = useRouter()

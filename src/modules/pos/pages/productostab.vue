@@ -379,6 +379,7 @@
                 </div>
               </template>
             </q-table>
+            
           </div>
         </q-card-section>
       </q-card>
@@ -1136,6 +1137,7 @@ const productosFiltrados2 = computed(() => {
 const productosUnicos = computed(() => {
   if (!todosProductos.value) return [];
 
+  // Para evitar duplicados
   const mapa = new Map();
 
   for (const prod of todosProductos.value) {
@@ -1553,10 +1555,19 @@ const abrirCuponazo = async () => {
 
 // nuevo catalogo
 const abrirCatalogo2 = async () => {
+
+  $q.loading.show({
+    message: "Cargando productos...",
+    spinnerColor: "green",
+    spinnerSize: 50,
+  });
+
   try {
     // Asegurar que los productos estén cargados antes de abrir el modal
-    await refetchTodosProductos();
+    await refetchTodosProductos(); // Se le puede agregar el await si es necesario
     modalProductos2.value = true;
+
+    $q.loading.hide();
   } catch (error) {
     //console.error("Error al cargar productos:", error);
     showErrorNotification("Error", "No se pudieron cargar los productos");

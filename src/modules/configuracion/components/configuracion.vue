@@ -136,7 +136,8 @@
             <div class="col-auto">
               <q-btn
                 :disabled="!estadoConexion?.status"
-                color="primary"
+                color="yellow-10"
+
                 icon="sync"
                 label="Sincronizar Ahora"
                 size="lg"
@@ -550,6 +551,7 @@ function ListaDet1(idPedidoEnc: any): {
 }
 
 .sync-btn {
+  color: yellow;
   border-radius: 8px;
   font-weight: 600;
   padding: 12px 24px;
