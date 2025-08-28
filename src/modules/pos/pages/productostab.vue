@@ -89,7 +89,14 @@
             <q-icon name="search" color="primary" />
           </template>
           <template #prepend>
-            <q-btn round dense flat icon="view_headline" color="primary" @click="abrirCatalogo2" />
+            <q-btn
+              round
+              dense
+              flat
+              icon="view_headline"
+              color="primary"
+              @click="abrirCatalogo2"
+            />
           </template>
         </q-input>
 
@@ -152,12 +159,45 @@
               <div class="text-h4 text-weight-bold q-mb-xs">
                 <q-icon name="inventory_2" class="q-mr-md" />
                 Catálogo de Productos
+                <!-- Indicador de loading en el header -->
+                <q-spinner-dots
+                  v-if="loadingProductosQuery && !todosProductos"
+                  color="white"
+                  size="24px"
+                  class="q-ml-md"
+                />
+                <q-spinner-dots
+                  v-else-if="fetchingProductos && todosProductos"
+                  color="white"
+                  size="20px"
+                  class="q-ml-md"
+                />
               </div>
               <div class="text-subtitle1 text-white-7">
-                Selecciona productos para agregar a tu pedido
+                <span v-if="loadingProductosQuery && !todosProductos">
+                  Cargando productos del servidor...
+                </span>
+                <span v-else>
+                  Selecciona productos para agregar a tu pedido
+                </span>
               </div>
             </div>
-            <div class="col-auto">
+            <div class="col-auto row items-center q-gutter-sm">
+              <!-- Botón de refresh -->
+              <q-btn
+                icon="refresh"
+                flat
+                round
+                dense
+                size="lg"
+                :loading="fetchingProductos"
+                :disable="loadingProductosQuery"
+                @click="refetchTodosProductos"
+                class="refresh-btn"
+              >
+                <q-tooltip>Actualizar productos</q-tooltip>
+              </q-btn>
+              <!-- Botón de cerrar -->
               <q-btn icon="close" flat round dense v-close-popup size="lg" />
             </div>
           </div>
@@ -194,7 +234,17 @@
             <!-- Estadísticas -->
             <div class="row items-center justify-between q-mt-md">
               <div class="text-caption text-grey-6">
-                {{ productosFiltrados2.length }} productos encontrados
+                <span v-if="loadingProductosQuery && !todosProductos">
+                  <q-spinner-dots color="grey-6" size="16px" class="q-mr-xs" />
+                  Cargando productos...
+                </span>
+                <span v-else-if="fetchingProductos && todosProductos">
+                  <q-spinner-dots color="blue" size="16px" class="q-mr-xs" />
+                  Actualizando...
+                </span>
+                <span v-else>
+                  {{ productosFiltrados2.length }} productos encontrados
+                </span>
               </div>
               <q-chip text-color="back" icon="info" size="sm">
                 Presiona Enter en cantidad para agregar
@@ -205,18 +255,74 @@
 
         <!-- Tabla de productos mejorada -->
         <q-card-section class="q-pa-sm q-pt-none">
-          <div v-if="loadingProductos" class="text-center q-pa-xl">
-            <q-spinner-dots color="primary" size="50px" />
-            <div class="text-grey-6 q-mt-md">Cargando productos...</div>
+          <!-- Loading inicial - cuando no hay productos y está cargando -->
+          <div
+            v-if="loadingProductosQuery && !todosProductos"
+            class="loading-container"
+          >
+            <div class="loading-content">
+              <q-spinner-dots size="60px" />
+              <div class="loading-text">
+                <div class="text-h6 text-black q-mb-sm">
+                  Cargando catálogo...
+                </div>
+                <div class="text-subtitle2 text-grey-6">
+                  Obteniendo productos del servidor
+                </div>
+              </div>
+            </div>
           </div>
 
+          <!-- Loading de refetch - cuando hay productos pero se están actualizando -->
+          <div
+            v-else-if="fetchingProductos && todosProductos"
+            class="refetch-loading"
+          >
+            <q-banner rounded class="justify-center">
+              <template #avatar>
+                <q-spinner-dots
+                  class="q-mr-xs border-radius-10"
+                  color="blue"
+                  size="24px"
+                />
+              </template>
+              Actualizando productos...
+            </q-banner>
+          </div>
+
+          <!-- Error en la carga -->
+          <div v-else-if="errorProductos" class="error-container">
+            <div class="error-content">
+              <q-icon name="error" size="60px" color="negative" />
+              <div class="error-text">
+                <div class="text-h6 text-negative q-mb-sm">
+                  Error al cargar productos
+                </div>
+                <div class="text-subtitle2 text-grey-6 q-mb-md">
+                  {{
+                    errorProductos?.message ||
+                    "No se pudieron cargar los productos"
+                  }}
+                </div>
+                <q-btn
+                  color="primary"
+                  icon="refresh"
+                  label="Reintentar"
+                  @click="refetchTodosProductos"
+                  :loading="fetchingProductos"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabla de productos -->
           <div v-else>
             <q-table
               :rows="productosFiltrados2"
               :columns="columnasCatalogo"
               row-key="PRODUCT0"
               :pagination="paginacionCatalogo"
-              :loading="loadingProductos"
+              :loading="fetchingProductos"
               class="catalogo-table"
               flat
               bordered
@@ -738,7 +844,6 @@
 </template>
 
 <script setup>
-
 import { useQuasar } from "quasar";
 import { useQueryClient } from "@tanstack/vue-query";
 import {
@@ -779,7 +884,10 @@ import useFormat from "@/common/composables/useFormat";
 import { useStoreSucursal } from "@/stores/sucursal";
 import { cleanAllStores } from "@/common/helper/cleanStore";
 import { usePdfCotizacion } from "@/modules/cotizacion_pdf/composable/useCotizacion";
-import { obtenerDetallePedido, obtenerPedidoEncPorIdAction } from "@/modules/pedidos_enc/action/pedidosEncAction";
+import {
+  obtenerDetallePedido,
+  obtenerPedidoEncPorIdAction,
+} from "@/modules/pedidos_enc/action/pedidosEncAction";
 import { useClienteStore } from "@/stores/cliente";
 import { usePdfTicket } from "@/modules/ticket_pdf/composable/useTicket";
 
@@ -858,19 +966,18 @@ const props = defineProps({
   tipoPedido: {
     type: String,
     required: true,
-  }
+  },
 });
 
 const idPedidoEnc = computed(() => props.pedidoId);
-const tipoPedido = computed(() => props.tipoPedido)
+const tipoPedido = computed(() => props.tipoPedido);
 
 // Emits
-const emit = defineEmits(['updateEstado']);
+const emit = defineEmits(["updateEstado"]);
 
 const updateEstadoPedido = (nuevoEstado) => {
-  emit('updateEstado', nuevoEstado);
-}
-
+  emit("updateEstado", nuevoEstado);
+};
 
 /*
 ==========================================================
@@ -884,7 +991,8 @@ const storeSucursal = useStoreSucursal();
 const { mutateAplicarCupon } = useCupones();
 const contingencia = ref(false);
 const { mutateCertificar, mutateFacturaContingencia } = useCertification();
-const { obtenerDetalleFactura, obtenerFacturaId3, obtenerDetalleFactura3 } = useFacturasEnc();
+const { obtenerDetalleFactura, obtenerFacturaId3, obtenerDetalleFactura3 } =
+  useFacturasEnc();
 const { generarFacturaPDF } = usePdfFactura();
 const { mutateCrearSincronizacion } = useSync();
 const {
@@ -900,31 +1008,34 @@ const {
   refetchTodosProductos,
   obtenerProductosId,
   precioReal,
+  loadingProductos: loadingProductosQuery,
+  fetchingProductos,
+  errorProductos,
 } = useProductos();
 const { obtenerPorCodigo } = useCodigo();
 const $q = useQuasar();
 const { mutateAnularPedidoPendiente } = usePedidosEnc();
-const { generarCotizacionPDF } = usePdfCotizacion()
+const { generarCotizacionPDF } = usePdfCotizacion();
 const clienteStore = useClienteStore();
 const { nombreVendedor } = useUserStore();
 const { totalItems } = useTotalStore();
 const { generarTicketPDF } = usePdfTicket();
 
 //USE COMPOSABLES
-const {  data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(idPedidoEnc);
-const {  refetch: refetchObtenerPedidoDetID } = useListaProductosPedidoDet(idPedidoEnc);
+const { data: pedidoData, refetchObtenerPedidoID } =
+  obtenerPedidoPorId(idPedidoEnc);
+const { refetch: refetchObtenerPedidoDetID } =
+  useListaProductosPedidoDet(idPedidoEnc);
 
 const modalFacturacion = ref(false);
 const modalCuponazo = ref(false);
-
-
 
 /*
 ==========================================================
                 VARIABLES GENERALES
 ==========================================================
 */
-const allowAutoFocusProduct = ref(true);  // Controla si el input de código puede auto-enfocarse
+const allowAutoFocusProduct = ref(true); // Controla si el input de código puede auto-enfocarse
 const btnConfirmarFactura = ref(null);
 const calcularCambio = ref(0);
 const cantidad = ref(1); // Cantidad en el boton
@@ -1090,7 +1201,7 @@ watch(modalProductos2, async (val) => {
   try {
     if (val) {
       // Cuando se abre el modal, asegurar que los productos estén cargados
-      await refetchTodosProductos();
+      // await refetchTodosProductos();
       // Reinicializar cantidadInputs cuando se abre el modal
       if (cantidadInputs && cantidadInputs.value) {
         cantidadInputs.value = {};
@@ -1320,11 +1431,12 @@ watch(modalProductos, async (val) => {
   if (val) {
     try {
       loadingProductos.value = true;
-      await refetchTodosProductos();
+      // await refetchTodosProductos();
     } catch (error) {
-      $q.notify(
-        {
-          type: "negative", message: "Error al cargar productos" });
+      $q.notify({
+        type: "negative",
+        message: "Error al cargar productos",
+      });
     } finally {
       loadingProductos.value = false;
     }
@@ -1394,12 +1506,12 @@ const actualizarCantidad = () => {
 
 const truncateDosDecimales = (numero) => {
   return Math.trunc(numero * 100) / 100;
-}
+};
 
 // Preparar actualizacion para pedido
 const prepararDataCotizacion = async (idPedido) => {
   const apiResponseDetallePedido = await obtenerDetallePedido(idPedido);
-  const pedidoEnc = await obtenerPedidoEncPorIdAction(idPedido)
+  const pedidoEnc = await obtenerPedidoEncPorIdAction(idPedido);
 
   const items = apiResponseDetallePedido.map((item) => {
     return {
@@ -1411,7 +1523,10 @@ const prepararDataCotizacion = async (idPedido) => {
   });
 
   const totalItems = items.reduce((acc, item) => acc + item.cantidad, 0);
-  const subtotal = items.reduce((acc, item) => acc + parseFloat(item.subtotal.replace("Q.", "")), 0);
+  const subtotal = items.reduce(
+    (acc, item) => acc + parseFloat(item.subtotal.replace("Q.", "")),
+    0
+  );
 
   const dataCotizacion = {
     encabezado: {
@@ -1420,7 +1535,7 @@ const prepararDataCotizacion = async (idPedido) => {
       fechaEmision: formatearFecha(pedidoEnc.FECHA_PEDIDO),
     },
 
-    observacion: '',
+    observacion: "",
 
     cliente: {
       nombre: clienteStore.nombre,
@@ -1432,45 +1547,49 @@ const prepararDataCotizacion = async (idPedido) => {
 
     resumen: {
       subtotal: formatCurrency(subtotal, 2),
-      totalPagar: `Q.${truncateDosDecimales(totalStore.totalGeneral).toFixed(2)}`,
+      totalPagar: `Q.${truncateDosDecimales(totalStore.totalGeneral).toFixed(
+        2
+      )}`,
       totalItems,
     },
     nombreVendedor: nombreVendedor,
   };
 
   return dataCotizacion;
-}
+};
 
 const imprimirCotizacion = async () => {
   if (pedidoStore.numeroDePedido <= 0) {
     $q.notify({
-      type: 'warning',
-      message: 'Crear una cotización para imprimir.',
-      position: 'top',
-      color: 'orange-8',
-      timeout: 3000
+      type: "warning",
+      message: "Crear una cotización para imprimir.",
+      position: "top",
+      color: "orange-8",
+      timeout: 3000,
     });
     return;
   }
 
   if (!totalStore) {
     $q.notify({
-      type: 'warning',
-      message: 'Agregue un producto antes de imprimir la cotización.',
-      position: 'top',
-      timeout: 3000
+      type: "warning",
+      message: "Agregue un producto antes de imprimir la cotización.",
+      position: "top",
+      timeout: 3000,
     });
     return;
   }
 
   try {
     $q.loading.show({
-      message: 'Imprimiendo cotización',
-      boxClass: 'bg-grey-2 text-grey-9',
-      spinnerColor: 'primary'
+      message: "Imprimiendo cotización",
+      boxClass: "bg-grey-2 text-grey-9",
+      spinnerColor: "primary",
     });
 
-    const datosCotizacion = await prepararDataCotizacion(pedidoStore.idPedidoEnc)
+    const datosCotizacion = await prepararDataCotizacion(
+      pedidoStore.idPedidoEnc
+    );
 
     const success = await generarCotizacionPDF(datosCotizacion);
 
@@ -1479,14 +1598,14 @@ const imprimirCotizacion = async () => {
     } else {
       //console.log("Fallo al genera cotización.")
     }
-    
+
     $q.loading.hide();
   } catch (error) {
     //console.log('Error al imprimir la cotización: ', error)
   } finally {
-    $q.loading.hide()
+    $q.loading.hide();
   }
-}
+};
 
 const limpiarPedido = async () => {
   if (!pedidoStore.idPedidoEnc) {
@@ -1496,12 +1615,16 @@ const limpiarPedido = async () => {
 
   const confirmado = await showConfirmationDialog(
     `Limpiar ${tipoPedido.value}`,
-    `¿Estás seguro de que deseas limpiar ${tipoPedido.value === 'pedido' ? 'el ' + tipoPedido.value : 'la ' + tipoPedido.value}?`
+    `¿Estás seguro de que deseas limpiar ${
+      tipoPedido.value === "pedido"
+        ? "el " + tipoPedido.value
+        : "la " + tipoPedido.value
+    }?`
   );
 
   if (confirmado) {
     cleanAllStores();
-    updateEstadoPedido('pedido')
+    updateEstadoPedido("pedido");
   }
 };
 
@@ -1517,9 +1640,13 @@ const limpiar = async () => {
 
   const confirmado = await showConfirmationDialog(
     `Anular ${tipoPedido.value}`,
-    `¿Estás seguro de que deseas anular ${tipoPedido.value === 'pedido' ? 'el ' + tipoPedido.value : 'la ' + tipoPedido.value}?`
+    `¿Estás seguro de que deseas anular ${
+      tipoPedido.value === "pedido"
+        ? "el " + tipoPedido.value
+        : "la " + tipoPedido.value
+    }?`
   );
-  
+
   if (confirmado) {
     mutateAnularPedidoPendiente(
       {
@@ -1540,7 +1667,7 @@ const limpiar = async () => {
     );
 
     cleanAllStores();
-    updateEstadoPedido('pedido')
+    updateEstadoPedido("pedido");
   }
 };
 
@@ -1564,7 +1691,7 @@ const abrirCatalogo2 = async () => {
 
   try {
     // Asegurar que los productos estén cargados antes de abrir el modal
-    await refetchTodosProductos(); // Se le puede agregar el await si es necesario
+    // await refetchTodosProductos();
     modalProductos2.value = true;
 
     $q.loading.hide();
@@ -1588,7 +1715,6 @@ const formatearFecha = (fecha) => {
 };
 
 const certificarFactura = async (id) => {
-
   // Obtener datos de la factura
   const factura = await obtenerFacturaId3(id);
   // Mostrar loading para certificación
@@ -1605,9 +1731,8 @@ const certificarFactura = async (id) => {
       serie: factura.SERIE,
       numero: factura.NUMERO_FACTURA,
     },
-    { 
+    {
       onSuccess: async (data) => {
-
         // Ocultar loading antes de imprimir
         $q.loading.hide();
 
@@ -1628,7 +1753,7 @@ const certificarFactura = async (id) => {
       onError: async (error) => {
         //console.error("Error en certificación:", error);
         $q.loading.hide();
-        
+
         $q.notify({
           type: "negative",
           message: `Error en certificación: ${error.message}, imprimiendo en contingencia`,
@@ -1637,14 +1762,13 @@ const certificarFactura = async (id) => {
           icon: "error",
         });
 
-        contingencia.value = true
+        contingencia.value = true;
 
-        await mutateAgregarContingencia(id)
+        await mutateAgregarContingencia(id);
 
-        nextTick() 
+        nextTick();
 
-        await imprimirFactura(id)
-
+        await imprimirFactura(id);
       },
     }
   );
@@ -1696,7 +1820,6 @@ const confirmarFactura = async () => {
 
   mutateCrearFacturaEnc2(datos, {
     onSuccess: async (respuesta) => {
-
       modalFacturacion.value = false;
 
       // Guardar último cambio para mostrarlo en clienteform luego de cerrar el modal
@@ -1710,7 +1833,6 @@ const confirmarFactura = async () => {
       // Ahora sí espera a que termine la certificación
 
       if (contingencia.value === true) {
-
         // Aumentar contingencia
         await mutateAgregarContingencia(idFacturaEnc.value);
         await imprimirFactura(respuesta);
@@ -1759,29 +1881,30 @@ const terminarPedidoRompefilas = async () => {
       spinnerSize: 50,
     });
 
-    const success = await generarTicketPDF(pedidoStore.numeroDePedido)
-    
+    const success = await generarTicketPDF(pedidoStore.numeroDePedido);
+
     if (success) {
       //console.log("Ticket generado con exito.")
-      $q.notify
+      $q.notify;
     } else {
       //console.log("Fallo al genera ticket.")
     }
 
     $q.notify({
-      type: 'positive',
-      message: 'Ticket generado correctamente.',
-      position: 'top',
-      timeout: 3000
+      type: "positive",
+      message: "Ticket generado correctamente.",
+      position: "top",
+      timeout: 3000,
     });
 
     cleanAllStores();
   } catch (error) {
     $q.notify({
-      type: 'negative',
-      message: 'Error al generar ticket: ', error,
-      position: 'top',
-      timeout: 3000
+      type: "negative",
+      message: "Error al generar ticket: ",
+      error,
+      position: "top",
+      timeout: 3000,
     });
   } finally {
     $q.loading.hide();
@@ -1789,7 +1912,6 @@ const terminarPedidoRompefilas = async () => {
 };
 
 const imprimirFactura = async (data) => {
-
   const factura2 = await obtenerFacturaId3(idFacturaEnc.value);
 
   const detalle = await obtenerDetalleFactura3(idFacturaEnc.value);
@@ -1800,14 +1922,14 @@ const imprimirFactura = async (data) => {
   //   cantidad: item.CANTIDAD_VENDIDA, // Cantidad Pedida
   //   descripcion: item.producto.DESCRIPCION_PROD, // Descripcion real
   //   precio: item.PRECIO_UNITARIO_VTA.toFixed(4), // Precio Unidad Venta
-  //   subtotal: item.SUBTOTAL_GENERAL.toFixed(4), // 
+  //   subtotal: item.SUBTOTAL_GENERAL.toFixed(4), //
   // }));
 
-    const itemsFactura = detalle.map((item) => ({
+  const itemsFactura = detalle.map((item) => ({
     cantidad: item.CANTIDAD_PEDIDA, // Cantidad Pedida
     descripcion: item.DESCRIPCION_PROD, // Descripcion real
     precio: item.PRECIO_UNIDAD_VENTA.toFixed(4), // Precio Unidad Venta
-    subtotal: item.SUBTOTAL_GENERAL.toFixed(4), // 
+    subtotal: item.SUBTOTAL_GENERAL.toFixed(4), //
   }));
 
   const totalItems = itemsFactura.reduce(
@@ -1901,11 +2023,9 @@ const buscarProductoEscaneado = async () => {
     return;
   }
 
-  
-
   loadingPorCodigo.value = true;
   let resultado = null;
-  
+
   // 1. buscar por código de barras
   try {
     resultado = await consultarCodigoM(codigoProducto.value, cantidad2.value);
@@ -1915,7 +2035,6 @@ const buscarProductoEscaneado = async () => {
 
   // 2. buscar por ID de producto
   if (!resultado || !resultado.producto) {
-    
     try {
       const productoDirecto = await precioReal(
         codigoProducto.value,
@@ -1954,16 +2073,16 @@ const buscarProductoEscaneado = async () => {
           PRECIO_FINAL: prod.PRECIO_FINAL,
         },
       };
-
-
     } catch (err) {
       await errorAgregarProductoConSonido(
-        `Error al buscar producto (${codigoProducto.value}) por código: ${err.message || "Error desconocido"}`
+        `Error al buscar producto (${codigoProducto.value}) por código: ${
+          err.message || "Error desconocido"
+        }`
       );
       codigoProducto.value = "";
       loadingPorCodigo.value = false;
       nextTick(() => {
-         inputCodigo.value?.focus();
+        inputCodigo.value?.focus();
       });
       return;
     }
@@ -1981,7 +2100,6 @@ const buscarProductoEscaneado = async () => {
     NUMERO_DE_PEDIDO: pedidoStore.numeroDePedido,
   };
 
-  
   mutateCrearPedidoDet(detalle, {
     onSuccess: async (data) => {
       detallesPedido.value.push(data);
@@ -1991,8 +2109,10 @@ const buscarProductoEscaneado = async () => {
       totalStore.setTotal(pedidoData.value?.TOTAL_GENERAL_PEDIDO || 0);
       // relistaDet2(); // Refrescar lista de detalles
       cantidad2.value = 1; // Resetear cantidad del modal
-      
-      mostrarNotificacionCorrectoSonido(`${detalle.PRODUCT0} agregado con éxito`);
+
+      mostrarNotificacionCorrectoSonido(
+        `${detalle.PRODUCT0} agregado con éxito`
+      );
     },
     onError: async (err) => {
       await errorAgregarProductoConSonido(
@@ -2062,7 +2182,6 @@ const agregarProductoAlPedido2 = async (producto) => {
           group: false, // se muestra de inmediato
           progress: false,
         });
-
       },
       onError: async (error) => {
         //console.error("Error al guardar producto en BD:", error);
@@ -2085,8 +2204,8 @@ const agregarProductoAlPedido2 = async (producto) => {
 const moverFocoAlSiguienteProducto = (indexActual) => {
   if (typeof indexActual !== "number" || indexActual < 0) {
     //console.warn(
-      //"Invalid index for moverFocoAlSiguienteProducto:",
-      //indexActual
+    //"Invalid index for moverFocoAlSiguienteProducto:",
+    //indexActual
     //);
     return;
   }
@@ -2132,8 +2251,9 @@ const seleccionarProducto2 = async (producto, index) => {
 
 const errorAgregarProductoConSonido = async (mensajeError) => {
   errorAgregarProducto.value = true;
-  errorAgregarProducto.value = await mostrarNotificacionErrorSonido(mensajeError);
-
+  errorAgregarProducto.value = await mostrarNotificacionErrorSonido(
+    mensajeError
+  );
 };
 
 /*
@@ -2469,6 +2589,80 @@ defineExpose({
   color: #2c3e50;
   border-radius: 12px 12px 0 0;
   box-shadow: 0 4px 20px rgba(255, 235, 59, 0.3);
+}
+
+/* ===== ESTILOS PARA LOADING Y ESTADOS ===== */
+
+/* Contenedor de loading principal */
+.loading-container {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  margin: 20px 0;
+}
+
+.loading-content {
+  text-align: center;
+  padding: 40px;
+}
+
+.loading-text .text-h6 {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+/* Loading de refetch */
+.refetch-loading {
+  margin-bottom: 16px;
+}
+
+.refetch-loading .q-banner {
+  border-left: 4px solid #1976d2;
+  font-weight: 500;
+}
+
+/* Contenedor de error */
+.error-container {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  border-radius: 12px;
+  margin: 20px 0;
+  border: 1px solid #f44336;
+}
+
+.error-content {
+  text-align: center;
+  padding: 40px;
+}
+
+.error-text .text-h6 {
+  font-weight: 600;
+}
+
+.error-text .q-btn {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* Botón de refresh */
+.refresh-btn {
+  transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+  transform: rotate(180deg);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Contenedor del buscador */
