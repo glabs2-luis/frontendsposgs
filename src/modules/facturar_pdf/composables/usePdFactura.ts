@@ -66,11 +66,11 @@ const generarFacturaPDF = async (data: DataFactura): Promise<boolean> => {
     const datosEmpresa = await useDatosFel().obtenerDatosEmpresa(1);
     const datosEstablecimiento = await useDatosFel().obtenerDatosEstablecimiento(1);
 
-    const nombreComercial = datosEmpresa.NOMBRE_COMERCIAL;
+    const nombreComercial = datosEstablecimiento.NOMBRE_COMERCIAL;
     const razonSocial = datosEmpresa.NOMBRE_EMISOR;
-    const direccionEmpresa = datosEmpresa.DIRECCION_EMISOR;
+    const direccionEmpresa = datosEstablecimiento.DIRECCION_ESTABLECIMIENTO;
     const nitEmpresa = datosEmpresa.NIT_EMISOR;
-    const telefonoEmpresa = datosEmpresa.TELEFONO;
+    const telefonoEmpresa = datosEstablecimiento.TELEFONO_ESTABLECIMIENTO;
     const documentoTipo = "DOCUMENTO TRIBUTARIO ELECTRONICO";
     const certificadorNombre = "INFILE, S.A.";
     const certificadorNit = "12521337";
