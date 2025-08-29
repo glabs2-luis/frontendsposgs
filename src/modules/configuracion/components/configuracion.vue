@@ -394,14 +394,21 @@ import {
 } from "@/common/helper/notification";
 
 import { DataFactura } from "@/modules/facturar_pdf/interfaces/pdfInterface";
+import { useStoreSucursal } from "@/stores/sucursal";
 import { usePdfFactura } from "@/modules/facturar_pdf/composables/usePdFactura";
+
+
 const { generarFacturaPDF } = usePdfFactura();
 // Store
 const configuracionStore = useConfiguracionStore();
-const { seriesSucursal } = useSeries();
+
 
 // sync
 import { useSync } from "@/modules/sync/composables/useSync";
+import { u } from "@tanstack/vue-query/build/legacy/queryClient-CAHOJcvF";
+const { seriesSucursal } = useSeries();
+const storeSucursal = useStoreSucursal();
+
 const {
   refetchArchivosCreados,
   archivosTransferidos,
@@ -414,9 +421,11 @@ const {
 } = useSync();
 
 // Parámetros
-const idSucursal = ref(1);
+const idSucursal = ref(0);
 const serie = ref(configuracionStore.serieSeleccionada || "");
 const conexionMensaje = ref(false);
+
+idSucursal.value = Number(storeSucursal.idSucursal)
 
 const { data: series, isLoading, error } = seriesSucursal(idSucursal.value);
 
