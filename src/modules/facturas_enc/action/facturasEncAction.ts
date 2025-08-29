@@ -144,7 +144,7 @@ export const obtenerFacturaNumeroSerieAction = async (serie: string, numero: num
 
   export const actualizarContingenciaAction = async (id: number): Promise<FacturaEnc> => {
     try {
-      const { data } = await posApi.patch(`/facturas-enc/contingencia`, {ID_FACTURA_ENC: id, CONTINGENCIA: true})
+      const { data } = await posApi.patch(`/facturas-enc/contingencia`, {ID_FACTURA_ENC: Number(id), ES_CONTINGENCIA: true})
       return data
     } catch (error) {
       const message = getAxiosErrorMessage(error, "Hubo un error actualizando la contingencia")

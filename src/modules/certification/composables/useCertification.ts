@@ -19,7 +19,7 @@ export const useCertification = () => {
         queryClient.invalidateQueries({ queryKey: ["certificar"] });
       },
       onError: (error: Error) => {
-        showErrorNotification("Error al certificar factura", error.message);
+       showErrorNotification("Error al certificar factura", error.message);
       },
     });
 
