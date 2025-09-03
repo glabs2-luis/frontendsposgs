@@ -81,6 +81,7 @@
           label="Código del Producto"
           outlined
           dense
+          @update:model-value="busquedaAutomatica"
           @keyup.enter="buscarProductoEscaneado"
           class="col-12 col-md-5"
           :disable="errorAgregarProducto"
@@ -146,6 +147,20 @@
             </div>
           </div>
         </div>
+
+        <!-- Descripcion del producto y subtotal Calculado -->
+        <div v-if="nuevosDatos">
+          <span style="color: black; font-weight: bold;">
+            {{ nuevosDatos.descripcion }}
+          </span> 
+          <span style="color: green; font-weight: bold; font-size: 16px;">
+            {{  ` - Precio: Q.  ${nuevosDatos.precio.toFixed(2)} - ` }}
+          </span>
+          <span style="color: blue; font-weight: bold; font-size: 16px;">
+            {{  `  Subtotal: Q.  ${nuevosDatos.subtotal.toFixed(2)}` }}
+          </span>
+        </div>
+
       </div>
     </q-card>
 
@@ -183,6 +198,7 @@
               </div>
             </div>
             <div class="col-auto row items-center q-gutter-sm">
+              
               <!-- Botón de refresh -->
               <q-btn
                 icon="refresh"
@@ -327,7 +343,9 @@
               flat
               bordered
               separator="cell"
-              :rows-per-page-options="[10, 20, 50, 100]"
+              virtual-scroll
+              :virtual-scroll-item-size="60"
+              :rows-per-page-options="[50, 100, 200]"
               :wrap-cells="true"
             >
               <!-- Columna personalizada para código -->
@@ -806,7 +824,6 @@
     <!-- Modal de cantidad-->
     <q-dialog
       v-model="modalCantidad"
-      persistent
       transition-show="fade"
       transition-hide="fade"
       @hide="volverAFocusInput"
@@ -860,6 +877,7 @@ import {
   showErrorNotification,
   showSuccessNotification,
   showConfirmationInsideModal,
+  showConfirmationInsideModal2,
   showErrorNotificationInside,
   showSuccessNotificationInside,
   runWithLoading,
@@ -890,6 +908,7 @@ import {
 } from "@/modules/pedidos_enc/action/pedidosEncAction";
 import { useClienteStore } from "@/stores/cliente";
 import { usePdfTicket } from "@/modules/ticket_pdf/composable/useTicket";
+import { hideLoading } from '../../../common/helper/notification';
 
 /*
 ==========================================================
@@ -1069,6 +1088,10 @@ const { consultarCodigo, consultarCodigoM } = useCodigo();
 const totalStore = useTotalStore();
 const userStore = useUserStore();
 const queryClient = useQueryClient();
+const descripcionProd = ref('')
+const subtotalCalculado = ref(0)
+const espera = ref(null) // guarda el timeout
+const nuevosDatos = ref(null) // Mostrar info del producto
 
 // Paginación del catálogo
 const paginacionCatalogo = ref({
@@ -1238,13 +1261,12 @@ const productosFiltrados2 = computed(() => {
 
   return productosUnicos.value.filter((p) => {
     const campos = `${p.DESCRIPCION_PROD || ""} ${p.DESCRIPCION_MARCA || ""} ${
-      p.PRODUCT0 || ""
-    }`.toLowerCase();
+      p.PRODUCT0 || "" }${p.CODIGO_BARRA || ""}   /`.toLowerCase();
     return palabras.every((palabra) => campos.includes(palabra));
   });
 });
 
-// mapear los productos para mostrar un registro en la tabla
+// Mapear los productos para mostrar un registro en la tabla
 const productosUnicos = computed(() => {
   if (!todosProductos.value) return [];
 
@@ -1279,6 +1301,55 @@ const productosUnicos = computed(() => {
                       FUNCIONES
 ==========================================================
 */
+
+// Busqueda Automatica
+const busquedaAutomatica = () => {
+
+  if (espera.value) clearTimeout(espera.value); // limpiar tiempo
+
+  if (codigoProducto.value.length > 0) {
+    espera.value = setTimeout(() => {
+      buscarDescripcion();
+    }, 500);
+  }
+}
+
+// Mostrar la descripcion del producto
+const buscarDescripcion = async () => {
+  try {
+    const resultado = await precioReal(codigoProducto.value, cantidad2.value)
+
+    const prod = Array.isArray(resultado) ? resultado[0] : resultado
+
+    if (!prod) {
+      nuevosDatos.value = null
+      return
+    }
+
+    const nuevaDescripcion = await obtenerProductosId(codigoProducto.value)
+    //console.log('esta es la nueva descripcion: ', nuevaDescripcion)
+
+    // Guardar en variable reactiva
+    nuevosDatos.value = {
+      codigo: codigoProducto.value,
+      descripcion: nuevaDescripcion.DESCRIPCION_PROD,
+      precio: prod.PRECIO_FINAL,
+      subtotal: prod.PRECIO_FINAL * cantidad2.value
+    }
+
+    //console.log('Estos son los nuevos datos', nuevosDatos.value)
+  } catch (error) {
+    nuevosDatos.value = null
+  }
+}
+
+// Si se actualiza cantidad
+watch(cantidad2, async () => {
+  if(codigoProducto.value.length > 0){
+  await buscarDescripcion()
+  }
+}, )
+
 const cantidadIngresada = (producto) => {
   if (!producto.CANTIDAD_PEDIDA || producto.CANTIDAD_PEDIDA <= 0) {
     showErrorNotification("Cantidad", "Ingrese una cantidad válida");
@@ -1299,7 +1370,7 @@ const refetchProductosFactura = async () => {
 // Confirmgar la contigencia
 const confirmarContingencia = async () => {
   if (contingencia.value) {
-    const confirmado = await showConfirmationInsideModal(
+    const confirmado = await showConfirmationInsideModal2(
       "Confirmar Contingencia",
       "¿Estás seguro de que deseas activar el modo de contingencia?"
     );
@@ -1498,7 +1569,7 @@ const usarMultiplicador = (e) => {
 
 // cerrar modal de cantidad con enter
 const actualizarCantidad = () => {
-  if (cantidad2.value > 1) {
+  if (cantidad2.value) {
     modalCantidad.value = false;
     return;
   }

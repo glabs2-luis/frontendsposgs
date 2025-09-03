@@ -3,6 +3,7 @@ import { createPersistedState } from 'pinia-plugin-persistedstate'
 
 export const useClienteStore = defineStore("cliente", {
   state: () => ({
+    idCliente: '',
     documento: '',
     nombre: '',
     direccion: '',
@@ -11,12 +12,14 @@ export const useClienteStore = defineStore("cliente", {
   }),
   actions: {
     setCliente(datos: {
+      idCliente: number,
       documento: string,
       nombre: string,
       direccion: string,
       telefono: string,
       email: string
     }) {
+      this.idCliente = datos.idCliente
       this.documento = datos.documento
       this.nombre = datos.nombre
       this.direccion = datos.direccion
@@ -24,6 +27,7 @@ export const useClienteStore = defineStore("cliente", {
       this.email = datos.email
     },
     limpiarCliente() {
+      this.idCliente = '',
       this.documento = ''
       this.nombre = ''
       this.direccion = ''

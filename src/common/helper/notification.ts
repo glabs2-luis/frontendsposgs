@@ -150,6 +150,40 @@ export const showConfirmationInsideModal = async (
   return result.isConfirmed;
 };
 
+// Mensaje de confirmacion dentro de un modal
+export const showConfirmationInsideModal2 = async (
+  title: string,
+  text?: string
+): Promise<boolean> => {
+  const result = await Swal.fire({
+    title,
+    text,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#4CAF50",
+    cancelButtonColor: "Red",
+    confirmButtonText: "Sí",
+    cancelButtonText: "Cancelar",
+    customClass: {
+      popup: "swal-popup-inside-modal",
+    },
+    heightAuto: false,
+    focusConfirm: true,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: () => {
+      const btn = Swal.getConfirmButton();
+      btn?.focus();
+      const container = document.querySelector(
+        ".swal2-container"
+      ) as HTMLElement;
+      if (container) container.style.zIndex = "9999";
+    },
+  });
+
+  return result.isConfirmed;
+};
+
 // Loadings
 export const showLoading = (message = 'Procesando…', insideModal = false) => {
   try {

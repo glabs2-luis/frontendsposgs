@@ -11,7 +11,7 @@
               unelevated
               spread
               no-caps
-              toggle-color="indigo"
+              toggle-color="yellow-9"
               color="grey-1"
               text-color="black"
               :options="[
@@ -483,6 +483,7 @@ import {
   showErrorNotification,
   showSuccessNotification,
   showConfirmationInsideModal,
+  showConfirmationInsideModal2,
   showErrorNotificationInside,
 } from "@/common/helper/notification";
 import ModalEditarCliente from "@/modals/modalEditarCliente.vue";
@@ -506,6 +507,7 @@ import { PedidosEnc } from "@/modules/pedidos_enc/interfaces/pedidoEncInterface"
 import { usePdfCotizacion } from "@/modules/cotizacion_pdf/composable/useCotizacion";
 import type { DataCotizacion } from "@/modules/cotizacion_pdf/interfaces/cotizacion.interface";
 import { obtenerDetallePedido, obtenerPedidoEncPorNumero } from "@/modules/pedidos_enc/action/pedidosEncAction";
+import { loginRoutes } from '../../login/router/index';
 
 const { ObtenerBodegasId2 } = useBodegas();
 const storeSucursal = useStoreSucursal();
@@ -661,7 +663,7 @@ const anularPedido = async (pedido: PedidosEnc) => {
 const continuarPedido = async (pedido) => {
   const tipoPedido = pedido.ESTADO_PEDIDO === "P" ? "pedido" : "cotización";
 
-  const confirmado = await showConfirmationInsideModal(
+  const confirmado = await showConfirmationInsideModal2(
     `Continuar ${tipoPedido}`,
     `¿Está seguro que desea continuar con ${
       tipoPedido === "pedido" ? "el" : "la"
@@ -687,6 +689,7 @@ const continuarPedido = async (pedido) => {
 
   // set cliente
   clienteStore.setCliente({
+    idCliente: pedido.CODIGO_DE_CLIENTE,
     documento: pedido.NIT_A_FACTURAR,
     nombre: pedido.NOMBRE_A_FACTURAR,
     direccion: pedido.DIRECCION_FACTURAR,
@@ -993,7 +996,7 @@ const crearPedido = () => {
     ID_SUCURSAL: Number(storeSucursal.idSucursal),
     USUARIO_INGRESO_PEDI: userStore.nombreVendedor.substring(0, 10),
     CODIGO_VENDEDOR: userStore.codigoVendedor,
-    CODIGO_DE_CLIENTE: obtenerConfiguracionPos.value.CODIGO_CLIENTE_CF, // Cliente Ticket
+    CODIGO_DE_CLIENTE: nit === 'CF' ? obtenerConfiguracionPos.value.CODIGO_CLIENTE_CF : Number(clienteStore.idCliente),
     ESTADO_PEDIDO: estadoPedido.value === "pedido" ? "P" : "C",
   };
 
@@ -1017,7 +1020,7 @@ const crearPedido = () => {
       mostrarCardPedidoCreado.value = true;
       mostrarCardTotal.value = true;
 
-      // notificaccion de creado
+      // Notificaccion de creado
       $q.notify({
         type: "success",
         message: `${estadoPedido.value} N° ${data.NUMERO_DE_PEDIDO} creado con éxito`,
@@ -1052,6 +1055,7 @@ const colocarCF = async () => {
 
   if (cf.data) {
     clienteStore.setCliente({
+      idCliente: cf.data.ID_ACLIENTE,
       documento: cf.data.NIT || "",
       nombre: cf.data.NOMBRE || "",
       direccion: cf.data.DIRECCION || "",
@@ -1076,6 +1080,8 @@ const { data, DatosSat2 } = useValidation(
   empresa.value
 );
 
+const id = ref(0)
+
 const buscarClienteDPINIT2 = async () => {
   try {
     // Valor que se ingresa es doc
@@ -1089,14 +1095,18 @@ const buscarClienteDPINIT2 = async () => {
     const tipo = tipoDocumento.value;
     const clienteBD = await obtenerClientePorDocumento(doc, tipo);
 
+    //console.log('encontro cliente en la db: ', clienteBD)
+
     if (clienteBD) {
       clienteStore.setCliente({
+        idCliente: clienteBD.ID_ACLIENTE,
         documento: clienteBD.NIT || "",
         nombre: clienteBD.NOMBRE || "",
         direccion: clienteBD.DIRECCION || "",
         telefono: clienteBD.TELEFONO || "",
         email: clienteBD.CORREO_ELECTRONICO || "",
       });
+      
       return;
     }
 
@@ -1144,10 +1154,17 @@ const buscarClienteDPINIT2 = async () => {
       }
     }
 
-    // 4) Si no hay en BD y SAT no devolvió nombre -> abrir modal solo con NIT
+    // 4) Si no hay en BD y SAT no devolvió nombre -> abrir modal solo con NIT o DPI
+    if(tipoDocumento.value==='nit'){
+      clienteTemp.value.NIT = doc
+    } else if (tipoDocumento.value==='dpi'){
+      clienteTemp.value.DPI = doc
+    }
+
+    //clienteTemp.value.NIT = doc;
+    //clienteTemp.value.DIRECCION = "Ciudad";
     abrirModalCliente.value = true;
-    clienteTemp.value.NIT = doc;
-    clienteTemp.value.DIRECCION = "Ciudad";
+
   } catch (err) {
     abrirModalCliente.value = true;
     $q.notify({
@@ -1177,6 +1194,7 @@ const buscarClienteDPINIT = async () => {
 
   if (clienteEncontrado) {
     clienteStore.setCliente({
+      idCliente: clienteEncontrado.ID_ACLIENTE,
       documento: clienteEncontrado.NIT || "",
       nombre: clienteEncontrado.NOMBRE || "",
       direccion: clienteEncontrado.DIRECCION || "",
@@ -1216,6 +1234,7 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
   mutateCrearCliente(payload, {
     onSuccess: (creado: any) => {
       clienteStore.setCliente({
+        idCliente: creado.ID_ACLIENTE,
         documento: creado.DPI || creado.NIT || "",
         nombre: creado.NOMBRE,
         direccion: creado.DIRECCION,

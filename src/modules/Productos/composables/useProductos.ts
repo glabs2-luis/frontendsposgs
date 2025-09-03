@@ -15,15 +15,11 @@ export const useProductos = () => {
   const queryClient = useQueryClient();
 
   //obtener todos los Productos
-  const {
-    data: todosProductos,
-    refetch: refetchTodosProductos,
-    isLoading: loadingProductos,
-    isFetching: fetchingProductos,
-    error: errorProductos,
-  } = useQuery({
+  const { data: todosProductos, refetch: refetchTodosProductos, isLoading: loadingProductos, isFetching: fetchingProductos, error: errorProductos } = useQuery({
     queryKey: ["productos"],
     queryFn: () => obtenerProductosAction(),
+    staleTime: 1000 * 60 * 60, // 60 minutos
+    refetchOnWindowFocus: false,
   });
 
   // obtener  productos por Id

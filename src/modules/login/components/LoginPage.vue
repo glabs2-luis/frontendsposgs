@@ -49,7 +49,9 @@
               </q-card-section>
 
               <q-card-section class="login-form">
-                <q-input
+
+                <!-- Habilita usuario -->
+                <!-- <q-input
                   ref="focusUsuario"
                   v-model="usuario"
                   label="Usuario"
@@ -57,13 +59,14 @@
                   dense
                   class="input-campo"
                   color="primary"
-                />
+                /> -->
 
                 <q-input
                   ref="focusContra"
                   v-model="password"
                   label="Contraseña"
                   :type="isPwd ? 'password' : 'text'"
+                  autofocus
                   outlined
                   dense
                   class="input-campo"
@@ -89,11 +92,12 @@
                   color="primary"
                 />
 
-                <q-checkbox
+                <!-- Recordar Usuario-->
+                <!-- <q-checkbox
                   v-model="recordarUsuario"
                   label="Recordar usuario"
                   class="q-mb-md"
-                />
+                /> -->
 
                 <q-btn
                   label="Iniciar sesión"
@@ -157,7 +161,7 @@ const mostrarBodega = async () => {
       bodega.value.DESCRIPCION_BODEGA,
       bodega.value.ID_SUCURSAL
     )
-    //console.log(bodega.value)
+
   } else {
     showErrorNotification(
       "Error",
@@ -170,7 +174,7 @@ const mostrarBodega = async () => {
 const realizarLogin = () => {
   loginMutation(
     {
-      USUARIO: usuario.value,
+      USUARIO: password.value,
       PASSWORD: password.value,
     },
     {
@@ -218,7 +222,7 @@ onMounted(async () => {
     });
   } else {
     nextTick(() => {
-      focusUsuario.value.focus();
+      //focusUsuario.value.focus();
     });
   }
 });

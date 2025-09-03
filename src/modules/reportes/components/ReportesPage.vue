@@ -77,7 +77,7 @@
             <div class="col-auto q-ma-md">
               <q-select
                 v-model="serie"
-                :options="seriesOptions"
+                :options="seriesOptions2"
                 label="Seleccionar Serie"
                 option-label="SERIE"
                 option-value="SERIE"
@@ -182,26 +182,29 @@ import { obtenerTipoVendedor } from "@/modules/notas_credito/action/useNotaCredi
 import { useFacturasFel } from "@/modules/pendientes/composables/useFelPendientes";
 import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
-import { showConfirmationInsideModal } from "../../../common/helper/notification";
+import { useStoreSucursal } from "@/stores/sucursal";
+import { useConfiguracionStore } from "@/stores/serie";
 
+const storeSerie = useConfiguracionStore()
 const $q = useQuasar();
-
+const storeSucursal = useStoreSucursal();
 const { facturasErrores, refetchFacturasErrores } = useFacturasFel();
 const { obtenerFacturasPorFecha } = useFacturasEnc();
-const { seriesSucursal } = useSeries();
+const { seriesSucursal, obtenerSeries } = useSeries();
 const mostrarPassword = ref(false);
 const accesoPermitido = ref(false);
 const mostrarModal = ref(false);
 const password = ref("");
 let fecha = ref<{ from: string; to?: string }>({ from: "" });
-const { data: series } = seriesSucursal(1);
 const serie = ref("");
 const rangoFechas = ref<{ from: string; to?: string }>({ from: "" });
 let totalCorte = ref(0); // Calcular total
 const ticketRef = ref<HTMLElement | null>(null); // Para impresion
 const listaFacturas = ref<FacturaEnc[]>([]);
-
 const router = useRouter();
+const serie2 = ref('')
+
+serie2.value = storeSerie.serieSeleccionada
 
 // Configuración en español para el calendario
 const localeEspanol = {
@@ -247,6 +250,7 @@ const localeEspanol = {
 
 // Mostrar el modal al iniciar la página
 onMounted(() => {
+
   if (facturasErrores.value) {
     $q.notify({
       icon: "warning",
@@ -312,8 +316,10 @@ const formatearFechaGT = (fecha: string) =>
 
 // Series Disponibles
 const seriesOptions = computed(() => {
-  return series.value?.map((item: any) => item.SERIE) || [];
+  return obtenerSeries.value?.map((item: any) => item.SERIE) || [];
 });
+
+const seriesOptions2 = [serie2.value]
 
 // Funcion para buscar Facturas
 const buscarFacturas = async () => {
@@ -324,14 +330,6 @@ const buscarFacturas = async () => {
   }
 
   try {
-    //console.log('fecha antes', rangoFechas.value.from)
-    //console.log('fecha despues', rangoFechas.value.to)
-
-    // Validar is no hay fecha still pending
-    //   if (rangoFechas.value.from ===  && !rangoFechas.value.to) {
-    //   showErrorNotification('Rango de Fechas', 'Debe seleccionar un rango de fechas válido')
-    //   return
-    // }
 
     const buscar = {
       fecha_inicial: new Date(rangoFechas.value.from),
@@ -343,21 +341,27 @@ const buscarFacturas = async () => {
       (buscar.fecha_inicial = new Date(valorUnaFecha.value + "T00:00:00")),
         (buscar.fecha_final = new Date(valorUnaFecha.value + "T23:59:59"));
     }
-
-    const facturas = await runWithLoading(
-      async () =>
-        await obtenerFacturasPorFecha(
+    
+    $q.loading.show({
+    message: `Buscando Facturas `,
+    spinnerColor: 'green',
+    spinnerSize: 50,
+  });
+    
+    const facturas = await obtenerFacturasPorFecha(
           buscar.fecha_inicial,
           buscar.fecha_final,
           buscar.serie
-        ),
-      "Cargando Facturas"
-    );
+        )
+
+    $q.loading.hide()
 
     listaFacturas.value = (facturas as any[]) || [];
 
     // Calcular total
   } catch (error) {
+    
+    $q.loading.hide()
     const message = error;
     showErrorNotification("Error", message);
   }

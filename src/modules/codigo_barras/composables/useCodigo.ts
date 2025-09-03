@@ -3,6 +3,7 @@ import { obtenerCodigoBarrasAction } from '../action/codigoAction'
 import { showSuccessNotification, showErrorNotification } from '@/common/helper/notification'
 import { Codigo } from '../interfaces/codigoInterface';
 import { getAxiosErrorMessage } from '@/common/helper/geterrordb';
+import { warn } from 'vue';
 
 export const useCodigo = () => {
     
@@ -25,7 +26,7 @@ export const useCodigo = () => {
       return data
     } catch (error) {
       const message = getAxiosErrorMessage(error, 'El producto no tiene codigo de barras')
-      throw new Error(message)
+      throw new warn(message)
     }
   }
 
