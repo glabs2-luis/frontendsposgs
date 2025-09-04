@@ -1,41 +1,60 @@
 <template>
+  <!-- Modal de contraseña para bajar precios -->
+  <PasswordModal
+    ref="passwordModalRef"
+    title="Bajar precio"
+    label="Clave del encargado"
+    @success="onPasswordSuccess"
+    @cancel="onPasswordCancel"
+  />
+
   <q-card flat bordered class="productos-table-card">
     <q-separator />
     <!-- FLOATIN ACTION BUTTONS PARA ASIGAR TAMAÑO DE LETRA Y RECARGAR LOS DETALLES DEL PEDIDO -->
-    <q-fab 
-      color="orange" 
-      icon="add" 
-      direction="up" 
+    <q-fab
+      color="orange"
+      icon="add"
+      direction="up"
       class="q-mb-md fixed-bottom-right"
-      style="bottom:30px; right: 30px;" 
+      style="bottom: 30px; right: 30px"
+    >
+      <q-fab-action
+        color="orange"
+        @click="forzarActualizacionTabla"
+        icon="sync"
       >
-      <q-fab-action 
-        color="orange" 
-        @click="forzarActualizacionTabla" 
-        icon="sync" 
-      >
-        <q-tooltip anchor="center left" self="bottom middle" transition-show="scale" transition-hide="scale">
-          Actualizar tabla de detalles del pedido actual 
+        <q-tooltip
+          anchor="center left"
+          self="bottom middle"
+          transition-show="scale"
+          transition-hide="scale"
+        >
+          Actualizar tabla de detalles del pedido actual
         </q-tooltip>
       </q-fab-action>
       <div class="q-pa-sm bg-white q-rounded shadow-2">
-          <q-input
-            v-model.number="tamanioLetra"
-            type="number"
-            label="Cantidad"
-            dense
-            outlined
-            style="width: 100px"
+        <q-input
+          v-model.number="tamanioLetra"
+          type="number"
+          label="Cantidad"
+          dense
+          outlined
+          style="width: 100px"
+        >
+          <q-tooltip
+            anchor="center left"
+            self="bottom middle"
+            transition-show="scale"
+            transition-hide="scale"
           >
-            <q-tooltip anchor="center left" self="bottom middle" transition-show="scale" transition-hide="scale">
-              Modificar tamaño de letra
-            </q-tooltip>
-          </q-input>
-        </div>
+            Modificar tamaño de letra
+          </q-tooltip>
+        </q-input>
+      </div>
     </q-fab>
     <q-card-section class="table-section">
       <q-table
-        :rows="listaProductosPedido||[]"
+        :rows="listaProductosPedido || []"
         :columns="columnas"
         row-key="ID_PEDIDO_DET"
         dense
@@ -51,58 +70,153 @@
          -->
         <!-- Filas  -->
         <!-- Descripción editable con  (AUX -> PROD) -->
-        <template v-slot:body-cell-DESCRIPCION_PROD="props" >
-            <q-td :props="props" :style="'font-size:' + tamanioLetra + 'px;'">
-              
-              {{ descMostrar(props.row) }}
-                <q-tooltip anchor="bottom middle" self="bottom middle" transition-show="scale" transition-hide="scale">
-                  {{ props.row.DESCRIPCION_PROD_AUX || props.row.DESCRIPCION_PROD }}
-                  
-                </q-tooltip>
-              <!-- Descripción editable -->
-                <!-- <div class="descripcion-prod row items-center no-wrap cursor-pointer"> -->
-                <q-popup-edit
-                  style="width: 500px;"
-                  :cover="false"
-                  :model-value="props.row.DESCRIPCION_PROD_AUX || props.row.DESCRIPCION_PROD"
-                  buttons
-                  label-set="Guardar"
-                  label-cancel="Cancelar"
-                  :disable="savingDescId === props.row.ID_PEDIDO_DET"
-                  @save="(val) => onGuardarDescripcion(props.row, val)"
-                  v-slot="scope"
-                >
-                    <q-input
-                      type="text"
-                      v-model="scope.value"
-                      clearable
-                      autogrow
-                      dense
-                      autofocus
-                      counter
-                      :maxlength="200"
-                      @focus="(e) => (e.target as HTMLInputElement).select()"
-                      @keyup.enter.stop="onGuardarDescripcion(props.row, scope.value)"
-                    />
-                </q-popup-edit>
+        <template v-slot:body-cell-DESCRIPCION_PROD="props">
+          <q-td :props="props" :style="'font-size:' + tamanioLetra + 'px;'">
+            {{ descMostrar(props.row) }}
+            <q-tooltip
+              anchor="bottom middle"
+              self="bottom middle"
+              transition-show="scale"
+              transition-hide="scale"
+            >
+              {{ props.row.DESCRIPCION_PROD_AUX || props.row.DESCRIPCION_PROD }}
+            </q-tooltip>
+            <!-- Descripción editable -->
+            <!-- <div class="descripcion-prod row items-center no-wrap cursor-pointer"> -->
+            <q-popup-edit
+              style="width: 500px"
+              :cover="false"
+              :model-value="
+                props.row.DESCRIPCION_PROD_AUX || props.row.DESCRIPCION_PROD
+              "
+              :disable="savingDescId === props.row.ID_PEDIDO_DET"
+              @save="(val) => onGuardarDescripcion(props.row, val)"
+              v-slot="scope"
+            >
+              <q-input
+                type="text"
+                v-model="scope.value"
+                clearable
+                autogrow
+                dense
+                autofocus
+                counter
+                :maxlength="200"
+                @focus="(e) => (e.target as HTMLInputElement).select()"
+                @keyup.enter="onGuardarDescripcion(props.row, scope.value)"
+                @keyup.esc="scope.set()"
+              />
+            </q-popup-edit>
+          </q-td>
+        </template>
+        <!-- CANTIDAD PEDIDA -->
+        <template v-slot:body-cell-CANTIDAD_PEDIDA="props">
+          <q-td
+            :props="props"
+            :style="'font-size:' + tamanioLetra + 'px;'"
+            data-editable="true"
+          >
+            {{ props.row.CANTIDAD_PEDIDA }}
+            <q-tooltip
+              anchor="bottom middle"
+              self="bottom middle"
+              transition-show="scale"
+              transition-hide="scale"
+            >
+              Cantidad: {{ props.row.CANTIDAD_PEDIDA }}
+            </q-tooltip>
 
-            </q-td>
-          </template>
+            <!-- Edición de cantidad -->
+            <q-popup-edit
+              style="width: 200px"
+              :cover="false"
+              :model-value="props.row.CANTIDAD_PEDIDA"
+              :disable="savingCantidadId === props.row.ID_PEDIDO_DET"
+              @save="(val) => onGuardarCantidad(props.row, val)"
+              v-slot="scope"
+            >
+              <q-input
+                type="number"
+                v-model.number="scope.value"
+                clearable
+                dense
+                autofocus
+                min="1"
+                step="1"
+                label="Cantidad"
+                @focus="(e) => (e.target as HTMLInputElement).select()"
+                @keyup.enter="onGuardarCantidad(props.row, scope.value)"
+                @keyup.esc="scope.set()"
+              />
+            </q-popup-edit>
+          </q-td>
+        </template>
+
         <!-- PRECIO UNITARIO -->
         <template v-slot:body-cell-PRECIO_UNIDAD_VENTA="props">
-          <q-td :props="props" :style="'font-size:' + tamanioLetra + 'px;'">
+          <q-td
+            :props="props"
+            :style="'font-size:' + tamanioLetra + 'px;'"
+            data-editable="true"
+          >
             {{ formatCurrency(Number(props.row.PRECIO_UNIDAD_VENTA), 4) }}
-            <q-tooltip anchor="bottom middle" self="bottom middle" transition-show="scale" transition-hide="scale">
-              {{ formatCurrency(Number(props.row.PRECIO_UNIDAD_VENTA), 4) }}    
+            <q-tooltip
+              anchor="bottom middle"
+              self="bottom middle"
+              transition-show="scale"
+              transition-hide="scale"
+              class="precio-auth-tooltip"
+            >
+              <div>
+                <div class="text-caption q-mt-xs">
+                  ⚠️ Bajar precio requiere autorización
+                </div>
+              </div>
             </q-tooltip>
+
+            <!-- Edición de precio -->
+            <q-popup-edit
+              style="width: 200px"
+              :cover="false"
+              :model-value="props.row.PRECIO_UNIDAD_VENTA"
+              :disable="savingPrecioId === props.row.ID_PEDIDO_DET"
+              v-slot="scope"
+            >
+              <q-input
+                type="number"
+                v-model.number="scope.value"
+                clearable
+                dense
+                autofocus
+                min="0"
+                step="0.0001"
+                label="Precio Unitario"
+                prefix="Q"
+                @focus="(e) => (e.target as HTMLInputElement).select()"
+                @keyup.enter="onGuardarPrecio(props.row, scope.value)"
+                @keyup.esc="scope.set()"
+              />
+            </q-popup-edit>
           </q-td>
         </template>
         <!-- SUBTOTAL -->
         <template v-slot:body-cell-SUBTOTAL_GENERAL="props">
           <q-td :props="props" :style="'font-size:' + tamanioLetra + 'px;'">
-            {{ formatCurrency(props.row.SUBTOTAL_VENTAS + props.row.MONTO_IVA, 2) }}
-            <q-tooltip anchor="bottom middle" self="bottom middle" transition-show="scale" transition-hide="scale">
-              {{ formatCurrency(props.row.SUBTOTAL_VENTAS + props.row.MONTO_IVA, 2) }}
+            {{
+              formatCurrency(props.row.SUBTOTAL_VENTAS + props.row.MONTO_IVA, 2)
+            }}
+            <q-tooltip
+              anchor="bottom middle"
+              self="bottom middle"
+              transition-show="scale"
+              transition-hide="scale"
+            >
+              {{
+                formatCurrency(
+                  props.row.SUBTOTAL_VENTAS + props.row.MONTO_IVA,
+                  2
+                )
+              }}
             </q-tooltip>
           </q-td>
         </template>
@@ -154,7 +268,15 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, computed, watch, watchEffect, ref, toRef, onMounted } from "vue";
+import {
+  nextTick,
+  computed,
+  watch,
+  watchEffect,
+  ref,
+  toRef,
+  onMounted,
+} from "vue";
 import { useQuasar } from "quasar";
 import type { QTableColumn } from "quasar";
 
@@ -164,31 +286,36 @@ import { usePedidoStore } from "@/stores/pedido";
 import { useTotalStore } from "@/stores/total";
 import useFormat from "@/common/composables/useFormat";
 
-import { showConfirmationDialog, showErrorNotification, } from "@/common/helper/notification";
+import {
+  showConfirmationDialog,
+  showErrorNotification,
+} from "@/common/helper/notification";
+import PasswordModal from "@/common/components/PasswordModal.vue";
 
 // PROPS
 interface Props {
   onProductoEliminado?: () => void;
   PedidoId?: number;
 }
-const props = defineProps<Props>()
-const pedidoId = toRef(props, 'PedidoId')
-const tamanioLetra = ref(16);                                 // Tamaño de letra para la descripción, precio y subtotal
+const props = defineProps<Props>();
+const pedidoId = toRef(props, "PedidoId");
+const tamanioLetra = ref(16); // Tamaño de letra para la descripción, precio y subtotal
 
 // COLUMNAS PARA LA TABLA
 const columnas: QTableColumn[] = [
-  { 
-    name:"PRODUCT0", 
-    label: "Código", 
-    field: "PRODUCT0", 
-    align: "center" ,
-    style: 'width: 100px; min-width: 100px; max-width: 100px;',
+  {
+    name: "PRODUCT0",
+    label: "Código",
+    field: "PRODUCT0",
+    align: "center",
+    style: "width: 100px; min-width: 100px; max-width: 100px;",
   },
   {
     name: "DESCRIPCION_PROD",
     label: "Descripción",
-    field: (row) => (row?.DESCRIPCION_PROD_AUX?.trim() || row?.DESCRIPCION_PROD), 
-    style: 'max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+    field: (row) => row?.DESCRIPCION_PROD_AUX?.trim() || row?.DESCRIPCION_PROD,
+    style:
+      "max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
     align: "left",
   },
   {
@@ -196,7 +323,8 @@ const columnas: QTableColumn[] = [
     label: "Cantidad",
     field: "CANTIDAD_PEDIDA",
     align: "center",
-    style: 'width: 80px; min-width: 80px; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+    style:
+      "width: 80px; min-width: 80px; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
   },
   {
     name: "PRECIO_UNIDAD_VENTA",
@@ -204,42 +332,60 @@ const columnas: QTableColumn[] = [
     field: "PRECIO_UNIDAD_VENTA",
     format: (val, row) => formatCurrency(Number(row.PRECIO_UNIDAD_VENTA), 4),
     align: "center",
-    style: 'width: 150px; min-width: 150px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+    style:
+      "width: 150px; min-width: 150px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
   },
   {
     name: "SUBTOTAL_GENERAL",
     label: "Subtotal",
     field: "SUBTOTAL_GENERAL",
-    format: (val, row) => formatCurrency(row.SUBTOTAL_VENTAS + row.MONTO_IVA, 2),
+    format: (val, row) =>
+      formatCurrency(row.SUBTOTAL_VENTAS + row.MONTO_IVA, 2),
     align: "center",
-    style: 'width: 100px; min-width: 100px; max-width: 120px;',
+    style: "width: 100px; min-width: 100px; max-width: 120px;",
   },
-  { 
-    name: "acciones", 
-    label: "Eliminar", 
-    field: "", 
+  {
+    name: "acciones",
+    label: "Eliminar",
+    field: "",
     align: "center",
-    style: 'width: 50px; min-width: 50px; max-width: 50px;', 
+    style: "width: 50px; min-width: 50px; max-width: 50px;",
   },
 ];
 
-// GENERALES 
+// GENERALES
 const $q = useQuasar();
 const isLoading = ref(false);
 const items = ref(0);
-const savingDescId = ref<number | null>(null);                // estado de guardado por fila
+const savingDescId = ref<number | null>(null); // estado de guardado por fila
+const savingCantidadId = ref<number | null>(null); // estado de guardado de cantidad
+const savingPrecioId = ref<number | null>(null); // estado de guardado de precio
+
+// Referencias para el modal de contraseña
+const passwordModalRef = ref();
+const precioPendiente = ref<{ row: any; nuevoPrecio: number } | null>(null);
 
 // COMPOSABLES FUNCTIONS
 const totalStore = useTotalStore();
 const pedidoStore = usePedidoStore();
 const { formatCurrency } = useFormat();
-const { useListaProductosPedidoDet, mutateEliminarPedidoDetID, mutateActualizarPedidoDetId } = usePedidoDet();
+const {
+  useListaProductosPedidoDet,
+  mutateEliminarPedidoDetID,
+  mutateActualizarPedidoDetId,
+  mutateActualizarCantidadPedidoDetID,
+  mutateActualizarPrecioPedidoDetID,
+} = usePedidoDet();
 const { obtenerPedidoPorId } = usePedidosEnc();
 
-
 // USE COMPOSABLES
-const {  data: listaProductosPedido, refetch:refetchListaProductosPedidoDet, isLoading:isLoadingQuery } = useListaProductosPedidoDet(pedidoId);
-const { data: pedidoData, refetchObtenerPedidoID } = obtenerPedidoPorId(pedidoId);
+const {
+  data: listaProductosPedido,
+  refetch: refetchListaProductosPedidoDet,
+  isLoading: isLoadingQuery,
+} = useListaProductosPedidoDet(pedidoId);
+const { data: pedidoData, refetchObtenerPedidoID } =
+  obtenerPedidoPorId(pedidoId);
 
 // Computed para el total general del pedido
 
@@ -254,13 +400,13 @@ const totalGeneral = computed(() => {
 watch(tamanioLetra, (nuevoTamanio) => {
   if (nuevoTamanio < 8 || nuevoTamanio > 100) {
     $q.notify({
-      type: 'negative',
-      message: 'El tamaño de letra debe estar entre 8 y 100',
+      type: "negative",
+      message: "El tamaño de letra debe estar entre 8 y 100",
     });
     return;
   }
   // Actualizar el tamaño de letra en el store o en la tabla si es necesario
-  localStorage.setItem('tamanioLetra', nuevoTamanio.toString());
+  localStorage.setItem("tamanioLetra", nuevoTamanio.toString());
 });
 
 // Watch para actualizar el store del total general
@@ -274,14 +420,11 @@ watch(
 );
 
 // actualización cuando cambia el id
-watch(
-  pedidoId,
-  async (nuevo, anterior) => {
-    if (nuevo && nuevo > 0) {
-      await forzarActualizacionTabla()
-    }
+watch(pedidoId, async (nuevo, anterior) => {
+  if (nuevo && nuevo > 0) {
+    await forzarActualizacionTabla();
   }
-);
+});
 
 // Watch para actualizar total cuando cambian los datos del pedido
 watch(
@@ -303,7 +446,7 @@ watchEffect(() => {
     items.value = 0;
     totalStore.setItems(0);
     return;
-  }  
+  }
   const total = listaProductosPedido.value.reduce((acc, row) => {
     return acc + (row.CANTIDAD_PEDIDA || 0);
   }, 0);
@@ -313,7 +456,7 @@ watchEffect(() => {
 
 // Mostrar la descripcion del producto o descripcion actualizada
 const descMostrar = (row: any) => {
-  const aux = (row?.DESCRIPCION_PROD_AUX ?? '').trim();
+  const aux = (row?.DESCRIPCION_PROD_AUX ?? "").trim();
   return aux.length ? aux : row?.DESCRIPCION_PROD;
 };
 
@@ -329,30 +472,116 @@ const forzarActualizacionTabla = async () => {
 };
 
 const onGuardarDescripcion = (row: any, nuevaDescripcion: string) => {
-  const desc = (nuevaDescripcion ?? '').trim();
+  const desc = (nuevaDescripcion ?? "").trim();
 
   if (!desc || desc === descMostrar(row)) return;
 
-    savingDescId.value = row.ID_PEDIDO_DET;
-    
- // const updatedRow = { ...row, DESCRIPCION_PROD_AUX: desc, DESCRIPCION_MOSTRAR: desc };
+  savingDescId.value = row.ID_PEDIDO_DET;
+
+  // const updatedRow = { ...row, DESCRIPCION_PROD_AUX: desc, DESCRIPCION_MOSTRAR: desc };
 
   mutateActualizarPedidoDetId(
     { id: row.ID_PEDIDO_DET, descripcion: desc },
     {
       onSuccess: async () => {
-        await forzarActualizacionTabla();        // actualizar Tabla
-        $q.notify({ type: 'positive', message: 'Descripción actualizada' })
+        await forzarActualizacionTabla(); // actualizar Tabla
+        $q.notify({ type: "positive", message: "Descripción actualizada" });
       },
       onError: (e: any) => {
-        const message = e?.message || 'No se pudo actualizar la descripción'
-        showErrorNotification('Error', message)
+        const message = e?.message || "No se pudo actualizar la descripción";
+        showErrorNotification("Error", message);
       },
       onSettled: () => {
-        savingDescId.value = null
-      }
+        savingDescId.value = null;
+      },
     }
   );
+};
+
+// Función para guardar cantidad
+const onGuardarCantidad = (row: any, nuevaCantidad: number) => {
+  if (!nuevaCantidad || nuevaCantidad <= 0) {
+    showErrorNotification("Error", "La cantidad debe ser mayor a 0");
+    return;
+  }
+
+  if (nuevaCantidad === row.CANTIDAD_PEDIDA) return;
+
+  savingCantidadId.value = row.ID_PEDIDO_DET;
+
+  mutateActualizarCantidadPedidoDetID(
+    { id: row.ID_PEDIDO_DET, cantidad: nuevaCantidad },
+    {
+      onSuccess: async () => {
+        await forzarActualizacionTabla();
+        $q.notify({ type: "positive", message: "Cantidad actualizada" });
+      },
+      onError: (e: any) => {
+        const message = e?.message || "No se pudo actualizar la cantidad";
+        showErrorNotification("Error", message);
+      },
+      onSettled: () => {
+        savingCantidadId.value = null;
+      },
+    }
+  );
+};
+
+// Función para guardar precio
+const onGuardarPrecio = (row: any, nuevoPrecio: number) => {
+  if (!nuevoPrecio || nuevoPrecio < 0) {
+    showErrorNotification("Error", "El precio debe ser mayor o igual a 0");
+    return;
+  }
+
+  if (nuevoPrecio === row.PRECIO_UNIDAD_VENTA) return;
+
+  // Verificar si el nuevo precio es menor al actual
+  if (nuevoPrecio < row.PRECIO_UNIDAD_VENTA) {
+    // Guardar el precio pendiente y abrir modal de contraseña
+    precioPendiente.value = { row, nuevoPrecio };
+    passwordModalRef.value?.abrirModal();
+    return;
+  }
+
+  // Si el precio es mayor o igual, proceder normalmente
+  guardarPrecio(row, nuevoPrecio);
+};
+
+// Función para guardar precio después de autorización
+const guardarPrecio = (row: any, nuevoPrecio: number) => {
+  savingPrecioId.value = row.ID_PEDIDO_DET;
+
+  mutateActualizarPrecioPedidoDetID(
+    { id: row.ID_PEDIDO_DET, precio: nuevoPrecio },
+    {
+      onSuccess: async (data) => {
+        await forzarActualizacionTabla();
+        $q.notify({ type: "positive", message: "Precio actualizado" });
+      },
+      onError: (e: Error) => {
+        const message = e?.message || "No se pudo actualizar el precio";
+        showErrorNotification("Error", message);
+      },
+      onSettled: () => {
+        savingPrecioId.value = null;
+      },
+    }
+  );
+};
+
+// Función cuando se autoriza la contraseña
+const onPasswordSuccess = () => {
+  if (precioPendiente.value) {
+    const { row, nuevoPrecio } = precioPendiente.value;
+    guardarPrecio(row, nuevoPrecio);
+    precioPendiente.value = null;
+  }
+};
+
+// Función cuando se cancela la contraseña
+const onPasswordCancel = () => {
+  precioPendiente.value = null;
 };
 
 // Eliminar Producto
@@ -393,7 +622,6 @@ const eliminarProducto = async (detalle) => {
       },
     });
   } catch (error) {
-
     showErrorNotification(
       "Error",
       "No se pudo eliminar el producto. Intente nuevamente."
@@ -415,15 +643,13 @@ defineExpose({
 
 onMounted(() => {
   // Cargar el tamaño de letra desde localStorage si existe
-  const tamanio = localStorage.getItem('tamanioLetra');
+  const tamanio = localStorage.getItem("tamanioLetra");
   if (tamanio) {
     tamanioLetra.value = parseInt(tamanio, 10);
   } else {
     tamanioLetra.value = 28; // Valor por defecto
   }
 });
-
-
 </script>
 
 <style scoped>
@@ -475,7 +701,6 @@ onMounted(() => {
 }
 
 .elegant-table {
-  
   background: white;
   border-radius: 0%;
   /* justify-items: center;
@@ -663,5 +888,90 @@ onMounted(() => {
   font-weight: bold;
   font-size: 16px; /* tamaño de descripcion */
   color: #212121;
+}
+
+/* Estilos para campos editables */
+.q-popup-edit {
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.q-popup-edit .q-input {
+  border-radius: 6px;
+}
+
+.q-popup-edit .q-field--focused .q-field__control {
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+/* Indicador visual para campos editables */
+.q-td[data-editable="true"] {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.q-td[data-editable="true"]:hover {
+  background-color: rgba(25, 118, 210, 0.05);
+  border-radius: 4px;
+}
+
+/* Loading states para campos editables */
+.q-popup-edit--loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Estilos para inputs con Enter habilitado */
+.q-popup-edit .q-input {
+  transition: all 0.2s ease;
+}
+
+.q-popup-edit .q-input:focus-within {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
+}
+
+/* Indicador visual para Enter */
+.q-popup-edit .q-input::after {
+  content: "Enter para guardar";
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  font-size: 10px;
+  color: #666;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.q-popup-edit .q-input:focus-within::after {
+  opacity: 1;
+}
+
+/* Estilos para precios que requieren autorización */
+.q-td[data-editable="true"] .precio-requiere-auth {
+  color: #ff6b35;
+  font-weight: 600;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Tooltip para precios que requieren autorización */
+.precio-auth-tooltip {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 8px 12px;
 }
 </style>
