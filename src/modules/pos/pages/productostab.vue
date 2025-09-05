@@ -230,6 +230,7 @@
               dense
               class="search-input-enhanced"
               bg-color="white"
+              @keyup.enter="buscarProducto"
             >
               <template #prepend>
                 <q-icon name="search" color="primary" />
@@ -334,7 +335,7 @@
           <!-- Tabla de productos -->
           <div v-else>
             <q-table
-              :rows="productosFiltrados2"
+              :rows="productosFiltrados2.slice(0, 30)"
               :columns="columnasCatalogo"
               row-key="PRODUCT0"
               :pagination="paginacionCatalogo"
@@ -861,7 +862,7 @@
 </template>
 
 <script setup>
-import { useQuasar } from "quasar";
+import { Notify, useQuasar } from "quasar";
 import { useQueryClient } from "@tanstack/vue-query";
 import {
   ref,
@@ -871,6 +872,7 @@ import {
   watchEffect,
   onBeforeUnmount,
   nextTick,
+  toRaw,
 } from "vue";
 import {
   showConfirmationDialog,
@@ -908,7 +910,6 @@ import {
 } from "@/modules/pedidos_enc/action/pedidosEncAction";
 import { useClienteStore } from "@/stores/cliente";
 import { usePdfTicket } from "@/modules/ticket_pdf/composable/useTicket";
-import { hideLoading } from '../../../common/helper/notification';
 
 /*
 ==========================================================
@@ -1031,13 +1032,15 @@ const {
   fetchingProductos,
   errorProductos,
 } = useProductos();
-const { obtenerPorCodigo } = useCodigo();
+const buscarCodigo = ref('2774651818380')
+const { obtenerPorCodigo} = useCodigo();
 const $q = useQuasar();
 const { mutateAnularPedidoPendiente } = usePedidosEnc();
 const { generarCotizacionPDF } = usePdfCotizacion();
 const clienteStore = useClienteStore();
 const { nombreVendedor } = useUserStore();
 const { totalItems } = useTotalStore();
+const totalStore = useTotalStore();
 const { generarTicketPDF } = usePdfTicket();
 
 //USE COMPOSABLES
@@ -1084,14 +1087,18 @@ const tipoPago = ref("EFECTIVO");
 const errorAgregarProducto = ref(false);
 const refCupon = ref();
 const pedidoStore = usePedidoStore();
-const { consultarCodigo, consultarCodigoM } = useCodigo();
-const totalStore = useTotalStore();
+const { consultarCodigo, consultarCodigoM } = useCodigo()
 const userStore = useUserStore();
 const queryClient = useQueryClient();
 const descripcionProd = ref('')
 const subtotalCalculado = ref(0)
 const espera = ref(null) // guarda el timeout
 const nuevosDatos = ref(null) // Mostrar info del producto
+const codigoBarra = ref('')
+const { obtenerProducto } = useCodigo()
+const { obtenerProducto2 } = useCodigo()
+const { data: productoEncontrado, refetch: refetchProducto } = obtenerProducto(filtroProductos)
+const { data: productoEncontrado2, refetch: refetchProducto2 } = obtenerProducto2(codigoProducto)
 
 // Paginación del catálogo
 const paginacionCatalogo = ref({
@@ -1250,9 +1257,21 @@ watch(modalProductos2, async (val) => {
   }
 });
 
+const buscarProducto = async () => {
+
+  refetchProducto()
+
+  if (productoEncontrado.value?.PRODUCT0) {
+    filtroProductos.value = productoEncontrado.value.PRODUCT0
+    console.log("Producto encontrado:", productoEncontrado.value.PRODUCT0)
+  } else {
+    showErrorNotificationInside('No encontrado', 'El Producto no pudo ser encontrado')
+  }
+}
+
 // filtro del catalogo
 const productosFiltrados2 = computed(() => {
-  if (!filtroProductos.value) return productosUnicos.value;
+  if (!filtroProductos.value) return productosUnicos.value; 
 
   const palabras = filtroProductos.value
     .toLowerCase()
@@ -1261,7 +1280,7 @@ const productosFiltrados2 = computed(() => {
 
   return productosUnicos.value.filter((p) => {
     const campos = `${p.DESCRIPCION_PROD || ""} ${p.DESCRIPCION_MARCA || ""} ${
-      p.PRODUCT0 || "" }${p.CODIGO_BARRA || ""}   /`.toLowerCase();
+      p.PRODUCT0 || ""}`.toLowerCase();
     return palabras.every((palabra) => campos.includes(palabra));
   });
 });
@@ -1270,6 +1289,7 @@ const productosFiltrados2 = computed(() => {
 const productosUnicos = computed(() => {
   if (!todosProductos.value) return [];
 
+  //console.log('Primer Producto: ', toRaw(todosProductos.value[10]))
   // Para evitar duplicados
   const mapa = new Map();
 
@@ -1317,17 +1337,25 @@ const busquedaAutomatica = () => {
 // Mostrar la descripcion del producto
 const buscarDescripcion = async () => {
   try {
+
+
     const resultado = await precioReal(codigoProducto.value, cantidad2.value)
 
     const prod = Array.isArray(resultado) ? resultado[0] : resultado
-
+    console.log('mostrando prod1: ', prod)
+    
     if (!prod) {
+
+      console.log('mostrando prod2: ', prod)
+     // 2. Si no encontró, buscar por código de barras 
+      console.log('No encontrado con precioReal, probando con código de barras...')
+
       nuevosDatos.value = null
       return
     }
 
     const nuevaDescripcion = await obtenerProductosId(codigoProducto.value)
-    //console.log('esta es la nueva descripcion: ', nuevaDescripcion)
+    console.log('esta es la nueva descripcion: ', nuevaDescripcion)
 
     // Guardar en variable reactiva
     nuevosDatos.value = {
@@ -1593,6 +1621,7 @@ const prepararDataCotizacion = async (idPedido) => {
     };
   });
 
+  // calcular la cantidad y el sbutotal
   const totalItems = items.reduce((acc, item) => acc + item.cantidad, 0);
   const subtotal = items.reduce(
     (acc, item) => acc + parseFloat(item.subtotal.replace("Q.", "")),
@@ -2098,10 +2127,11 @@ const buscarProductoEscaneado = async () => {
   let resultado = null;
 
   // 1. buscar por código de barras
-  try {
+  try{
     resultado = await consultarCodigoM(codigoProducto.value, cantidad2.value);
-  } catch (error) {
-    //console.warn("Código no encontrado por código de barras:", error);
+  } catch{
+    //showErrorNotification('error', error)
+    //return
   }
 
   // 2. buscar por ID de producto
@@ -2112,10 +2142,9 @@ const buscarProductoEscaneado = async () => {
         cantidad2.value
       );
 
-      if (
-        productoDirecto.PRECIO_FINAL === 0 ||
-        productoDirecto.PRECIO_FINAL === null
-      ) {
+      console.log(productoDirecto)
+
+      if (productoDirecto.PRECIO_FINAL === 0 || productoDirecto.PRECIO_FINAL === null) {
         await errorAgregarProductoConSonido(
           `Producto sin precio, El código ${codigoProducto.value} no tiene precio`
         );
@@ -2316,7 +2345,8 @@ const seleccionarProducto2 = async (producto, index) => {
     await nextTick();
     moverFocoAlSiguienteProducto(index);
   } catch (error) {
-    //console.error("Error in seleccionarProducto2:", error);
+    showErrorNotificationInside('Error', error)
+    console.error("Error in seleccionarProducto2:", error);
   }
 };
 

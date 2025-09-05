@@ -281,6 +281,9 @@ watchEffect(() => {
 
 // Comparar clave para ingresar
 const verificarPassword = async () => {
+   
+  try{
+
   const datos = await obtenerTipoVendedor(password.value);
 
   // Validar si no encontro al vendedor
@@ -303,6 +306,17 @@ const verificarPassword = async () => {
       "Contacte a algun administrador"
     );
   }
+  } catch (error){
+    
+      $q.notify({
+      type: 'negative',
+      message: 'Clave Incorrecta. No encontrada.',
+      position: 'top',
+      timeout: 3000
+    });
+  password.value = ''
+  }
+
 };
 
 // Cerrar modal

@@ -1,9 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
-import { obtenerCodigoBarrasAction } from '../action/codigoAction'
+import { obtenerCodigoBarrasAction, obtenerProductoPorCodigoAction } from '../action/codigoAction'
 import { showSuccessNotification, showErrorNotification } from '@/common/helper/notification'
 import { Codigo } from '../interfaces/codigoInterface';
 import { getAxiosErrorMessage } from '@/common/helper/geterrordb';
-import { warn } from 'vue';
+import { Ref, warn } from 'vue';
 
 export const useCodigo = () => {
     
@@ -26,14 +26,26 @@ export const useCodigo = () => {
       return data
     } catch (error) {
       const message = getAxiosErrorMessage(error, 'El producto no tiene codigo de barras')
-      throw new warn(message)
+      throw new Error(message)
     }
   }
+
+  const obtenerProducto = (codigo: Ref<string>) => useQuery({
+    queryKey: ['codigo-barra-producto', codigo],
+    queryFn: () => obtenerProductoPorCodigoAction(codigo.value)
+  })
+  
+  const obtenerProducto2 = (codigo: Ref<string>) => useQuery({
+    queryKey: ['codigo-barra-producto', codigo],
+    queryFn: () => obtenerProductoPorCodigoAction(codigo.value)
+  })
 
   return {
     queryClient,
     consultarCodigo,
-    consultarCodigoM
+    consultarCodigoM,
+    obtenerProducto,
+    obtenerProducto2
   }
 
 }

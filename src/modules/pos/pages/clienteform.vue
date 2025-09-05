@@ -1000,6 +1000,8 @@ const crearPedido = () => {
     ESTADO_PEDIDO: estadoPedido.value === "pedido" ? "P" : "C",
   };
 
+  //console.log('yo soy pedido enc', pedidoEnc)
+
   mutateCrearPedidoEnc(pedidoEnc, {
     onSuccess: async (data) => {
       // cerrar expansion
