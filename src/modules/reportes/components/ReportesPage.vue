@@ -39,8 +39,42 @@
       </q-card>
     </q-dialog>
 
+    <!-- Loading mientras se verifican facturas pendientes -->
+    <div
+      v-if="loadingFacturasErrores"
+      class="flex flex-center"
+      style="min-height: 50vh"
+    >
+      <div class="text-center">
+        <q-spinner-dots color="primary" size="50px" />
+        <div class="text-h6 text-grey-6 q-mt-md">
+          Verificando facturas pendientes...
+        </div>
+      </div>
+    </div>
+
+    <!-- Error al cargar facturas pendientes -->
+    <div
+      v-else-if="errorFacturasErrores"
+      class="flex flex-center"
+      style="min-height: 50vh"
+    >
+      <div class="text-center">
+        <q-icon name="error" color="negative" size="50px" />
+        <div class="text-h6 text-negative q-mt-md">
+          {{ errorFacturasErrores.message }}
+        </div>
+        <q-btn
+          color="primary"
+          label="Reintentar"
+          @click="() => refetchFacturasErrores()"
+          class="q-mt-md"
+        />
+      </div>
+    </div>
+
     <!-- Contenido de la pagina-->
-    <div v-if="accesoPermitido">
+    <div v-else-if="accesoPermitido">
       <q-card flat bordered class="q-pa-md q-mt-sm">
         <q-card-section class="q-pa-xs q-ma-xs text-h6" color="primary">
           Corte de Caja
@@ -185,10 +219,15 @@ import { useQuasar } from "quasar";
 import { useStoreSucursal } from "@/stores/sucursal";
 import { useConfiguracionStore } from "@/stores/serie";
 
-const storeSerie = useConfiguracionStore()
+const storeSerie = useConfiguracionStore();
 const $q = useQuasar();
 const storeSucursal = useStoreSucursal();
-const { facturasErrores, refetchFacturasErrores } = useFacturasFel();
+const {
+  facturasErrores,
+  refetchFacturasErrores,
+  isLoading: loadingFacturasErrores,
+  error: errorFacturasErrores,
+} = useFacturasFel();
 const { obtenerFacturasPorFecha } = useFacturasEnc();
 const { seriesSucursal, obtenerSeries } = useSeries();
 const mostrarPassword = ref(false);
@@ -202,9 +241,9 @@ let totalCorte = ref(0); // Calcular total
 const ticketRef = ref<HTMLElement | null>(null); // Para impresion
 const listaFacturas = ref<FacturaEnc[]>([]);
 const router = useRouter();
-const serie2 = ref('')
+const serie2 = ref("");
 
-serie2.value = storeSerie.serieSeleccionada
+serie2.value = storeSerie.serieSeleccionada;
 
 // Configuración en español para el calendario
 const localeEspanol = {
@@ -248,26 +287,63 @@ const localeEspanol = {
   ],
 };
 
-// Mostrar el modal al iniciar la página
-onMounted(() => {
-
-  if (facturasErrores.value) {
+// Función para verificar facturas pendientes
+const verificarFacturasPendientes = () => {
+  // Verificar si hay facturas con errores
+  if (facturasErrores.value && facturasErrores.value.length > 0) {
     $q.notify({
       icon: "warning",
-      message: "No puede acceder a este modulo",
-      caption:
-        "Hay facturas pendientes de certificar, redirigiendo a la sección de pendientes...",
-      color: "blue-10",
+      message: "No puede acceder a este módulo",
+      caption: `Hay ${facturasErrores.value.length} factura(s) pendientes de certificar. Redirigiendo a la sección de pendientes...`,
+      color: "orange",
       position: "center",
-      actions: [{ label: "Aceptar", color: "blue-10" }],
+      actions: [{ label: "Aceptar", color: "white" }],
+      timeout: 0, // No se cierra automáticamente
     });
+
     setTimeout(() => {
       router.replace("/pendientes");
-    }, 5000);
-  } else {
+    }, 3000);
+    return true; // Hay facturas pendientes
+  }
+  return false; // No hay facturas pendientes
+};
+
+// Mostrar el modal al iniciar la página
+onMounted(async () => {
+  // Esperar a que se carguen las facturas pendientes
+  if (loadingFacturasErrores.value) {
+    // Si está cargando, esperar a que termine
+    await new Promise((resolve) => {
+      const unwatch = watch(loadingFacturasErrores, (loading) => {
+        if (!loading) {
+          unwatch(); // Dejar de observar
+          resolve(true);
+        }
+      });
+    });
+  }
+
+  // Verificar facturas pendientes
+  const hayFacturasPendientes = verificarFacturasPendientes();
+
+  // Si no hay facturas pendientes, mostrar modal de contraseña
+  if (!hayFacturasPendientes) {
     mostrarModal.value = true;
   }
 });
+
+// Watch para verificar facturas pendientes cuando cambien los datos
+watch(
+  facturasErrores,
+  (nuevasFacturas) => {
+    if (nuevasFacturas && nuevasFacturas.length > 0 && accesoPermitido.value) {
+      // Si el usuario ya tenía acceso pero ahora hay facturas pendientes
+      verificarFacturasPendientes();
+    }
+  },
+  { immediate: false }
+);
 
 watch(rangoFechas, (nuevo, viejo) => {
   fecha.value = nuevo;
@@ -319,7 +395,7 @@ const seriesOptions = computed(() => {
   return obtenerSeries.value?.map((item: any) => item.SERIE) || [];
 });
 
-const seriesOptions2 = [serie2.value]
+const seriesOptions2 = [serie2.value];
 
 // Funcion para buscar Facturas
 const buscarFacturas = async () => {
@@ -330,7 +406,6 @@ const buscarFacturas = async () => {
   }
 
   try {
-
     const buscar = {
       fecha_inicial: new Date(rangoFechas.value.from),
       fecha_final: new Date(rangoFechas.value.to),
@@ -341,27 +416,26 @@ const buscarFacturas = async () => {
       (buscar.fecha_inicial = new Date(valorUnaFecha.value + "T00:00:00")),
         (buscar.fecha_final = new Date(valorUnaFecha.value + "T23:59:59"));
     }
-    
-    $q.loading.show({
-    message: `Buscando Facturas `,
-    spinnerColor: 'green',
-    spinnerSize: 50,
-  });
-    
-    const facturas = await obtenerFacturasPorFecha(
-          buscar.fecha_inicial,
-          buscar.fecha_final,
-          buscar.serie
-        )
 
-    $q.loading.hide()
+    $q.loading.show({
+      message: `Buscando Facturas `,
+      spinnerColor: "green",
+      spinnerSize: 50,
+    });
+
+    const facturas = await obtenerFacturasPorFecha(
+      buscar.fecha_inicial,
+      buscar.fecha_final,
+      buscar.serie
+    );
+
+    $q.loading.hide();
 
     listaFacturas.value = (facturas as any[]) || [];
 
     // Calcular total
   } catch (error) {
-    
-    $q.loading.hide()
+    $q.loading.hide();
     const message = error;
     showErrorNotification("Error", message);
   }
