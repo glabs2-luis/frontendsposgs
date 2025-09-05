@@ -1339,12 +1339,9 @@ const busquedaAutomatica = () => {
 const buscarDescripcion = async () => {
   try {
 
-
     const resultado = await precioReal(codigoProducto.value, cantidad2.value)
-
     const prod = Array.isArray(resultado) ? resultado[0] : resultado
-    //console.log('mostrando prod1: ', prod)
-    
+
     if (!prod) {
 
       nuevosDatos.value = null
