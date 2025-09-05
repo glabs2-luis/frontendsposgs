@@ -10,6 +10,22 @@
 
   <q-card flat bordered class="productos-table-card">
     <q-separator />
+
+    <!-- FILTRO SIMPLE -->
+<div class="q-pa-sm bg-grey-1">
+  <q-input 
+    v-model="filtro" 
+    placeholder="Filtrar por código o descripción..." 
+    outlined 
+    dense 
+    clearable
+  >
+    <template v-slot:prepend>
+      <q-icon name="search" />
+    </template>
+  </q-input>
+</div>
+
     <!-- FLOATIN ACTION BUTTONS PARA ASIGAR TAMAÑO DE LETRA Y RECARGAR LOS DETALLES DEL PEDIDO -->
     <q-fab
       color="orange"
@@ -63,6 +79,8 @@
         :pagination="{ rowsPerPage: 50 }"
         class="elegant-table h-full full-height-table"
         table-header-style="background: linear-gradient(135deg, #536103 0%, #6b745b 100%); color: white;"
+          :filter="filtro"
+  :filter-method="filtrarProductos"
       >
         <!-- Header -->
         <!--
@@ -360,6 +378,7 @@ const items = ref(0);
 const savingDescId = ref<number | null>(null); // estado de guardado por fila
 const savingCantidadId = ref<number | null>(null); // estado de guardado de cantidad
 const savingPrecioId = ref<number | null>(null); // estado de guardado de precio
+const filtro = ref('')
 
 // Referencias para el modal de contraseña
 const passwordModalRef = ref();
@@ -386,6 +405,21 @@ const {
 } = useListaProductosPedidoDet(pedidoId);
 const { data: pedidoData, refetchObtenerPedidoID } =
   obtenerPedidoPorId(pedidoId);
+
+  // Filtro de productos
+const filtrarProductos = (rows: any[], terms: string) => {
+  if (!terms) return rows;
+  
+  const palabras = terms.toLowerCase().trim().split(/\s+/).filter(p => p.length > 0);
+  
+  return rows.filter(row => {
+    const codigo = (row.PRODUCT0 || '').toString().toLowerCase();
+    const descripcion = (row.DESCRIPCION_PROD_AUX || row.DESCRIPCION_PROD || '').toLowerCase();
+    const textoCompleto = codigo + ' ' + descripcion;
+    
+    return palabras.every(palabra => textoCompleto.includes(palabra));
+  });
+};
 
 // Computed para el total general del pedido
 
