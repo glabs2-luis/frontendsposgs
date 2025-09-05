@@ -464,6 +464,7 @@
                           try {
                             cantidadInputs.value[props.rowIndex] = el;
                           } catch (error) {
+                            showConfirmationInsideModal('Error', error)
                             //console.warn('Error assigning ref:', error);
                           }
                         }
@@ -1380,7 +1381,7 @@ watch(cantidad2, async () => {
 
 const cantidadIngresada = (producto) => {
   if (!producto.CANTIDAD_PEDIDA || producto.CANTIDAD_PEDIDA <= 0) {
-    showErrorNotification("Cantidad", "Ingrese una cantidad válida");
+    showErrorNotificationInsideModal("Cantidad", "Ingrese una cantidad válida");
     return;
   }
 };
@@ -2288,6 +2289,7 @@ const agregarProductoAlPedido2 = async (producto) => {
         await errorAgregarProductoConSonido(
           `Error al agregar producto: ${error.message || "Error desconocido"}`
         );
+        //showConfirmationInsideModal('Error', error)
         throw new Error(error);
       },
       onSettled: () => {
@@ -2295,6 +2297,7 @@ const agregarProductoAlPedido2 = async (producto) => {
       },
     });
   } catch (error) {
+    showErrorNotificationInside('Error', error)
     //console.error("Error al agregar producto:", error);
     loadingAgregar.value = false;
   }
@@ -2345,8 +2348,8 @@ const seleccionarProducto2 = async (producto, index) => {
     await nextTick();
     moverFocoAlSiguienteProducto(index);
   } catch (error) {
-    showErrorNotificationInside('Error', error)
-    console.error("Error in seleccionarProducto2:", error);
+    showErrorNotificationInsideModal('Error', error)
+    //console.error("Error in seleccionarProducto2:", error);
   }
 };
 

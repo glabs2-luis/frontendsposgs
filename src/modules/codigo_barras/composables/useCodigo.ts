@@ -32,12 +32,14 @@ export const useCodigo = () => {
 
   const obtenerProducto = (codigo: Ref<string>) => useQuery({
     queryKey: ['codigo-barra-producto', codigo],
-    queryFn: () => obtenerProductoPorCodigoAction(codigo.value)
+    queryFn: () => obtenerProductoPorCodigoAction(codigo.value),
+    enabled: false
   })
   
   const obtenerProducto2 = (codigo: Ref<string>) => useQuery({
     queryKey: ['codigo-barra-producto', codigo],
-    queryFn: () => obtenerProductoPorCodigoAction(codigo.value)
+    queryFn: () => obtenerProductoPorCodigoAction(codigo.value),
+    enabled: false
   })
 
   return {

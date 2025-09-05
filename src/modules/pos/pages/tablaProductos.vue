@@ -11,20 +11,20 @@
   <q-card flat bordered class="productos-table-card">
     <q-separator />
 
-    <!-- FILTRO SIMPLE -->
-<div class="q-pa-sm bg-grey-1">
-  <q-input 
-    v-model="filtro" 
-    placeholder="Filtrar por código o descripción..." 
-    outlined 
-    dense 
-    clearable
-  >
-    <template v-slot:prepend>
-      <q-icon name="search" />
-    </template>
-  </q-input>
-</div>
+    <!-- FILTRO  -->
+      <div class="q-pa-sm bg-grey-1">
+        <q-input 
+          v-model="filtro" 
+          placeholder="Filtrar por código o descripción..." 
+          outlined 
+          dense 
+          clearable
+        >
+          <template v-slot:prepend>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </div>
 
     <!-- FLOATIN ACTION BUTTONS PARA ASIGAR TAMAÑO DE LETRA Y RECARGAR LOS DETALLES DEL PEDIDO -->
     <q-fab
@@ -307,6 +307,7 @@ import useFormat from "@/common/composables/useFormat";
 import {
   showConfirmationDialog,
   showErrorNotification,
+  showErrorNotificationInside,
 } from "@/common/helper/notification";
 import PasswordModal from "@/common/components/PasswordModal.vue";
 
@@ -549,10 +550,11 @@ const onGuardarCantidad = (row: any, nuevaCantidad: number) => {
       onSuccess: async () => {
         await forzarActualizacionTabla();
         $q.notify({ type: "positive", message: "Cantidad actualizada" });
+        filtro.value = ''
       },
       onError: (e: any) => {
         const message = e?.message || "No se pudo actualizar la cantidad";
-        showErrorNotification("Error", message);
+        showErrorNotificationInside("Error", message);
       },
       onSettled: () => {
         savingCantidadId.value = null;
@@ -592,6 +594,7 @@ const guardarPrecio = (row: any, nuevoPrecio: number) => {
       onSuccess: async (data) => {
         await forzarActualizacionTabla();
         $q.notify({ type: "positive", message: "Precio actualizado" });
+        filtro.value = ''
       },
       onError: (e: Error) => {
         const message = e?.message || "No se pudo actualizar el precio";
