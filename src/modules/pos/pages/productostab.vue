@@ -1343,20 +1343,16 @@ const buscarDescripcion = async () => {
     const resultado = await precioReal(codigoProducto.value, cantidad2.value)
 
     const prod = Array.isArray(resultado) ? resultado[0] : resultado
-    console.log('mostrando prod1: ', prod)
+    //console.log('mostrando prod1: ', prod)
     
     if (!prod) {
-
-      console.log('mostrando prod2: ', prod)
-     // 2. Si no encontró, buscar por código de barras 
-      console.log('No encontrado con precioReal, probando con código de barras...')
 
       nuevosDatos.value = null
       return
     }
 
     const nuevaDescripcion = await obtenerProductosId(codigoProducto.value)
-    console.log('esta es la nueva descripcion: ', nuevaDescripcion)
+    //console.log('esta es la nueva descripcion: ', nuevaDescripcion)
 
     // Guardar en variable reactiva
     nuevosDatos.value = {

@@ -259,10 +259,14 @@ const facturasFiltradas = computed(() => {
 
 // Cargar detalle al abrir el modal
 const verDetalleFactura = async (id: number) => {
+  try {
   idSeleccionado.value = id
   const resultado = await obtenerDetalleFactura(id)
   detalleFactura.value = resultado
   mostrarDetalle.value = true
+  } catch(error) {
+  showErrorNotification('Error', error)
+  }
 }
 
 // Formatear fecha
@@ -283,7 +287,7 @@ const reimprimirFactura = async (idFactura: number) => {
       return
     }
 
-    const datosFelCertificados = await   obtenerDatosFel(factura.NUMERO_FACTURA)
+    const datosFelCertificados = await obtenerDatosFel(factura.NUMERO_FACTURA)
     
     const detalle = await obtenerDetalleFactura(idFactura)
     if (!detalle || detalle.length === 0) {
@@ -340,7 +344,7 @@ const reimprimirFactura = async (idFactura: number) => {
     )
 
   } catch (error) {
-    showErrorNotification('Error al reimprimir factura', 'Error')
+    showErrorNotification('Error al reimprimir factura', error)
   }
 }
 
