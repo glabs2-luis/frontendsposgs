@@ -40,13 +40,12 @@
           />
           <q-btn
             icon="restart_alt"
-            color="amber-9"
-            class="color: black"
+            class="boton-amarillo"
             @click="limpiarPedido"
           />
           <q-btn
             label="Anular"
-            color="red-5"
+            class="boton-amarillo"
             text-color="black"
             style="color: black"
             @click="limpiar"
@@ -87,7 +86,11 @@
           :disable="errorAgregarProducto"
         >
           <template #append>
-            <q-icon name="search" color="primary" />
+            <q-btn
+              @click="abrirCatalogo2"
+              icon="search"
+              class="boton-amarillo"
+            />
           </template>
           <template #prepend>
             <q-btn
@@ -117,50 +120,42 @@
           <q-btn
             @click="buscarProductoEscaneado"
             class="boton-amarillo"
-            icon="add"
-            label="Agregar"
+            icon="add_shopping_cart"
+            size="sm"
             :loading="loadingAgregar"
             :disable="!codigoProducto"
           />
-          <q-btn
-            @click="abrirCatalogo2"
-            color="secondary"
-            icon="inventory_2"
-            label="Catálogo"
-            class="col"
-            outline
-          />
 
+          <!-- Contador de productos mejorado -->
           <div class="col-auto">
-            <div
-              class="text-subtitle2 text-black"
-              style="
-                background-color: #f2f28a;
-                font-size: 180%;
-                border-radius: 4px;
-                color: #000;
-                padding: 4px 4px;
-                margin-top: px;
-              "
-            >
-              {{ `Productos: ${totalStore.totalItems}` }}
-            </div>
+            <q-card flat class="productos-counter-card">
+              <q-card-section class="q-pa-xs">
+                <div class="row items-center q-col-gutter-xs">
+                  <q-icon name="shopping_cart" color="orange" size="xs" />
+                  <div class="counter-info">
+                    <div class="counter-label">Productos</div>
+                    <div class="counter-number">
+                      {{ totalStore.totalItems }}
+                    </div>
+                  </div>
+                </div>
+              </q-card-section>
+            </q-card>
           </div>
         </div>
 
         <!-- Descripcion del producto y subtotal Calculado -->
         <div v-if="nuevosDatos">
-          <span style="color: black; font-weight: bold;">
+          <span style="color: black; font-weight: bold">
             {{ nuevosDatos.descripcion }}
-          </span> 
-          <span style="color: green; font-weight: bold; font-size: 16px;">
-            {{  ` - Precio: Q.  ${nuevosDatos.precio.toFixed(2)} - ` }}
           </span>
-          <span style="color: blue; font-weight: bold; font-size: 16px;">
-            {{  `  Subtotal: Q.  ${nuevosDatos.subtotal.toFixed(2)}` }}
+          <span style="color: green; font-weight: bold; font-size: 16px">
+            {{ ` - Precio: ${formatCurrency(nuevosDatos.precio, 3)} - ` }}
+          </span>
+          <span style="color: blue; font-weight: bold; font-size: 16px">
+            {{ `  Subtotal: ${formatCurrency(nuevosDatos.subtotal, 3)}` }}
           </span>
         </div>
-
       </div>
     </q-card>
 
@@ -198,7 +193,6 @@
               </div>
             </div>
             <div class="col-auto row items-center q-gutter-sm">
-              
               <!-- Botón de refresh -->
               <q-btn
                 icon="refresh"
@@ -322,7 +316,7 @@
                   }}
                 </div>
                 <q-btn
-                  color="primary"
+                  color="orange"
                   icon="refresh"
                   label="Reintentar"
                   @click="refetchTodosProductos"
@@ -464,7 +458,7 @@
                           try {
                             cantidadInputs.value[props.rowIndex] = el;
                           } catch (error) {
-                            showConfirmationInsideModal('Error', error)
+                            showConfirmationInsideModal('Error', error);
                             //console.warn('Error assigning ref:', error);
                           }
                         }
@@ -487,7 +481,7 @@
                     label="Agregar"
                     size="md"
                     :loading="loadingAgregar"
-                    class="btn-agregar-table"
+                    class="boton-amarillo"
                   />
                 </q-td>
               </template>
@@ -505,7 +499,6 @@
                 </div>
               </template>
             </q-table>
-            
           </div>
         </q-card-section>
       </q-card>
@@ -730,7 +723,7 @@
               <div class="q-mt-sm">
                 <q-btn
                   icon="discount"
-                  color="yellow-8"
+                  color="orange"
                   class="q-ml-sm text-black"
                   label="Agregar Cupón"
                   @click="abrirCuponazo"
@@ -744,7 +737,7 @@
         <q-card-actions align="right" class="q-pt-none">
           <q-btn
             ref="btnConfirmarFactura"
-            color="secondary"
+            color="orange"
             icon="taskalt"
             label="Facturar "
             class="q-ml-sm"
@@ -1033,8 +1026,8 @@ const {
   fetchingProductos,
   errorProductos,
 } = useProductos();
-const buscarCodigo = ref('2774651818380')
-const { obtenerPorCodigo} = useCodigo();
+const buscarCodigo = ref("2774651818380");
+const { obtenerPorCodigo } = useCodigo();
 const $q = useQuasar();
 const { mutateAnularPedidoPendiente } = usePedidosEnc();
 const { generarCotizacionPDF } = usePdfCotizacion();
@@ -1088,18 +1081,20 @@ const tipoPago = ref("EFECTIVO");
 const errorAgregarProducto = ref(false);
 const refCupon = ref();
 const pedidoStore = usePedidoStore();
-const { consultarCodigo, consultarCodigoM } = useCodigo()
+const { consultarCodigo, consultarCodigoM } = useCodigo();
 const userStore = useUserStore();
 const queryClient = useQueryClient();
-const descripcionProd = ref('')
-const subtotalCalculado = ref(0)
-const espera = ref(null) // guarda el timeout
-const nuevosDatos = ref(null) // Mostrar info del producto
-const codigoBarra = ref('')
-const { obtenerProducto } = useCodigo()
-const { obtenerProducto2 } = useCodigo()
-const { data: productoEncontrado, refetch: refetchProducto } = obtenerProducto(filtroProductos)
-const { data: productoEncontrado2, refetch: refetchProducto2 } = obtenerProducto2(codigoProducto)
+const descripcionProd = ref("");
+const subtotalCalculado = ref(0);
+const espera = ref(null); // guarda el timeout
+const nuevosDatos = ref(null); // Mostrar info del producto
+const codigoBarra = ref("");
+const { obtenerProducto } = useCodigo();
+const { obtenerProducto2 } = useCodigo();
+const { data: productoEncontrado, refetch: refetchProducto } =
+  obtenerProducto(filtroProductos);
+const { data: productoEncontrado2, refetch: refetchProducto2 } =
+  obtenerProducto2(codigoProducto);
 
 // Paginación del catálogo
 const paginacionCatalogo = ref({
@@ -1259,20 +1254,22 @@ watch(modalProductos2, async (val) => {
 });
 
 const buscarProducto = async () => {
-
-  refetchProducto()
+  refetchProducto();
 
   if (productoEncontrado.value?.PRODUCT0) {
-    filtroProductos.value = productoEncontrado.value.PRODUCT0
-    console.log("Producto encontrado:", productoEncontrado.value.PRODUCT0)
+    filtroProductos.value = productoEncontrado.value.PRODUCT0;
+    console.log("Producto encontrado:", productoEncontrado.value.PRODUCT0);
   } else {
-    showErrorNotificationInside('No encontrado', 'El Producto no pudo ser encontrado')
+    showErrorNotificationInside(
+      "No encontrado",
+      "El Producto no pudo ser encontrado"
+    );
   }
-}
+};
 
 // filtro del catalogo
 const productosFiltrados2 = computed(() => {
-  if (!filtroProductos.value) return productosUnicos.value; 
+  if (!filtroProductos.value) return productosUnicos.value;
 
   const palabras = filtroProductos.value
     .toLowerCase()
@@ -1281,7 +1278,8 @@ const productosFiltrados2 = computed(() => {
 
   return productosUnicos.value.filter((p) => {
     const campos = `${p.DESCRIPCION_PROD || ""} ${p.DESCRIPCION_MARCA || ""} ${
-      p.PRODUCT0 || ""}`.toLowerCase();
+      p.PRODUCT0 || ""
+    }`.toLowerCase();
     return palabras.every((palabra) => campos.includes(palabra));
   });
 });
@@ -1325,7 +1323,6 @@ const productosUnicos = computed(() => {
 
 // Busqueda Automatica
 const busquedaAutomatica = () => {
-
   if (espera.value) clearTimeout(espera.value); // limpiar tiempo
 
   if (codigoProducto.value.length > 0) {
@@ -1333,22 +1330,20 @@ const busquedaAutomatica = () => {
       buscarDescripcion();
     }, 500);
   }
-}
+};
 
 // Mostrar la descripcion del producto
 const buscarDescripcion = async () => {
   try {
-
-    const resultado = await precioReal(codigoProducto.value, cantidad2.value)
-    const prod = Array.isArray(resultado) ? resultado[0] : resultado
+    const resultado = await precioReal(codigoProducto.value, cantidad2.value);
+    const prod = Array.isArray(resultado) ? resultado[0] : resultado;
 
     if (!prod) {
-
-      nuevosDatos.value = null
-      return
+      nuevosDatos.value = null;
+      return;
     }
 
-    const nuevaDescripcion = await obtenerProductosId(codigoProducto.value)
+    const nuevaDescripcion = await obtenerProductosId(codigoProducto.value);
     //console.log('esta es la nueva descripcion: ', nuevaDescripcion)
 
     // Guardar en variable reactiva
@@ -1356,21 +1351,21 @@ const buscarDescripcion = async () => {
       codigo: codigoProducto.value,
       descripcion: nuevaDescripcion.DESCRIPCION_PROD,
       precio: prod.PRECIO_FINAL,
-      subtotal: prod.PRECIO_FINAL * cantidad2.value
-    }
+      subtotal: prod.PRECIO_FINAL * cantidad2.value,
+    };
 
     //console.log('Estos son los nuevos datos', nuevosDatos.value)
   } catch (error) {
-    nuevosDatos.value = null
+    nuevosDatos.value = null;
   }
-}
+};
 
 // Si se actualiza cantidad
 watch(cantidad2, async () => {
-  if(codigoProducto.value.length > 0){
-  await buscarDescripcion()
+  if (codigoProducto.value.length > 0) {
+    await buscarDescripcion();
   }
-}, )
+});
 
 const cantidadIngresada = (producto) => {
   if (!producto.CANTIDAD_PEDIDA || producto.CANTIDAD_PEDIDA <= 0) {
@@ -1641,9 +1636,7 @@ const prepararDataCotizacion = async (idPedido) => {
 
     resumen: {
       subtotal: formatCurrency(subtotal, 2),
-      totalPagar: `Q.${truncateDosDecimales(totalStore.totalGeneral).toFixed(
-        2
-      )}`,
+      totalPagar: formatCurrency(totalStore.totalGeneral, 2),
       totalItems,
     },
     nombreVendedor: nombreVendedor,
@@ -1776,7 +1769,6 @@ const abrirCuponazo = async () => {
 
 // nuevo catalogo
 const abrirCatalogo2 = async () => {
-
   $q.loading.show({
     message: "Cargando productos...",
     spinnerColor: "green",
@@ -2121,9 +2113,9 @@ const buscarProductoEscaneado = async () => {
   let resultado = null;
 
   // 1. buscar por código de barras
-  try{
+  try {
     resultado = await consultarCodigoM(codigoProducto.value, cantidad2.value);
-  } catch{
+  } catch {
     //showErrorNotification('error', error)
     //return
   }
@@ -2136,9 +2128,12 @@ const buscarProductoEscaneado = async () => {
         cantidad2.value
       );
 
-      console.log(productoDirecto)
+      console.log(productoDirecto);
 
-      if (productoDirecto.PRECIO_FINAL === 0 || productoDirecto.PRECIO_FINAL === null) {
+      if (
+        productoDirecto.PRECIO_FINAL === 0 ||
+        productoDirecto.PRECIO_FINAL === null
+      ) {
         await errorAgregarProductoConSonido(
           `Producto sin precio, El código ${codigoProducto.value} no tiene precio`
         );
@@ -2290,7 +2285,7 @@ const agregarProductoAlPedido2 = async (producto) => {
       },
     });
   } catch (error) {
-    showErrorNotificationInside('Error', error)
+    showErrorNotificationInside("Error", error);
     //console.error("Error al agregar producto:", error);
     loadingAgregar.value = false;
   }
@@ -2341,7 +2336,7 @@ const seleccionarProducto2 = async (producto, index) => {
     await nextTick();
     moverFocoAlSiguienteProducto(index);
   } catch (error) {
-    showErrorNotificationInsideModal('Error', error)
+    showErrorNotificationInsideModal("Error", error);
     //console.error("Error in seleccionarProducto2:", error);
   }
 };
@@ -3020,6 +3015,79 @@ defineExpose({
 
 .catalogo-table .q-table__tbody tr {
   animation: fadeInRow 0.3s ease-out;
+}
+
+/* Estilos para el contador de productos mejorado */
+.productos-counter-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  min-width: auto;
+  width: fit-content;
+}
+
+.productos-counter-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+}
+
+.counter-info,
+.total-info {
+  text-align: center;
+  min-width: 60px;
+}
+
+.counter-label,
+.total-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 1px;
+}
+
+.counter-number {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #007bff;
+  line-height: 1;
+}
+
+.total-amount {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #28a745;
+  line-height: 1;
+}
+
+.productos-counter-card .q-separator {
+  height: 40px;
+  opacity: 0.3;
+}
+
+/* Responsive para el contador */
+@media (max-width: 768px) {
+  .productos-counter-card .row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .productos-counter-card .q-separator {
+    display: none;
+  }
+
+  .counter-info,
+  .total-info {
+    min-width: auto;
+  }
+
+  .counter-number,
+  .total-amount {
+    font-size: 1rem;
+  }
 }
 
 .catalogo-table .q-table__tbody tr:nth-child(1) {
