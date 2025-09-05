@@ -15,10 +15,10 @@
           v-ripple
           @click="router.push(item.route)"
         >
-        <q-item-section avatar>
-          <q-icon :name="item.icon" />
-        </q-item-section>
-        <q-item-section>{{ item.label }}</q-item-section>
+          <q-item-section avatar>
+            <q-icon :name="item.icon" />
+          </q-item-section>
+          <q-item-section>{{ item.label }}</q-item-section>
         </q-item>
       </q-list>
     </q-drawer>
@@ -120,9 +120,7 @@
       <router-view />
     </q-page-container>
 
-    <q-footer
-      v-if="route.path !== '/ventas'"
-    >
+    <q-footer v-if="route.path !== '/ventas'">
       <div class="bg-yellow-8 text-black text-center q-pa-sm">
         <strong> Libreria San Bartolome - 2025 </strong>
       </div>
@@ -185,18 +183,18 @@ const menuOptions = [
   { label: "Clientes", icon: "person", route: "/clientes" },
   { label: "Facturas", icon: "description", route: "/facturas" },
   { label: "Notas de Crédito", icon: "edit_note", route: "/notas" },
-  { label: "Reportes", icon: "bar_chart", route: "/reportes" },
+  { label: "Corte de caja", icon: "bar_chart", route: "/reportes" },
   { label: "Pendientes", icon: "schedule", route: "/pendientes" },
   { label: "Configuración", icon: "settings", route: "/configuracion" },
 ];
 
 const menuFiltrado = computed(() => {
-  if (userStore.tipoUsuarioStore === 'ROMPEFILA') {
-    return menuOptions.filter(option => option.route === '/ventas');
+  if (userStore.tipoUsuarioStore === "ROMPEFILA") {
+    return menuOptions.filter((option) => option.route === "/ventas");
   }
 
   return menuOptions;
-})
+});
 
 // Variables para sincronización automática (mantener compatibilidad)
 const ultimaSincronizacion = ref<Date | null>(null);
