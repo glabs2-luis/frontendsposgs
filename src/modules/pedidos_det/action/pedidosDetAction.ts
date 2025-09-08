@@ -76,7 +76,7 @@ export const actualizarCantidadPedidoDetAction = async (
   cantidad: number
 ): Promise<void> => {
   try {
-    await posApi.put(`/pedidos-det/updateCantidad`, {
+    await posApi.put(`/pedidos-det/updateCantidad`, {}, {
       params: { ID_PEDIDO_DET: id, CANTIDAD_NUEVA: cantidad },
     });
   } catch (error) {

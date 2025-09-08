@@ -372,7 +372,7 @@ const verificarPassword = async () => {
     return;
   }
 
-  if (datos.TIPO_VENDEDOR === "SA") {
+  if (datos.TIPO_VENDEDOR === "SA" || datos.TIPO_VENDEDOR === "AD") {
     // Validar que sea tipo SA
     accesoPermitido.value = true; // Activar acceso
     mostrarModal.value = false;
