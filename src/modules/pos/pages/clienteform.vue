@@ -173,12 +173,9 @@
             <q-toggle
               v-model="validador"
               label="Validar"
-              icon="assignment"
+              icon="done"
               size="sm"
-              color="deep-orange-5"
-              class="text-caption"
-              unelevated
-              rounded
+              class="boton-amarillo"
               style="min-height: 38px"
             ></q-toggle>
             <q-tooltip> Validador de Nit</q-tooltip>
@@ -346,7 +343,7 @@
               </q-tab-panels>
 
               <q-card-actions align="right">
-                <q-btn flat label="Cerrar" color="primary" v-close-popup />
+                <q-btn flat label="Cerrar" color="orange" v-close-popup />
               </q-card-actions>
             </q-card>
           </q-dialog>
@@ -356,8 +353,7 @@
         <div class="btn-pendientes-container">
           <q-btn
             icon="assignment"
-            color="red"
-            class="color: black"
+            class="boton-amarillo"
             @click="abrirModalPedidosPendientes"
           />
         </div>
@@ -368,12 +364,12 @@
             <div class="row items-center q-gutter-sm no-wrap">
               <!-- Número de Pedido -->
               <div v-if="mostrarNumPedido" class="row items-center q-gutter-xs">
-                <q-icon name="receipt_long" color="primary" size="sm" />
                 <div
                   class="text-subtitle2 text-primary"
                   style="font-size: 160%"
                 >
-                  {{ estadoPedido }} #{{ numPedido2 }}
+                  {{ estadoPedido === "pedido" ? "Pedido" : "Cotización" }} N°
+                  {{ formatNumber(numPedido2) }}
                 </div>
               </div>
 
@@ -407,11 +403,14 @@
 
         <!-- Modal para escanear codigo de rompefilas -->
         <q-dialog v-model="modalCodigoRompefilas">
-          <q-card style="min-width: 350px; min-height: 200px; border-radius: 10px;">
-
+          <q-card
+            style="min-width: 350px; min-height: 200px; border-radius: 10px"
+          >
             <q-toolbar class="bg-yellow-8 text-black">
               <q-icon name="qr_code_2" size="sm" class="q-mr-sm" />
-              <q-toolbar-title class="text-subtitle1 text-weight-bold">Rompefilas</q-toolbar-title>
+              <q-toolbar-title class="text-subtitle1 text-weight-bold"
+                >Rompefilas</q-toolbar-title
+              >
               <q-btn icon="close" flat round dense v-close-popup />
             </q-toolbar>
 
@@ -427,13 +426,16 @@
             </q-card-section>
 
             <q-card-actions align="right" class="q-pa-md">
-              <q-btn label="Cancelar" color="grey-8" @click="handleCancelar" />
-              <q-btn label="Aceptar" color="yellow-8 text-black text-weight-bold" @click="handleAceptarCodigo" :disable="!codigoBarra" />
+              <q-btn label="Cancelar" color="orange" @click="handleCancelar" />
+              <q-btn
+                label="Aceptar"
+                color="orange"
+                @click="handleAceptarCodigo"
+                :disable="!codigoBarra"
+              />
             </q-card-actions>
-            
           </q-card>
         </q-dialog>
-
       </div>
     </div>
   </div>
@@ -506,8 +508,11 @@ import { runWithLoading } from "@/common/helper/notification";
 import { PedidosEnc } from "@/modules/pedidos_enc/interfaces/pedidoEncInterface";
 import { usePdfCotizacion } from "@/modules/cotizacion_pdf/composable/useCotizacion";
 import type { DataCotizacion } from "@/modules/cotizacion_pdf/interfaces/cotizacion.interface";
-import { obtenerDetallePedido, obtenerPedidoEncPorNumero } from "@/modules/pedidos_enc/action/pedidosEncAction";
-import { loginRoutes } from '../../login/router/index';
+import {
+  obtenerDetallePedido,
+  obtenerPedidoEncPorNumero,
+} from "@/modules/pedidos_enc/action/pedidosEncAction";
+import { loginRoutes } from "../../login/router/index";
 
 const { ObtenerBodegasId2 } = useBodegas();
 const storeSucursal = useStoreSucursal();
@@ -548,13 +553,17 @@ const mostrarNumPedido = computed(() => pedidoStore.numeroDePedido || 0);
 const numPedido2 = computed(() => pedidoStore.numeroDePedido || 0); // pedido funcional
 const focus2 = ref<HTMLInputElement | null>(null);
 let espera: ReturnType<typeof setTimeout> | null = null; // Para la busqueda automatica
-const estadoPedido = ref(!pedidoStore.estadoPedido || pedidoStore.estadoPedido === 'P' ? 'pedido' : 'cotización');
-const tab = ref('pedidos')
-const { generarCotizacionPDF } = usePdfCotizacion()
-const filtroPedidos = ref('');
-const filtroCotizaciones = ref('');
-const modalCodigoRompefilas = ref(false)
-const codigoBarra = ref('')
+const estadoPedido = ref(
+  !pedidoStore.estadoPedido || pedidoStore.estadoPedido === "P"
+    ? "pedido"
+    : "cotización"
+);
+const tab = ref("pedidos");
+const { generarCotizacionPDF } = usePdfCotizacion();
+const filtroPedidos = ref("");
+const filtroCotizaciones = ref("");
+const modalCodigoRompefilas = ref(false);
+const codigoBarra = ref("");
 
 // abrir expansion item y focus a nit
 watch(
@@ -1010,7 +1019,10 @@ const crearPedido = async () => {
     ID_SUCURSAL: Number(storeSucursal.idSucursal),
     USUARIO_INGRESO_PEDI: userStore.nombreVendedor.substring(0, 10),
     CODIGO_VENDEDOR: userStore.codigoVendedor,
-    CODIGO_DE_CLIENTE: nit === 'CF' ? obtenerConfiguracionPos.value.CODIGO_CLIENTE_CF : Number(clienteStore.idCliente),
+    CODIGO_DE_CLIENTE:
+      nit === "CF"
+        ? obtenerConfiguracionPos.value.CODIGO_CLIENTE_CF
+        : Number(clienteStore.idCliente),
     ESTADO_PEDIDO: estadoPedido.value === "pedido" ? "P" : "C",
   };
 
@@ -1118,7 +1130,7 @@ const buscarClienteDPINIT2 = async () => {
         telefono: clienteBD.TELEFONO || "",
         email: clienteBD.CORREO_ELECTRONICO || "",
       });
-      
+
       return;
     }
 
@@ -1176,16 +1188,15 @@ const buscarClienteDPINIT2 = async () => {
     }
 
     // 4) Si no hay en BD y SAT no devolvió nombre -> abrir modal solo con NIT o DPI
-    if(tipoDocumento.value==='nit'){
-      clienteTemp.value.NIT = doc
-    } else if (tipoDocumento.value==='dpi'){
-      clienteTemp.value.DPI = doc
+    if (tipoDocumento.value === "nit") {
+      clienteTemp.value.NIT = doc;
+    } else if (tipoDocumento.value === "dpi") {
+      clienteTemp.value.DPI = doc;
     }
 
     //clienteTemp.value.NIT = doc;
     //clienteTemp.value.DIRECCION = "Ciudad";
     abrirModalCliente.value = true;
-
   } catch (err) {
     abrirModalCliente.value = true;
     $q.notify({
@@ -1304,7 +1315,7 @@ onBeforeUnmount(() => {
 
 // Modal para escanear codigo generado en rompefilas
 const handleModalCodigo = (event: KeyboardEvent) => {
-  if (event.key === 'F9' && userStore.tipoUsuarioStore === 'POS') {
+  if (event.key === "F9" && userStore.tipoUsuarioStore === "POS") {
     if (numPedido2.value > 0) {
       $q.notify({
         type: "negative",
@@ -1312,25 +1323,27 @@ const handleModalCodigo = (event: KeyboardEvent) => {
         position: "top",
         timeout: 2000,
       });
-      return
+      return;
     }
-    event.preventDefault(); 
-    modalCodigoRompefilas.value = true
+    event.preventDefault();
+    modalCodigoRompefilas.value = true;
   }
 };
 
 const handleAceptarCodigo = async () => {
-  if (!codigoBarra.value) return
+  if (!codigoBarra.value) return;
 
   try {
     $q.loading.show({
-      message: 'Buscando pedido',
-      boxClass: 'bg-grey-2 text-grey-9',
-      spinnerColor: 'primary'
+      message: "Buscando pedido",
+      boxClass: "bg-grey-2 text-grey-9",
+      spinnerColor: "primary",
     });
 
     //console.log('Código de barras ingresado:', codigoBarra.value);
-    const pedidoEnc = await obtenerPedidoEncPorNumero(parseInt(codigoBarra.value))
+    const pedidoEnc = await obtenerPedidoEncPorNumero(
+      parseInt(codigoBarra.value)
+    );
 
     if (!pedidoEnc) {
       $q.notify({
@@ -1343,13 +1356,11 @@ const handleAceptarCodigo = async () => {
       return;
     }
 
-    await continuarPedido(pedidoEnc)
+    await continuarPedido(pedidoEnc);
 
     modalCodigoRompefilas.value = false;
-    codigoBarra.value = '';
-
+    codigoBarra.value = "";
   } catch (error) {
-
     $q.notify({
       type: "negative",
       message: `Pedido con numero ${codigoBarra.value} no encontrado.`,
@@ -1357,16 +1368,15 @@ const handleAceptarCodigo = async () => {
       timeout: 2000,
     });
   } finally {
-    $q.loading.hide()
+    $q.loading.hide();
   }
 };
 
 // Función para manejar el clic en el botón "Cancelar"
 const handleCancelar = () => {
   modalCodigoRompefilas.value = false;
-  codigoBarra.value = '';
+  codigoBarra.value = "";
 };
-
 </script>
 
 <style scoped>
@@ -1457,4 +1467,18 @@ const handleCancelar = () => {
   border-radius: 10px;
 }
 
+.boton-amarillo {
+  background: linear-gradient(90deg, #ffeb3b, #fbc02d);
+  color: #070606;
+  font-weight: 500;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.boton-amarillo:hover {
+  background: linear-gradient(90deg, #fbc02d, #f9a825);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transform: scale(1.02);
+}
 </style>
