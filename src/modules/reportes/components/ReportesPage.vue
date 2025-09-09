@@ -107,20 +107,20 @@
               />
             </div>
 
-            <!-- Serie -->
+            <!-- Serie Combo Box if needed -->
+            <!-- <q-select
+            v-model="serie"
+            :options="seriesOptions2"
+            label="Seleccionar Serie"
+            option-label="SERIE"
+            option-value="SERIE"
+            style="width: 250px"
+            emit-value
+            map-options
+            autofocus
+            /> -->
+            
             <div class="col-auto q-ma-md">
-              <q-select
-                v-model="serie"
-                :options="seriesOptions2"
-                label="Seleccionar Serie"
-                option-label="SERIE"
-                option-value="SERIE"
-                style="width: 250px"
-                emit-value
-                map-options
-                autofocus
-              />
-
               <!-- Botón Buscar Facturas -->
               <q-btn
                 class="q-pa-sm q-mt-md boton-amarillo"
@@ -404,7 +404,7 @@ const cancelar = () => {
 const formatearFechaGT = (fecha: string) =>
   fecha ? date.formatDate(new Date(fecha + "T00:00:00"), "DD/MM/YYYY") : "";
 
-// Series Disponibles
+// Series Disponibles - si habran mas a futuro xd
 const seriesOptions = computed(() => {
   return obtenerSeries.value?.map((item: any) => item.SERIE) || [];
 });
@@ -414,7 +414,7 @@ const seriesOptions2 = [serie2.value];
 // Funcion para buscar Facturas
 const buscarFacturas = async () => {
   // Validaciones
-  if (!serie.value) {
+  if (!storeSerie.serieSeleccionada) {
     showErrorNotification("Serie", "Debe seleccionar una serie");
     return;
   }
@@ -423,7 +423,7 @@ const buscarFacturas = async () => {
     const buscar = {
       fecha_inicial: new Date(rangoFechas.value.from),
       fecha_final: new Date(rangoFechas.value.to),
-      serie: serie.value,
+      serie: storeSerie.serieSeleccionada, // Serie en store
     };
 
     if (rangoFechas.value.to === undefined) {
