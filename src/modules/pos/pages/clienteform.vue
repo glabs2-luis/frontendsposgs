@@ -585,7 +585,7 @@ watch(abrirModalCliente, async (isOpen, wasOpen) => {
 
     // Crear pedido automáticamente al cerrar el modal
     await nextTick();
-    crearPedido();
+   // crearPedido();
   }
 });
 
@@ -625,11 +625,11 @@ watch(estadoPedido, (newEstado) => {
 const busquedaAutomatica = () => {
   if (espera) clearTimeout(espera); // Limpir tiempo
 
-  if (clienteStore.documento.length > 7) {
+  if (clienteStore.documento.length > 1) {
     //  Longitud mayor a 7 para buscar
     espera = setTimeout(() => {
       buscarClienteDPINIT2();
-    }, 500);
+    }, 700);
   }
 };
 
@@ -656,11 +656,14 @@ const anularPedido = async (pedido: PedidosEnc) => {
     usuario: userStore.nombreVendedor,
   });
 
+  // Limpiar Pedido
+  cleanAllStores()
   estadoPedido.value = "pedido";
 };
 
 // continuar pedido pendiente
 const continuarPedido = async (pedido) => {
+
   const tipoPedido = pedido.ESTADO_PEDIDO === "P" ? "pedido" : "cotización";
 
   const confirmado = await showConfirmationInsideModal2(
@@ -670,9 +673,8 @@ const continuarPedido = async (pedido) => {
     } ${tipoPedido} N° ${pedido.NUMERO_DE_PEDIDO}?`
   );
 
-  // if (!confirmado) return;
+   if (!confirmado) return;
 
-  // cleanAllStores();
   await nextTick();
 
   await formRef.value?.resetValidation();
@@ -704,6 +706,8 @@ const continuarPedido = async (pedido) => {
 
   // Enfocar productosTab para continuar
   await productosTabRef.value?.enfocarCodigo();
+
+
 };
 
 const truncateDosDecimales = (numero) => {
@@ -941,6 +945,7 @@ const abrirModalPedidosPendientes = () => {
 
 //Llenar modal desde esta pagina
 const clienteTemp = ref({
+  idCliente: undefined,
   NIT: "",
   DPI: "",
   NOMBRE: "",
@@ -952,6 +957,7 @@ const clienteTemp = ref({
 //Limpiar los datos del cliente
 const resetCliente = () => {
   clienteTemp.value = {
+    idCliente : undefined,
     NIT: "",
     DPI: "",
     NOMBRE: "",
@@ -966,7 +972,8 @@ const nuevoPedido = () => {
 };
 
 // crear pedido xd
-const crearPedido = () => {
+const crearPedido = async () => {
+
   if (pedidoStore.idPedidoEnc) {
     showErrorNotification(
       "Error",
@@ -975,9 +982,16 @@ const crearPedido = () => {
     return;
   }
 
+  // Se debe validar bien que no exista
+  // if(validador.value === true){
+  //   showErrorNotification('Validar Cliente', 'Debe validar al cliente con DPI o NIT')
+  //   return
+  // }
+
   const nombre = clienteStore.nombre?.trim();
   const direccion = clienteStore.direccion?.trim();
   const nit = clienteStore.documento?.trim();
+  const codigo = clienteStore.idCliente
 
   if (!nombre || !direccion || !nit) {
     showErrorNotification(
@@ -1000,10 +1014,9 @@ const crearPedido = () => {
     ESTADO_PEDIDO: estadoPedido.value === "pedido" ? "P" : "C",
   };
 
-  //console.log('yo soy pedido enc', pedidoEnc)
-
   mutateCrearPedidoEnc(pedidoEnc, {
     onSuccess: async (data) => {
+
       // cerrar expansion
       expansion.value?.hide();
       // Actualizar variables reactivas
@@ -1082,8 +1095,7 @@ const { data, DatosSat2 } = useValidation(
   empresa.value
 );
 
-const id = ref(0)
-
+// Funcion de busqueda de cliente
 const buscarClienteDPINIT2 = async () => {
   try {
     // Valor que se ingresa es doc
@@ -1097,12 +1109,10 @@ const buscarClienteDPINIT2 = async () => {
     const tipo = tipoDocumento.value;
     const clienteBD = await obtenerClientePorDocumento(doc, tipo);
 
-    //console.log('encontro cliente en la db: ', clienteBD)
-
     if (clienteBD) {
       clienteStore.setCliente({
         idCliente: clienteBD.ID_ACLIENTE,
-        documento: clienteBD.NIT || "",
+        documento: tipoDocumento.value === 'nit' ? clienteBD.NIT : clienteBD.DPI, // si se busca por dpi o nit
         nombre: clienteBD.NOMBRE || "",
         direccion: clienteBD.DIRECCION || "",
         telefono: clienteBD.TELEFONO || "",
@@ -1116,8 +1126,8 @@ const buscarClienteDPINIT2 = async () => {
     if (validador.value) {
       $q.loading.show({
         message: "Consultando datos en SAT…",
-        boxClass: "bg-grey-2 text-grey-9",
-        spinnerColor: "primary",
+        spinnerColor: "green",
+        spinnerSize: 50
       });
 
       const result = await DatosSat2(
@@ -1133,8 +1143,9 @@ const buscarClienteDPINIT2 = async () => {
 
       // result = texto
       if (result.isCertified === false) {
-        showErrorNotification("Error", result.data.nombre);
-        return;
+        showErrorNotification("Error", result.data.nombre)
+        return
+
       } else {
         // 3) No existe en BD pero SAT devolvió nombre -> abrir modal con datos prellenados
         abrirModalCliente.value = true;
@@ -1147,12 +1158,20 @@ const buscarClienteDPINIT2 = async () => {
           //await crearPedido() // Nuevo crear pedido - no lo esta creando miau miau miau
         });
         // Crear el pedido ahora
-        clienteStore.nombre = clienteTemp.value.NOMBRE;
-        clienteStore.direccion = clienteTemp.value.DIRECCION;
-        clienteStore.telefono = clienteTemp.value.TELEFONO;
-        clienteStore.documento = clienteTemp.value.NIT
-          ? clienteTemp.value.NIT
-          : clienteTemp.value.DPI;
+
+        const cliente2 = await obtenerClientePorDocumento(doc, tipo)
+        //aqui guardar el id
+
+        //clienteStore.idCliente = 
+          clienteStore.setCliente({
+          idCliente: Number(clienteStore.idCliente) || undefined, //  conservar si existía
+          documento: clienteTemp.value.NIT || clienteTemp.value.DPI,
+          nombre: clienteTemp.value.NOMBRE,
+          direccion: clienteTemp.value.DIRECCION,
+          telefono: clienteTemp.value.TELEFONO || "",
+          email: clienteTemp.value.CORREO_ELECTRONICO || "",
+        })
+
       }
     }
 
@@ -1233,9 +1252,14 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
     payload.TELEFONO = "";
   }
 
+
+
   mutateCrearCliente(payload, {
-    onSuccess: (creado: any) => {
+    
+    onSuccess: (creado: Cliente) => {
+
       clienteStore.setCliente({
+        // idCliente no existe
         idCliente: creado.ID_ACLIENTE,
         documento: creado.DPI || creado.NIT || "",
         nombre: creado.NOMBRE,
@@ -1254,9 +1278,13 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
         color: "green",
         timeout: 2000,
       });
+
+      // Crear pedido
+      crearPedido()
+
     },
     onError: (error: any) => {
-      //console.error("Error creando cliente:", error);
+
       showErrorNotification(
         "Error",
         error.message || "No se pudo registrar el cliente"

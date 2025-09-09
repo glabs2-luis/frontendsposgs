@@ -37,10 +37,14 @@ export const useCodigo = () => {
   })
   
   const obtenerProducto2 = (codigo: Ref<string>) => useQuery({
-    queryKey: ['codigo-barra-producto', codigo],
+    queryKey: ['codigo-barra-producto2', codigo],
     queryFn: () => obtenerProductoPorCodigoAction(codigo.value),
     enabled: false
   })
+
+//   const obtenerProducto2 = async (codigo: string) => {
+//   return await obtenerProductoPorCodigoAction(codigo)
+// }
 
   return {
     queryClient,

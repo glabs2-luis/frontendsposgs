@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="mostrar" @show="enfocarNombre">
+  <q-dialog v-model="mostrar" persistent @show="enfocarNombre">
     <q-card style="min-width: 500px; max-width: 90vw;">
       <q-card-section class="row items-center justify-between">
         <div class="titulo-modal"> {{  props.modo === 'crear' ? 'Crear Cliente ': 'Editar Cliente'}} </div>
@@ -12,8 +12,8 @@
 
         <q-form @submit.prevent="Guardar">
           <q-input ref="focusNombre" v-model="clienteForm.NOMBRE" label="Nombre" dense outlined :rules="[val => !!val || 'Requerido']" />
-          <q-input v-model="clienteForm.DPI" label="DPI" dense outlined class="q-mb-md"/>
-          <q-input v-model="clienteForm.NIT" label="NIT" dense outlined :rules="[val => !!val || 'Requerido']" />
+          <q-input v-model="clienteForm.DPI" label="DPI" dense outlined :rules="[validarDpiNit]" class="q-mb-md"/>
+          <q-input v-model="clienteForm.NIT" label="NIT" dense outlined :rules="[validarDpiNit]" />
           <q-input v-model="cliente.DIRECCION" label="Dirección" dense outlined  :rules="[val => !!val || 'Requerido']" />
           <q-input v-model="cliente.TELEFONO" label="Teléfono" dense outlined class="q-mb-md" mask="####-####" />
           <q-input v-model="cliente.CORREO_ELECTRONICO" label="Correo Electrónico" dense outlined class="q-mb-sm" type="email" />
@@ -52,6 +52,15 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
   (e: 'guardar', clienteActualizado: Cliente): void
 }>()
+
+const validarDpiNit = (val: string) => {
+  const form = clienteForm.value ?? {}  // Acceder al value
+  
+  if (!val && !form.DPI && !form.NIT) {
+    return 'Debes ingresar al menos NIT o DPI'
+  }
+  return true
+}
 
 // Modal interno 
 const mostrar = ref(props.modelValue)

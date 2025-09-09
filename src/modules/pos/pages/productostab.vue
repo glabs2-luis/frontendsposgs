@@ -1337,29 +1337,52 @@ const busquedaAutomatica = () => {
 
 // Mostrar la descripcion del producto
 const buscarDescripcion = async () => {
+
   try {
 
-    const resultado = await precioReal(codigoProducto.value, cantidad2.value)
-    const prod = Array.isArray(resultado) ? resultado[0] : resultado
+    let prod = null // Tiene el precio del producto
+    let codigoFinal = codigoProducto.value // Tiene el codigo a buscar descripcion
 
+    // 1. Intentar con el código ingresado
+    try {
+      prod = await precioReal(codigoProducto.value, cantidad2.value)
+
+    } catch (error) {
+      //console.warn("No se encontró precio con el código:", codigoProducto.value)
+    }
+
+    // 2. Si no existe → intentar con PRODUCT0 alterno
     if (!prod) {
 
+      const { data } = await refetchProducto2() // aquí data no es ref
+
+      if (data && data.PRODUCT0) {
+        try {
+          prod = await precioReal(data.PRODUCT0, cantidad2.value)
+          codigoFinal = data.PRODUCT0
+
+        } catch (error) {
+          //console.warn("Tampoco se encontró precio con PRODUCT0:", data.PRODUCT0)
+        }
+      }
+    }
+
+    // 3. Si aún no hay prod → salir
+    if (!prod) {
       nuevosDatos.value = null
       return
     }
 
-    const nuevaDescripcion = await obtenerProductosId(codigoProducto.value)
-    //console.log('esta es la nueva descripcion: ', nuevaDescripcion)
+    // 4. Obtener descripción
+    const nuevaDescripcion = await obtenerProductosId(codigoFinal)
 
-    // Guardar en variable reactiva
     nuevosDatos.value = {
-      codigo: codigoProducto.value,
+      codigo: codigoFinal, // No se muestra en pantalla
       descripcion: nuevaDescripcion.DESCRIPCION_PROD,
       precio: prod.PRECIO_FINAL,
       subtotal: prod.PRECIO_FINAL * cantidad2.value
     }
 
-    //console.log('Estos son los nuevos datos', nuevosDatos.value)
   } catch (error) {
     nuevosDatos.value = null
   }
@@ -1677,8 +1700,8 @@ const imprimirCotizacion = async () => {
   try {
     $q.loading.show({
       message: "Imprimiendo cotización",
-      boxClass: "bg-grey-2 text-grey-9",
-      spinnerColor: "primary",
+      spinnerColor: "green",
+      spinnerSize: 50,
     });
 
     const datosCotizacion = await prepararDataCotizacion(
@@ -1695,7 +1718,8 @@ const imprimirCotizacion = async () => {
 
     $q.loading.hide();
   } catch (error) {
-    //console.log('Error al imprimir la cotización: ', error)
+    showErrorNotification('Error'), error
+
   } finally {
     $q.loading.hide();
   }
@@ -1885,6 +1909,7 @@ const terminarVenta = async () => {
 
 // Guarda factura enc y det
 const confirmarFactura = async () => {
+
   if (!configuracionStore.serieSeleccionada) {
     modalFacturacion.value = false;
     showErrorNotification(
@@ -1971,7 +1996,7 @@ const terminarPedidoRompefilas = async () => {
 
     $q.loading.show({
       message: "Generando ticket...",
-      spinnerColor: "primary",
+      spinnerColor: "green",
       spinnerSize: 50,
     });
 
@@ -2011,13 +2036,6 @@ const imprimirFactura = async (data) => {
   const detalle = await obtenerDetalleFactura3(idFacturaEnc.value);
 
   if (!detalle || detalle.length === 0) return;
-
-  // const itemsFactura = detalle.map((item) => ({
-  //   cantidad: item.CANTIDAD_VENDIDA, // Cantidad Pedida
-  //   descripcion: item.producto.DESCRIPCION_PROD, // Descripcion real
-  //   precio: item.PRECIO_UNITARIO_VTA.toFixed(4), // Precio Unidad Venta
-  //   subtotal: item.SUBTOTAL_GENERAL.toFixed(4), //
-  // }));
 
   const itemsFactura = detalle.map((item) => ({
     cantidad: item.CANTIDAD_PEDIDA, // Cantidad Pedida
@@ -2085,6 +2103,7 @@ const imprimirFactura = async (data) => {
   // limpiar campos de pago
   montoEfectivo.value = null;
   montoTarjeta.value = null;
+  tipoPago.value = 'EFECTIVO' // Setear efectivo para la nueva factura
 
   // Invalidate pedidos pendientes y refetch
   queryClient.invalidateQueries({
@@ -2166,7 +2185,8 @@ const buscarProductoEscaneado = async () => {
         precio: {
           PRECIO_FINAL: prod.PRECIO_FINAL,
         },
-      };
+      }
+      
     } catch (err) {
       await errorAgregarProductoConSonido(
         `Error al buscar producto (${codigoProducto.value}) por código: ${
