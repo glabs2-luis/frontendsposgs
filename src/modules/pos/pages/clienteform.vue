@@ -182,8 +182,8 @@
           </q-card>
 
           <!-- Modal de Pedidos Pendientes -->
-          <q-dialog v-model="modalPendientes">
-            <q-card class="q-pa-md" style="min-width: 900px">
+          <q-dialog v-model="modalPendientes" persistent no-focus-trap>
+            <q-card class="q-pa-md" style="min-width: 900px; z-index: -1;">
               <q-card-section class="row items-center q-pb-none">
                 <q-icon name="assignment" color="deep-orange-6" />
                 <span class="q-ml-md text-subtitle1"
@@ -215,6 +215,7 @@
 
                   <q-input
                     dense
+                    autofocus
                     debounce="300"
                     v-model="filtroPedidos"
                     placeholder="Buscar pedidos..."
@@ -275,6 +276,7 @@
 
                   <q-input
                     dense
+                    autofocus
                     debounce="300"
                     v-model="filtroCotizaciones"
                     placeholder="Buscar cotizaciones..."
@@ -321,6 +323,7 @@
                             icon="input"
                             color="green-8"
                             flat
+                            autofocus
                             dense
                             label=""
                             @click="continuarPedido(pedido)"
@@ -632,12 +635,15 @@ watch(estadoPedido, (newEstado) => {
 
 //busqueda automatica
 const busquedaAutomatica = () => {
-  if (espera) clearTimeout(espera); // Limpir tiempo
+
+  if (espera) clearTimeout(espera); // Limpiar tiempo
 
   if (clienteStore.documento.length > 1) {
-    //  Longitud mayor a 7 para buscar
     espera = setTimeout(() => {
       buscarClienteDPINIT2();
+      clienteStore.nombre = '',
+      clienteStore.direccion = ''
+      clienteTemp.value.NOMBRE = ''
     }, 700);
   }
 };
@@ -649,7 +655,10 @@ const handleActualizarPedido = (nuevoEstado: string) => {
 
 // Anular pedido pendiente
 const anularPedido = async (pedido: PedidosEnc) => {
+
   const tipoPedido = pedido.ESTADO_PEDIDO === "P" ? "pedido" : "cotización";
+
+  await nextTick()
 
   const confirmado = await showConfirmationInsideModal(
     `Anular ${tipoPedido}`,
@@ -1380,6 +1389,7 @@ const handleCancelar = () => {
 </script>
 
 <style scoped>
+
 .total-card {
   background-color: #fcf5d6;
   border: 1px solid #fae4a2;

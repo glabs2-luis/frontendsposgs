@@ -138,12 +138,17 @@ export const showConfirmationInsideModal = async (
     allowOutsideClick: false,
     allowEscapeKey: false,
     didOpen: () => {
-      const btn = Swal.getConfirmButton();
-      btn?.focus();
       const container = document.querySelector(
         ".swal2-container"
       ) as HTMLElement;
-      if (container) container.style.zIndex = "9999";
+      if (container) container.style.zIndex = "9999999";
+    
+      // Forzar que Swal recupere el foco después
+      setTimeout(() => {
+        const btn = Swal.getConfirmButton();
+        if (btn) btn.focus();
+              btn.dispatchEvent(new Event("focus")); 
+      }, 400);
     },
   });
 
@@ -171,13 +176,19 @@ export const showConfirmationInsideModal2 = async (
     focusConfirm: true,
     allowOutsideClick: false,
     allowEscapeKey: false,
+    
     didOpen: () => {
-      const btn = Swal.getConfirmButton();
-      btn?.focus();
       const container = document.querySelector(
         ".swal2-container"
       ) as HTMLElement;
-      if (container) container.style.zIndex = "9999";
+      if (container) container.style.zIndex = "9999999";
+    
+      // Forzar que Swal recupere el foco después
+      setTimeout(() => {
+        const btn = Swal.getConfirmButton();
+              btn.dispatchEvent(new Event("focus")); 
+        if (btn) btn.focus();
+      }, 400); 
     },
   });
 

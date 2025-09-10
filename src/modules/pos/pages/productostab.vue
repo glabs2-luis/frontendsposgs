@@ -3,7 +3,7 @@
     <q-card
       flat
       bordered
-      class="q-pa-md q-mb-xs bg-yellow-1 text-black rounded-borders shadow-2"
+      class="q-pa-sm q-mb-xs bg-yellow-1 text-black rounded-borders shadow-2"
     >
       <!-- Detalle del pedido -->
       <div class="row items-center justify-between q-mb-md">
@@ -163,8 +163,8 @@
     <q-dialog v-model="modalProductos2" maximized>
       <q-card class="catalogo-modal">
         <!-- Header mejorado -->
-        <q-card-section class="catalogo-header q-pa-lg">
-          <div class="row items-center justify-between">
+        <q-card-section class="catalogo-header q-pa-xs q-pl-md">
+          <div class="row items-center q-pa-xs justify-between">
             <div class="col">
               <div class="text-h4 text-weight-bold q-mb-xs">
                 <q-icon name="inventory_2" class="q-mr-md" />
@@ -215,7 +215,7 @@
         </q-card-section>
 
         <!-- Buscador mejorado -->
-        <q-card-section class="q-pa-sm q-pb-md">
+        <q-card-section class="q-pa-xs">
           <div class="search-container">
             <q-input
               ref="buscadorProductoRef"
@@ -244,7 +244,7 @@
             </q-input>
 
             <!-- Estadísticas -->
-            <div class="row items-center justify-between q-mt-md">
+            <div class="row items-center justify-between q-mt-xs q-pl-md">
               <div class="text-caption text-grey-6">
                 <span v-if="loadingProductosQuery && !todosProductos">
                   <q-spinner-dots color="grey-6" size="16px" class="q-mr-xs" />
@@ -266,7 +266,7 @@
         </q-card-section>
 
         <!-- Tabla de productos mejorada -->
-        <q-card-section class="q-pa-sm q-pt-none">
+        <q-card-section class="q-pa-xs q-pl-sm">
           <!-- Loading inicial - cuando no hay productos y está cargando -->
           <div
             v-if="loadingProductosQuery && !todosProductos"
@@ -1159,7 +1159,7 @@ const focusBtnConfirmar = async () => {
 */
 
 watch(todosProductos, async (nuevos, anteriores) => {
-  
+
   if (!nuevos || nuevos.length === 0) return;
   
   // Evitar reescritura innecesaria
@@ -1469,6 +1469,7 @@ const confirmarContingencia = async () => {
       timeout: 3000,
       icon: "warning",
     });
+    
   } else {
     $q.notify({
       type: "info",
@@ -2820,8 +2821,8 @@ defineExpose({
 /* Contenedor del buscador */
 .search-container {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 8px;
+  padding: 8px 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
