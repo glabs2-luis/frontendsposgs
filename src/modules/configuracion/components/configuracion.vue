@@ -405,7 +405,6 @@ const configuracionStore = useConfiguracionStore();
 
 // sync
 import { useSync } from "@/modules/sync/composables/useSync";
-import { u } from "@tanstack/vue-query/build/legacy/queryClient-CAHOJcvF";
 const { seriesSucursal } = useSeries();
 const storeSucursal = useStoreSucursal();
 

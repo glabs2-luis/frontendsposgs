@@ -193,6 +193,7 @@
               </div>
             </div>
             <div class="col-auto row items-center q-gutter-sm">
+
               <!-- Botón de refresh -->
               <q-btn
                 icon="refresh"
@@ -329,7 +330,7 @@
           <!-- Tabla de productos -->
           <div v-else>
             <q-table
-              :rows="productosFiltrados2.slice(0, 30)"
+              :rows="productosFiltrados2.slice(0, 50)"
               :columns="columnasCatalogo"
               row-key="PRODUCT0"
               :pagination="paginacionCatalogo"
@@ -339,8 +340,8 @@
               bordered
               separator="cell"
               virtual-scroll
-              :virtual-scroll-item-size="60"
-              :rows-per-page-options="[50, 100, 200]"
+              :virtual-scroll-item-size="48"
+              :rows-per-page-options="[25, 50, 100]"
               :wrap-cells="true"
             >
               <!-- Columna personalizada para código -->
@@ -867,6 +868,7 @@ import {
   onBeforeUnmount,
   nextTick,
   toRaw,
+  shallowRef
 } from "vue";
 import {
   showConfirmationDialog,
@@ -904,6 +906,7 @@ import {
 } from "@/modules/pedidos_enc/action/pedidosEncAction";
 import { useClienteStore } from "@/stores/cliente";
 import { usePdfTicket } from "@/modules/ticket_pdf/composable/useTicket";
+import { db } from "@/db/productosDB"
 
 /*
 ==========================================================
@@ -1089,6 +1092,7 @@ const subtotalCalculado = ref(0);
 const espera = ref(null); // guarda el timeout
 const nuevosDatos = ref(null); // Mostrar info del producto
 const codigoBarra = ref("");
+const productosCacheados = shallowRef([]) // superfiical que solo ref
 const { obtenerProducto } = useCodigo();
 const { obtenerProducto2 } = useCodigo();
 const { data: productoEncontrado, refetch: refetchProducto } =
@@ -1153,6 +1157,29 @@ const focusBtnConfirmar = async () => {
                 WATCHS Y WATCH EFFECTS
 ==========================================================
 */
+
+watch(todosProductos, async (nuevos, anteriores) => {
+  
+  if (!nuevos || nuevos.length === 0) return;
+  
+  // Evitar reescritura innecesaria
+  if (anteriores && nuevos.length === anteriores.length) return;
+  
+  try {
+    await db.productos.clear();
+    
+    // Convertir a objetos planos
+    const productosPlanos = nuevos.map((p) => JSON.parse(JSON.stringify(p)));
+    
+    await db.productos.bulkPut(productosPlanos);
+    
+    //console.log("Productos guardados en IndexedDB:", productosPlanos.length);
+    productosCacheados.value = productosPlanos;
+  } catch (err) {
+    //console.error("Error guardando en IndexedDB:", err);
+  }
+});
+
 // focus en modal cupon
 watch(modalCuponazo, (val) => {
   if (val)
@@ -1253,6 +1280,19 @@ watch(modalProductos2, async (val) => {
   }
 });
 
+onMounted(async () => {
+  try {
+    const cache = await db.productos.limit(1000).toArray();
+    if (cache.length > 0) {
+      // productos ya vienen planos, pero hacemos spread por seguridad
+      productosCacheados.value = cache.map((p) => ({ ...p }));
+      //console.log("Productos cargados desde IndexedDB:", cache.length);
+    }
+  } catch (err) {
+   // console.error("Error leyendo de IndexedDB:", err);
+  }
+});
+
 const buscarProducto = async () => {
   refetchProducto();
 
@@ -1269,26 +1309,23 @@ const buscarProducto = async () => {
 
 // filtro del catalogo
 const productosFiltrados2 = computed(() => {
-  if (!filtroProductos.value) return productosUnicos.value;
+  if (!filtroProductos.value) return productosUnicos.value.slice(0, 100); // no más de 500
 
-  const palabras = filtroProductos.value
-    .toLowerCase()
-    .split(" ")
-    .filter((p) => p.trim() !== "");
+  const palabras = filtroProductos.value.toLowerCase().split(" ").filter(Boolean);
 
-  return productosUnicos.value.filter((p) => {
-    const campos = `${p.DESCRIPCION_PROD || ""} ${p.DESCRIPCION_MARCA || ""} ${
-      p.PRODUCT0 || ""
-    }`.toLowerCase();
-    return palabras.every((palabra) => campos.includes(palabra));
-  });
+  return productosUnicos.value
+    .filter((p) => {
+      const campos = `${p.DESCRIPCION_PROD || ""} ${p.DESCRIPCION_MARCA || ""} ${p.PRODUCT0 || ""}`.toLowerCase();
+      return palabras.every((palabra) => campos.includes(palabra));
+    })
+    .slice(0, 500); // cortar después del filtro
 });
 
 // Mapear los productos para mostrar un registro en la tabla
 const productosUnicos = computed(() => {
-  if (!todosProductos.value) return [];
+//  if (!todosProductos.value) return [];
+  if (!productosCacheados.value) return [];
 
-  //console.log('Primer Producto: ', toRaw(todosProductos.value[10]))
   // Para evitar duplicados
   const mapa = new Map();
 
