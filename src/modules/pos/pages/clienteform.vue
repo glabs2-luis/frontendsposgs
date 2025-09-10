@@ -215,7 +215,7 @@
 
                   <q-input
                     dense
-                    autofocus
+
                     debounce="300"
                     v-model="filtroPedidos"
                     placeholder="Buscar pedidos..."
@@ -276,7 +276,7 @@
 
                   <q-input
                     dense
-                    autofocus
+
                     debounce="300"
                     v-model="filtroCotizaciones"
                     placeholder="Buscar cotizaciones..."
@@ -658,6 +658,8 @@ const anularPedido = async (pedido: PedidosEnc) => {
 
   const tipoPedido = pedido.ESTADO_PEDIDO === "P" ? "pedido" : "cotización";
 
+    modalPendientes.value = false;
+
   await nextTick()
 
   const confirmado = await showConfirmationInsideModal(
@@ -667,7 +669,10 @@ const anularPedido = async (pedido: PedidosEnc) => {
     } ${tipoPedido}?`
   );
 
-  if (!confirmado) return;
+  if (!confirmado) {
+     modalPendientes.value = true;
+    return;
+  }
 
   mutateAnularPedidoPendiente({
     id: pedido.ID_PEDIDO_ENC,
@@ -684,6 +689,8 @@ const continuarPedido = async (pedido) => {
 
   const tipoPedido = pedido.ESTADO_PEDIDO === "P" ? "pedido" : "cotización";
 
+  modalPendientes.value = false;
+
   const confirmado = await showConfirmationInsideModal2(
     `Continuar ${tipoPedido}`,
     `¿Está seguro que desea continuar con ${
@@ -691,7 +698,10 @@ const continuarPedido = async (pedido) => {
     } ${tipoPedido} N° ${pedido.NUMERO_DE_PEDIDO}?`
   );
 
-   if (!confirmado) return;
+   if (!confirmado) {
+    modalPendientes.value = true;
+   return;
+   }
 
   await nextTick();
 
