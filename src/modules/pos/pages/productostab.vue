@@ -29,7 +29,10 @@
             keep-color
             class="toggle-brillante"
             @click="confirmarContingencia"
-          />
+          >
+            <q-tooltip> Activa y desactiva el modo de contingencia</q-tooltip>
+          </q-toggle>
+
           <q-btn
             v-if="tipoPedido === 'cotización'"
             icon="print"
@@ -42,14 +45,18 @@
             icon="restart_alt"
             class="boton-amarillo"
             @click="limpiarPedido"
-          />
+          >
+            <q-tooltip> Limpiar pedido</q-tooltip>
+          </q-btn>
           <q-btn
             label="Anular"
             class="boton-amarillo"
             text-color="black"
             style="color: black"
             @click="limpiar"
-          />
+          >
+            <q-tooltip> Anular pedido</q-tooltip>
+          </q-btn>
 
           <!-- v-if="userStore.tipoUsuarioStore === 'POS'" -->
           <q-btn
@@ -82,6 +89,8 @@
           dense
           @update:model-value="busquedaAutomatica"
           @keyup.enter="buscarProductoEscaneado"
+          @keydown.arrow-up.prevent="aumentarCantidadInput"
+          @keydown.arrow-down.prevent="disminuirCantidadInput"
           class="col-12 col-md-5"
           :disable="errorAgregarProducto"
         >
@@ -126,7 +135,7 @@
             :disable="!codigoProducto"
           />
 
-          <!-- Contador de productos mejorado -->
+          <!-- Contador de productos -->
           <div class="col-auto">
             <q-card flat class="productos-counter-card">
               <q-card-section class="q-pa-xs">
@@ -140,6 +149,7 @@
                   </div>
                 </div>
               </q-card-section>
+              <q-tooltip> Cantidad de items agregados</q-tooltip>
             </q-card>
           </div>
         </div>
@@ -166,7 +176,7 @@
         <q-card-section class="catalogo-header q-pa-xs q-pl-md">
           <div class="row items-center q-pa-xs justify-between">
             <div class="col">
-              <div class="text-h4 text-weight-bold q-mb-xs">
+              <div class="text-h6 text-weight-bold">
                 <q-icon name="inventory_2" class="q-mr-md" />
                 Catálogo de Productos
                 <!-- Indicador de loading en el header -->
@@ -193,7 +203,6 @@
               </div>
             </div>
             <div class="col-auto row items-center q-gutter-sm">
-
               <!-- Botón de refresh -->
               <q-btn
                 icon="refresh"
@@ -215,7 +224,7 @@
         </q-card-section>
 
         <!-- Buscador mejorado -->
-        <q-card-section class="q-pa-xs">
+        <q-card-section class="q-pa-sm q-pb-md">
           <div class="search-container">
             <q-input
               ref="buscadorProductoRef"
@@ -244,7 +253,7 @@
             </q-input>
 
             <!-- Estadísticas -->
-            <div class="row items-center justify-between q-mt-xs q-pl-md">
+            <div class="row items-center justify-between q-mt-md">
               <div class="text-caption text-grey-6">
                 <span v-if="loadingProductosQuery && !todosProductos">
                   <q-spinner-dots color="grey-6" size="16px" class="q-mr-xs" />
@@ -582,18 +591,28 @@
         <q-card-section class="q-pt-sm">
           <div class="row q-col-gutter-sm items-start">
             <div class="col-12">
-              <q-select
-                v-model="tipoPago"
-                :options="opcionesPago2"
-                label="Tipo de Pago"
-                outlined
-                dense
-                class="bg-grey-1"
-              >
-                <template #prepend>
-                  <q-icon name="payments" color="primary" />
-                </template>
-              </q-select>
+              <div class="payment-method-container">
+                <div class="text-caption text-grey-6 q-mb-sm">Tipo de Pago</div>
+                <q-btn-toggle
+                  v-model="tipoPago"
+                  :options="[
+                    {
+                      label: 'Efectivo',
+                      value: 'EFECTIVO',
+                      icon: 'account_balance_wallet',
+                    },
+                    { label: 'Tarjeta', value: 'TARJETA', icon: 'credit_card' },
+                    { label: 'Mixto', value: 'MIXTO', icon: 'payments' },
+                  ]"
+                  unelevated
+                  spread
+                  no-caps
+                  class="payment-method-buttons"
+                  toggle-color="yellow-10"
+                  color="grey-4"
+                  text-color="grey-8"
+                />
+              </div>
             </div>
 
             <div class="col-12 q-mt-sm">
@@ -868,7 +887,7 @@ import {
   onBeforeUnmount,
   nextTick,
   toRaw,
-  shallowRef
+  shallowRef,
 } from "vue";
 import {
   showConfirmationDialog,
@@ -906,7 +925,7 @@ import {
 } from "@/modules/pedidos_enc/action/pedidosEncAction";
 import { useClienteStore } from "@/stores/cliente";
 import { usePdfTicket } from "@/modules/ticket_pdf/composable/useTicket";
-import { db } from "@/db/productosDB"
+import { db } from "@/db/productosDB";
 
 /*
 ==========================================================
@@ -1079,7 +1098,7 @@ const modalProductos = ref(false);
 const modalProductos2 = ref(false);
 const montoEfectivo = ref(null);
 const montoTarjeta = ref(null);
-const opcionesPago2 = ["EFECTIVO", "TARJETA", "MIXTO"];
+// const opcionesPago2 = ["EFECTIVO", "TARJETA", "MIXTO"]; // Ya no se necesita para el btn-group
 const tipoPago = ref("EFECTIVO");
 const errorAgregarProducto = ref(false);
 const refCupon = ref();
@@ -1092,7 +1111,7 @@ const subtotalCalculado = ref(0);
 const espera = ref(null); // guarda el timeout
 const nuevosDatos = ref(null); // Mostrar info del producto
 const codigoBarra = ref("");
-const productosCacheados = shallowRef([]) // superfiical que solo ref
+const productosCacheados = shallowRef([]); // superfiical que solo ref
 const { obtenerProducto } = useCodigo();
 const { obtenerProducto2 } = useCodigo();
 const { data: productoEncontrado, refetch: refetchProducto } =
@@ -1159,20 +1178,19 @@ const focusBtnConfirmar = async () => {
 */
 
 watch(todosProductos, async (nuevos, anteriores) => {
-
   if (!nuevos || nuevos.length === 0) return;
-  
+
   // Evitar reescritura innecesaria
   if (anteriores && nuevos.length === anteriores.length) return;
-  
+
   try {
     await db.productos.clear();
-    
+
     // Convertir a objetos planos
     const productosPlanos = nuevos.map((p) => JSON.parse(JSON.stringify(p)));
-    
+
     await db.productos.bulkPut(productosPlanos);
-    
+
     //console.log("Productos guardados en IndexedDB:", productosPlanos.length);
     productosCacheados.value = productosPlanos;
   } catch (err) {
@@ -1201,6 +1219,12 @@ watch(modalCantidad, (val) => {
 watch(modalFacturacion, (val) => {
   if (val) {
     refetchProductosFactura();
+  } else {
+    // Resetear tipo de pago a efectivo cuando se cierre el modal
+    tipoPago.value = "EFECTIVO";
+    // Limpiar montos
+    montoEfectivo.value = null;
+    montoTarjeta.value = null;
   }
 });
 
@@ -1225,6 +1249,15 @@ watch(montoEfectivo, (nuevoValor) => {
   }
 });
 
+// si el tarjeta cambia, calcular cambio
+watch(montoTarjeta, (nuevoValor) => {
+  if (nuevoValor !== null && nuevoValor >= 0) {
+    calcularCambioModal();
+  } else {
+    calcularCambio.value = 0;
+  }
+});
+
 // focus desde mixto
 watch(tipoPago, async (nuevo) => {
   if (nuevo === "EFECTIVO") {
@@ -1234,6 +1267,8 @@ watch(tipoPago, async (nuevo) => {
     await nextTick();
     focusEfectivo.value?.focus();
   } else if (nuevo === "TARJETA") {
+    // asignar el total a pagar al monto de tarjeta para no ser digitado manualmente
+    montoTarjeta.value = totalAPagar.value;
     await nextTick();
     focusTarjeta.value?.focus();
   }
@@ -1289,7 +1324,7 @@ onMounted(async () => {
       //console.log("Productos cargados desde IndexedDB:", cache.length);
     }
   } catch (err) {
-   // console.error("Error leyendo de IndexedDB:", err);
+    // console.error("Error leyendo de IndexedDB:", err);
   }
 });
 
@@ -1311,11 +1346,16 @@ const buscarProducto = async () => {
 const productosFiltrados2 = computed(() => {
   if (!filtroProductos.value) return productosUnicos.value.slice(0, 100); // no más de 500
 
-  const palabras = filtroProductos.value.toLowerCase().split(" ").filter(Boolean);
+  const palabras = filtroProductos.value
+    .toLowerCase()
+    .split(" ")
+    .filter(Boolean);
 
   return productosUnicos.value
     .filter((p) => {
-      const campos = `${p.DESCRIPCION_PROD || ""} ${p.DESCRIPCION_MARCA || ""} ${p.PRODUCT0 || ""}`.toLowerCase();
+      const campos = `${p.DESCRIPCION_PROD || ""} ${
+        p.DESCRIPCION_MARCA || ""
+      } ${p.PRODUCT0 || ""}`.toLowerCase();
       return palabras.every((palabra) => campos.includes(palabra));
     })
     .slice(0, 500); // cortar después del filtro
@@ -1323,7 +1363,7 @@ const productosFiltrados2 = computed(() => {
 
 // Mapear los productos para mostrar un registro en la tabla
 const productosUnicos = computed(() => {
-//  if (!todosProductos.value) return [];
+  //  if (!todosProductos.value) return [];
   if (!productosCacheados.value) return [];
 
   // Para evitar duplicados
@@ -1371,31 +1411,25 @@ const busquedaAutomatica = () => {
 
 // Mostrar la descripcion del producto
 const buscarDescripcion = async () => {
-
   try {
-
-    let prod = null // Tiene el precio del producto
-    let codigoFinal = codigoProducto.value // Tiene el codigo a buscar descripcion
-
+    let prod = null; // Tiene el precio del producto
+    let codigoFinal = codigoProducto.value; // Tiene el codigo a buscar descripcion
 
     // 1. Intentar con el código ingresado
     try {
-      prod = await precioReal(codigoProducto.value, cantidad2.value)
-
+      prod = await precioReal(codigoProducto.value, cantidad2.value);
     } catch (error) {
       //console.warn("No se encontró precio con el código:", codigoProducto.value)
     }
 
     // 2. Si no existe → intentar con PRODUCT0 alterno
     if (!prod) {
-
-      const { data } = await refetchProducto2() // aquí data no es ref
+      const { data } = await refetchProducto2(); // aquí data no es ref
 
       if (data && data.PRODUCT0) {
         try {
-          prod = await precioReal(data.PRODUCT0, cantidad2.value)
-          codigoFinal = data.PRODUCT0
-
+          prod = await precioReal(data.PRODUCT0, cantidad2.value);
+          codigoFinal = data.PRODUCT0;
         } catch (error) {
           //console.warn("Tampoco se encontró precio con PRODUCT0:", data.PRODUCT0)
         }
@@ -1404,12 +1438,12 @@ const buscarDescripcion = async () => {
 
     // 3. Si aún no hay prod → salir
     if (!prod) {
-      nuevosDatos.value = null
-      return
+      nuevosDatos.value = null;
+      return;
     }
 
     // 4. Obtener descripción
-    const nuevaDescripcion = await obtenerProductosId(codigoFinal)
+    const nuevaDescripcion = await obtenerProductosId(codigoFinal);
 
     nuevosDatos.value = {
       codigo: codigoFinal, // No se muestra en pantalla
@@ -1417,7 +1451,6 @@ const buscarDescripcion = async () => {
       precio: prod.PRECIO_FINAL,
       subtotal: prod.PRECIO_FINAL * cantidad2.value,
     };
-
   } catch (error) {
     nuevosDatos.value = null;
   }
@@ -1469,7 +1502,6 @@ const confirmarContingencia = async () => {
       timeout: 3000,
       icon: "warning",
     });
-    
   } else {
     $q.notify({
       type: "info",
@@ -1564,6 +1596,12 @@ watch(modalCantidad, (val) => {
 watch(modalFacturacion, (val) => {
   if (val) {
     refetchProductosFactura();
+  } else {
+    // Resetear tipo de pago a efectivo cuando se cierre el modal
+    tipoPago.value = "EFECTIVO";
+    // Limpiar montos
+    montoEfectivo.value = null;
+    montoTarjeta.value = null;
   }
 });
 
@@ -1597,7 +1635,7 @@ watch(modalProductos, async (val) => {
 
 // si el efectivo cambia, calcular cambio
 const calcularCambioModal = () => {
-  if (opcionesPago2 === "MIXTO") calcularCambio.value = 0;
+  if (tipoPago.value === "MIXTO") calcularCambio.value = 0;
   else {
     calcularCambio.value = montoEfectivo.value - totalStore.totalGeneral;
   }
@@ -1654,6 +1692,17 @@ const actualizarCantidad = () => {
     modalCantidad.value = false;
     return;
   }
+};
+
+// aumentar cantidad en input de código
+const aumentarCantidadInput = () => {
+  cantidad2.value = (cantidad2.value || 1) + 1;
+};
+
+// disminuir cantidad en input de código
+const disminuirCantidadInput = () => {
+  const nuevaCantidad = (cantidad2.value || 1) - 1;
+  cantidad2.value = Math.max(1, nuevaCantidad); // No permitir cantidades menores a 1
 };
 
 const truncateDosDecimales = (numero) => {
@@ -1752,8 +1801,7 @@ const imprimirCotizacion = async () => {
 
     $q.loading.hide();
   } catch (error) {
-    showErrorNotification('Error'), error
-
+    showErrorNotification("Error"), error;
   } finally {
     $q.loading.hide();
   }
@@ -1841,8 +1889,6 @@ const abrirCatalogo2 = async () => {
   });
 
   try {
-    // Asegurar que los productos estén cargados antes de abrir el modal
-    // await refetchTodosProductos();
     modalProductos2.value = true;
 
     $q.loading.hide();
@@ -1942,7 +1988,6 @@ const terminarVenta = async () => {
 
 // Guarda factura enc y det
 const confirmarFactura = async () => {
-
   if (!configuracionStore.serieSeleccionada) {
     modalFacturacion.value = false;
     showErrorNotification(
@@ -2136,7 +2181,7 @@ const imprimirFactura = async (data) => {
   // limpiar campos de pago
   montoEfectivo.value = null;
   montoTarjeta.value = null;
-  tipoPago.value = 'EFECTIVO' // Setear efectivo para la nueva factura
+  tipoPago.value = "EFECTIVO"; // Setear efectivo para la nueva factura
 
   // Invalidate pedidos pendientes y refetch
   queryClient.invalidateQueries({
@@ -2188,8 +2233,6 @@ const buscarProductoEscaneado = async () => {
         cantidad2.value
       );
 
-      console.log(productoDirecto);
-
       if (
         productoDirecto.PRECIO_FINAL === 0 ||
         productoDirecto.PRECIO_FINAL === null
@@ -2221,13 +2264,10 @@ const buscarProductoEscaneado = async () => {
         precio: {
           PRECIO_FINAL: prod.PRECIO_FINAL,
         },
-      }
-      
+      };
     } catch (err) {
       await errorAgregarProductoConSonido(
-        `Error al buscar producto (${codigoProducto.value}) por código: ${
-          err.message || "Error desconocido"
-        }`
+        `${err.message || "Error desconocido al buscar el precio del producto"}`
       );
       codigoProducto.value = "";
       loadingPorCodigo.value = false;
@@ -2821,8 +2861,8 @@ defineExpose({
 /* Contenedor del buscador */
 .search-container {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 8px;
-  padding: 8px 8px;
+  border-radius: 12px;
+  padding: 20px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
@@ -3148,6 +3188,102 @@ defineExpose({
   .counter-number,
   .total-amount {
     font-size: 1rem;
+  }
+}
+
+/* Payment Method Button Group Styles */
+.payment-method-container {
+  width: 100%;
+}
+
+.payment-method-buttons {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Payment Method Toggle Styles */
+.payment-method-buttons .q-btn {
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 16px;
+  transition: all 0.3s ease-in-out;
+  min-height: 48px;
+  border: 2px solid transparent;
+  position: relative;
+}
+
+.payment-method-buttons .q-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Active state styling - botón presionado */
+.payment-method-buttons .q-btn--active {
+  font-weight: 700 !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Colores específicos para cada opción cuando está activa */
+.payment-method-buttons .q-btn--active[data-value="EFECTIVO"] {
+  background: linear-gradient(135deg, #4caf50, #66bb6a) !important;
+  color: white !important;
+  border: 2px solid #2e7d32 !important;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4) !important;
+}
+
+.payment-method-buttons .q-btn--active[data-value="TARJETA"] {
+  background: linear-gradient(135deg, #2196f3, #42a5f5) !important;
+  color: white !important;
+  border: 2px solid #1565c0 !important;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4) !important;
+}
+
+.payment-method-buttons .q-btn--active[data-value="MIXTO"] {
+  background: linear-gradient(135deg, #ff9800, #ffb74d) !important;
+  color: white !important;
+  border: 2px solid #ef6c00 !important;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4) !important;
+}
+
+/* Efecto de brillo para botón activo */
+.payment-method-buttons .q-btn--active::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 70%
+  );
+  border-radius: inherit;
+  animation: shine 2s infinite;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .payment-method-buttons .q-btn {
+    font-size: 12px;
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+
+  .payment-method-buttons .q-btn .q-icon {
+    font-size: 16px;
   }
 }
 

@@ -15,11 +15,15 @@ export const useProductos = () => {
   const queryClient = useQueryClient();
 
   //obtener todos los Productos
-  const { data: todosProductos, refetch: refetchTodosProductos, isLoading: loadingProductos, isFetching: fetchingProductos, error: errorProductos } = useQuery({
+  const {
+    data: todosProductos,
+    refetch: refetchTodosProductos,
+    isLoading: loadingProductos,
+    isFetching: fetchingProductos,
+    error: errorProductos,
+  } = useQuery({
     queryKey: ["productos"],
     queryFn: () => obtenerProductosAction(),
-    staleTime: 1000 * 60 * 3, // 60 minutos
-    refetchOnWindowFocus: false,
   });
 
   // obtener  productos por Id
@@ -46,11 +50,7 @@ export const useProductos = () => {
       //console.log('composable: ', productoPrecio)
       return productoPrecio;
     } catch (error) {
-      const message = getAxiosErrorMessage(
-        error,
-        "Error obteniendo el precio del producto"
-      );
-      throw new Error(message);
+      throw new Error(error);
     }
   };
 

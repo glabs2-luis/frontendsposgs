@@ -56,10 +56,12 @@
           <div v-else>
             {{ configuracionStore.serieSeleccionada }}
           </div>
+          <q-tooltip> Serie de facturación</q-tooltip>
         </div>
 
         <div class="q-mr-md text-weight-medium">
           {{ nombreVendedor }}
+          <q-tooltip> Nombre del vendedor</q-tooltip>
         </div>
 
         <!-- Botón de sincronización -->
@@ -111,13 +113,20 @@
           class="q-ml-sm"
           color="negative"
           @click="cerrarSesion"
-        />
+        >
+          <q-tooltip> Cerrar Sesión </q-tooltip>
+        </q-btn>
       </q-toolbar>
     </q-header>
 
     <!-- Paginas -->
     <q-page-container>
-      <router-view />
+      <router-view v-slot="{ Component, route }">
+        <keep-alive>
+          <component :is="Component" v-if="route.path === '/ventas'" />
+        </keep-alive>
+        <component :is="Component" v-if="route.path !== '/ventas'" />
+      </router-view>
     </q-page-container>
 
     <q-footer v-if="route.path !== '/ventas'">

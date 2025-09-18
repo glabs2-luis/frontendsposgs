@@ -19,7 +19,7 @@ export const useUserStore = defineStore(
       nombreVendedor.value = "";
       codigoVendedor.value = null;
       token.value = "";
-      tipoUsuarioStore.value = '';
+      tipoUsuarioStore.value = "";
       localStorage.clear();
       delete axios.defaults.headers.common["Authorization"];
       router.push("/login");

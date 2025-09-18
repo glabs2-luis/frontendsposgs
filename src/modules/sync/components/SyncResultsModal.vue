@@ -5,7 +5,11 @@
       <q-card-section class="modal-header">
         <div class="row items-center">
           <q-icon name="sync" size="24px" class="q-mr-sm" />
-          <span class="text-h6">Resultados de Sincronización</span>
+          <span class="text-h6">Actualizar inventario, precios y otros</span>
+          <span class="text-subtitle1 text-grey-6">
+            Utilice esta opción para actualizar el inventario, precios y otros
+            manualmente
+          </span>
         </div>
       </q-card-section>
 
@@ -134,7 +138,7 @@
         <q-btn flat label="Cerrar" color="grey-7" @click="closeModal" />
         <q-btn
           unelevated
-          label="Sincronizar Todo"
+          label="Actualizar Todo"
           color="primary"
           :loading="isSyncing"
           :disable="isSyncing"

@@ -178,12 +178,12 @@
               class="boton-amarillo"
               style="min-height: 38px"
             ></q-toggle>
-            <q-tooltip> Validador de Nit</q-tooltip>
+            <q-tooltip> Activa y desactiva el validador de Nit</q-tooltip>
           </q-card>
 
           <!-- Modal de Pedidos Pendientes -->
           <q-dialog v-model="modalPendientes" persistent no-focus-trap>
-            <q-card class="q-pa-md" style="min-width: 900px; z-index: -1;">
+            <q-card class="q-pa-md" style="min-width: 900px; z-index: -1">
               <q-card-section class="row items-center q-pb-none">
                 <q-icon name="assignment" color="deep-orange-6" />
                 <span class="q-ml-md text-subtitle1"
@@ -215,7 +215,6 @@
 
                   <q-input
                     dense
-
                     debounce="300"
                     v-model="filtroPedidos"
                     placeholder="Buscar pedidos..."
@@ -276,7 +275,6 @@
 
                   <q-input
                     dense
-
                     debounce="300"
                     v-model="filtroCotizaciones"
                     placeholder="Buscar cotizaciones..."
@@ -359,6 +357,7 @@
             class="boton-amarillo"
             @click="abrirModalPedidosPendientes"
           />
+          <q-tooltip> Pedidos y Cotizaciones Pendientes</q-tooltip>
         </div>
 
         <!-- Botones al lado derecho -->
@@ -458,13 +457,20 @@
   <q-footer>
     <div class="bg-yellow-8 text-black q-pa-sm row items-center justify-center">
       <div class="q-pr-md">
-        <div class="text-weight-bold">Libreria San Bartolome - 2025</div>
+        <div class="text-weight-bold">
+          Libreria San Bartolome - copy right © {{ new Date().getFullYear() }}
+        </div>
       </div>
 
       <div class="cambio row items-center q-gutter-xs">
-        <q-icon name="undo" size="sm" class="" />
-        <div class="text-balance text-weight-bold">
-          Cambio: {{ formatCurrency(totalStore.ultimoCambio, 2) }}
+        <q-icon name="account_balance_wallet" size="sm" class="" />
+        <div
+          class="text-balance text-weight-bold bg-black q-pa-sm q-rounded-borders"
+        >
+          <span class="text-white">Cambio:</span>
+          <span class="text-white">
+            {{ formatCurrency(totalStore.ultimoCambio, 2) }}
+          </span>
         </div>
       </div>
     </div>
@@ -597,7 +603,7 @@ watch(abrirModalCliente, async (isOpen, wasOpen) => {
 
     // Crear pedido automáticamente al cerrar el modal
     await nextTick();
-   // crearPedido();
+    // crearPedido();
   }
 });
 
@@ -635,16 +641,16 @@ watch(estadoPedido, (newEstado) => {
 
 //busqueda automatica
 const busquedaAutomatica = () => {
-
   if (espera) clearTimeout(espera); // Limpiar tiempo
 
   if (clienteStore.documento.length > 1) {
     espera = setTimeout(() => {
       buscarClienteDPINIT2();
-      clienteStore.nombre = '',
-      clienteStore.direccion = ''
-      clienteTemp.value.NOMBRE = ''
+      (clienteStore.nombre = ""), (clienteStore.direccion = "");
+      clienteTemp.value.NOMBRE = "";
     }, 700);
+  } else if (clienteStore.documento.length === 0) {
+    clienteStore.limpiarCliente();
   }
 };
 
@@ -655,12 +661,11 @@ const handleActualizarPedido = (nuevoEstado: string) => {
 
 // Anular pedido pendiente
 const anularPedido = async (pedido: PedidosEnc) => {
-
   const tipoPedido = pedido.ESTADO_PEDIDO === "P" ? "pedido" : "cotización";
 
-    modalPendientes.value = false;
+  modalPendientes.value = false;
 
-  await nextTick()
+  await nextTick();
 
   const confirmado = await showConfirmationInsideModal(
     `Anular ${tipoPedido}`,
@@ -670,7 +675,7 @@ const anularPedido = async (pedido: PedidosEnc) => {
   );
 
   if (!confirmado) {
-     modalPendientes.value = true;
+    modalPendientes.value = true;
     return;
   }
 
@@ -680,13 +685,12 @@ const anularPedido = async (pedido: PedidosEnc) => {
   });
 
   // Limpiar Pedido
-  cleanAllStores()
+  cleanAllStores();
   estadoPedido.value = "pedido";
 };
 
 // continuar pedido pendiente
 const continuarPedido = async (pedido) => {
-
   const tipoPedido = pedido.ESTADO_PEDIDO === "P" ? "pedido" : "cotización";
 
   modalPendientes.value = false;
@@ -698,10 +702,10 @@ const continuarPedido = async (pedido) => {
     } ${tipoPedido} N° ${pedido.NUMERO_DE_PEDIDO}?`
   );
 
-   if (!confirmado) {
+  if (!confirmado) {
     modalPendientes.value = true;
-   return;
-   }
+    return;
+  }
 
   await nextTick();
 
@@ -734,8 +738,6 @@ const continuarPedido = async (pedido) => {
 
   // Enfocar productosTab para continuar
   await productosTabRef.value?.enfocarCodigo();
-
-
 };
 
 const truncateDosDecimales = (numero) => {
@@ -838,23 +840,6 @@ const imprimirCotizacion = async (pedido) => {
   }
 };
 
-// signo menos
-onMounted(() => {
-  window.addEventListener("keydown", usarMenos);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("keydown", usarMenos);
-});
-
-// usar tecla - para abrir modal pendientes
-const usarMenos = (e) => {
-  if (e.key === "-") {
-    e.preventDefault();
-    abrirModalPedidosPendientes();
-  }
-};
-
 // Crear Pedido con F3
 onMounted(() => {
   window.addEventListener("keydown", crearPedidoConF3);
@@ -871,14 +856,14 @@ const crearPedidoConF3 = (e: KeyboardEvent) => {
   }
 };
 
-// Cerrar expansion cuando se crea un pedido
-watchEffect(() => {
-  const cerrar = pedidoStore.idPedidoEnc;
+// // Cerrar expansion cuando se crea un pedido
+// watchEffect(() => {
+//   const cerrar = pedidoStore.idPedidoEnc;
 
-  if (cerrar > 0) {
-    expansion.value?.hide();
-  }
-});
+//   if (cerrar > 0) {
+//     expansion.value?.hide();
+//   }
+// });
 
 // Opción A: Solo enfoca cuando el valor queda vacío
 watch(
@@ -985,7 +970,7 @@ const clienteTemp = ref({
 //Limpiar los datos del cliente
 const resetCliente = () => {
   clienteTemp.value = {
-    idCliente : undefined,
+    idCliente: undefined,
     NIT: "",
     DPI: "",
     NOMBRE: "",
@@ -1001,7 +986,6 @@ const nuevoPedido = () => {
 
 // crear pedido xd
 const crearPedido = async () => {
-
   if (pedidoStore.idPedidoEnc) {
     showErrorNotification(
       "Error",
@@ -1019,13 +1003,25 @@ const crearPedido = async () => {
   const nombre = clienteStore.nombre?.trim();
   const direccion = clienteStore.direccion?.trim();
   const nit = clienteStore.documento?.trim();
-  const codigo = clienteStore.idCliente
+  const codigo = clienteStore.idCliente;
 
   if (!nombre || !direccion || !nit) {
     showErrorNotification(
       "Datos incompletos",
       "Debe seleccionar un cliente válido antes de crear el pedido"
     );
+    return;
+  }
+  if (!codigo || codigo === "0") {
+    $q.notify({
+      type: "negative",
+      message:
+        "No se puede crear el pedido, debe seleccionar un cliente válido",
+      position: "top",
+      timeout: 2000,
+    });
+
+    // clienteStore.limpiarCliente();
     return;
   }
 
@@ -1047,9 +1043,6 @@ const crearPedido = async () => {
 
   mutateCrearPedidoEnc(pedidoEnc, {
     onSuccess: async (data) => {
-
-      // cerrar expansion
-      expansion.value?.hide();
       // Actualizar variables reactivas
       numPedido.value = data.NUMERO_DE_PEDIDO;
       totalReal.value = data.TOTAL_GENERAL_PEDIDO;
@@ -1078,21 +1071,24 @@ const crearPedido = async () => {
       });
 
       await nextTick();
+      //focus en input codigo de barra de productos
       productosTabRef.value?.enfocarCodigo();
+
+      expansion.value?.hide();
     },
     onError: (error: any) => {
-      showErrorNotification(
-        "Error al crear",
-        error.message ||
-          `No se pudo registrar ${
+      // NO cerrar el expansion cuando hay error - debe permanecer abierto para que el usuario pueda corregir
+      $q.notify({
+        type: "negative",
+        message:
+          `No se pudo crear el pedido ${
             estadoPedido.value === "pedido" ? "el" : "la"
-          } ${estadoPedido.value}`
-      );
+          } ${estadoPedido.value}` +
+          " | " +
+          error.message,
+      });
     },
   });
-
-  //focus
-  productosTabRef.value?.enfocarCodigo();
 };
 
 // Funcion para Colocar CF
@@ -1109,7 +1105,6 @@ const colocarCF = async () => {
       email: cf.data.CORREO_ELECTRONICO || "",
     });
     crearPedido();
-    expansion.value?.hide();
   }
 };
 
@@ -1143,7 +1138,8 @@ const buscarClienteDPINIT2 = async () => {
     if (clienteBD) {
       clienteStore.setCliente({
         idCliente: clienteBD.ID_ACLIENTE,
-        documento: tipoDocumento.value === 'nit' ? clienteBD.NIT : clienteBD.DPI, // si se busca por dpi o nit
+        documento:
+          tipoDocumento.value === "nit" ? clienteBD.NIT : clienteBD.DPI, // si se busca por dpi o nit
         nombre: clienteBD.NOMBRE || "",
         direccion: clienteBD.DIRECCION || "",
         telefono: clienteBD.TELEFONO || "",
@@ -1158,7 +1154,7 @@ const buscarClienteDPINIT2 = async () => {
       $q.loading.show({
         message: "Consultando datos en SAT…",
         spinnerColor: "green",
-        spinnerSize: 50
+        spinnerSize: 50,
       });
 
       const result = await DatosSat2(
@@ -1174,9 +1170,20 @@ const buscarClienteDPINIT2 = async () => {
 
       // result = texto
       if (result.isCertified === false) {
-        showErrorNotification("Error", result.data.nombre)
-        return
+        // showErrorNotification(
+        //   "Error",
+        //   result.data.nombre + " no es certificado"
+        // );
+        clienteStore.setCliente({
+          idCliente: 0,
+          documento: tipoDocumento.value === "nit" ? doc : doc, // si se busca por dpi o nit
+          nombre: result.data.nombre,
+          direccion: "No direcion",
+          telefono: "",
+          email: "",
+        });
 
+        return;
       } else {
         // 3) No existe en BD pero SAT devolvió nombre -> abrir modal con datos prellenados
         abrirModalCliente.value = true;
@@ -1190,19 +1197,18 @@ const buscarClienteDPINIT2 = async () => {
         });
         // Crear el pedido ahora
 
-        const cliente2 = await obtenerClientePorDocumento(doc, tipo)
+        const cliente2 = await obtenerClientePorDocumento(doc, tipo);
         //aqui guardar el id
 
-        //clienteStore.idCliente = 
-          clienteStore.setCliente({
+        //clienteStore.idCliente =
+        clienteStore.setCliente({
           idCliente: Number(clienteStore.idCliente) || undefined, //  conservar si existía
           documento: clienteTemp.value.NIT || clienteTemp.value.DPI,
           nombre: clienteTemp.value.NOMBRE,
           direccion: clienteTemp.value.DIRECCION,
           telefono: clienteTemp.value.TELEFONO || "",
           email: clienteTemp.value.CORREO_ELECTRONICO || "",
-        })
-
+        });
       }
     }
 
@@ -1253,7 +1259,7 @@ const buscarClienteDPINIT = async () => {
       email: clienteEncontrado.CORREO_ELECTRONICO || "",
     });
 
-    expansion.value?.toggle();
+    // NO cerrar expansion aquí - se cerrará en onSuccess de crearPedido
     crearPedido();
   } else {
     abrirModalCliente.value = true;
@@ -1282,12 +1288,8 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
     payload.TELEFONO = "";
   }
 
-
-
   mutateCrearCliente(payload, {
-    
     onSuccess: (creado: Cliente) => {
-
       clienteStore.setCliente({
         // idCliente no existe
         idCliente: creado.ID_ACLIENTE,
@@ -1299,7 +1301,7 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
       });
 
       abrirModalCliente.value = false;
-      expansion.value?.toggle();
+      // NO cerrar expansion aquí - se cerrará en onSuccess de crearPedido
 
       $q.notify({
         type: "success",
@@ -1310,11 +1312,9 @@ const guardarClienteDesdeModal = (nuevoCliente: Cliente) => {
       });
 
       // Crear pedido
-      crearPedido()
-
+      crearPedido();
     },
     onError: (error: any) => {
-
       showErrorNotification(
         "Error",
         error.message || "No se pudo registrar el cliente"
@@ -1399,7 +1399,6 @@ const handleCancelar = () => {
 </script>
 
 <style scoped>
-
 .total-card {
   background-color: #fcf5d6;
   border: 1px solid #fae4a2;
@@ -1464,8 +1463,9 @@ const handleCancelar = () => {
 .cambio {
   position: absolute;
   right: 0;
-  font-size: 18px;
+  font-size: 32px;
   margin-right: 60px;
+  font-weight: 800;
 }
 
 .tipo-transaccion-container {

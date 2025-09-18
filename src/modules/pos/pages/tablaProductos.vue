@@ -97,7 +97,7 @@
               transition-show="scale"
               transition-hide="scale"
             >
-              {{ props.row.DESCRIPCION_PROD_AUX || props.row.DESCRIPCION_PROD }}
+              Clic para editar la descripción
             </q-tooltip>
             <!-- Descripción editable -->
             <!-- <div class="descripcion-prod row items-center no-wrap cursor-pointer"> -->
@@ -135,14 +135,6 @@
             data-editable="true"
           >
             {{ props.row.CANTIDAD_PEDIDA }}
-            <q-tooltip
-              anchor="bottom middle"
-              self="bottom middle"
-              transition-show="scale"
-              transition-hide="scale"
-            >
-              Cantidad: {{ props.row.CANTIDAD_PEDIDA }}
-            </q-tooltip>
 
             <!-- Edición de cantidad -->
             <q-popup-edit
@@ -223,19 +215,6 @@
             {{
               formatCurrency(props.row.SUBTOTAL_VENTAS + props.row.MONTO_IVA, 2)
             }}
-            <q-tooltip
-              anchor="bottom middle"
-              self="bottom middle"
-              transition-show="scale"
-              transition-hide="scale"
-            >
-              {{
-                formatCurrency(
-                  props.row.SUBTOTAL_VENTAS + props.row.MONTO_IVA,
-                  2
-                )
-              }}
-            </q-tooltip>
           </q-td>
         </template>
         <!-- ELIMINAR PRODUCTO -->
