@@ -14,6 +14,7 @@
           clickable
           v-ripple
           @click="router.push(item.route)"
+          :class="{ 'menu-item-active': route.path === item.route }"
         >
           <q-item-section avatar>
             <q-icon :name="item.icon" />
@@ -200,7 +201,7 @@ const {
 
 // Opciones del menu
 const menuOptions = [
-  { label: "Ventas", icon: "point_of_sale", route: "/ventas" },
+  { label: "POS", icon: "point_of_sale", route: "/ventas" },
   { label: "Clientes", icon: "person", route: "/clientes" },
   { label: "Facturas", icon: "description", route: "/facturas" },
   { label: "Notas de Crédito", icon: "edit_note", route: "/notas" },
@@ -369,6 +370,28 @@ const cerrarSesion = async () => {
 }
 .q-item:hover {
   background: #fff9c4;
+}
+
+/* Estilo para el menú activo */
+.menu-item-active {
+  background: linear-gradient(135deg, #ffeb3b 0%, #fbc02d 100%) !important;
+  color: #070606 !important;
+  font-weight: 600;
+  border-radius: 8px;
+  margin: 2px 8px;
+  box-shadow: 0 2px 8px rgba(251, 192, 45, 0.3);
+  transform: translateX(4px);
+  transition: all 0.3s ease;
+}
+
+.menu-item-active .q-icon {
+  color: #070606 !important;
+}
+
+.menu-item-active:hover {
+  background: linear-gradient(135deg, #fbc02d 0%, #ffc107 100%) !important;
+  transform: translateX(6px);
+  box-shadow: 0 4px 12px rgba(251, 192, 45, 0.4);
 }
 
 /* Animación de rotación para el icono de sincronización */

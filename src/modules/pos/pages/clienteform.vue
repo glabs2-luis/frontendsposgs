@@ -181,170 +181,332 @@
             <q-tooltip> Activa y desactiva el validador de Nit</q-tooltip>
           </q-card>
 
-          <!-- Modal de Pedidos Pendientes -->
+          <!-- Modal de Pedidos Pendientes Mejorado -->
           <q-dialog v-model="modalPendientes" persistent no-focus-trap>
-            <q-card class="q-pa-md" style="min-width: 900px; z-index: -1">
-              <q-card-section class="row items-center q-pb-none">
-                <q-icon name="assignment" color="deep-orange-6" />
-                <span class="q-ml-md text-subtitle1"
-                  >Pedidos y Cotizaciones Pendientes</span
-                >
-
-                <q-space />
-
-                <q-btn icon="close" flat dense round v-close-popup />
+            <q-card
+              class="modal-pedidos-pendientes"
+              style="min-width: 1000px; max-width: 1200px; z-index: -1"
+            >
+              <!-- Header mejorado -->
+              <q-card-section class="modal-header">
+                <div class="row items-center">
+                  <div class="header-icon">
+                    <q-icon name="assignment" size="32px" />
+                  </div>
+                  <div class="header-content">
+                    <div class="text-h6 text-weight-bold">
+                      Pedidos y Cotizaciones Pendientes
+                    </div>
+                  </div>
+                  <q-space />
+                  <q-btn
+                    icon="close"
+                    flat
+                    dense
+                    round
+                    v-close-popup
+                    class="close-btn"
+                  />
+                </div>
               </q-card-section>
 
+              <!-- Tabs mejorados -->
               <q-tabs
                 v-model="tab"
                 dense
-                class="text-grey-7"
+                class="tabs-mejorados"
                 active-color="primary"
                 indicator-color="primary"
-                align="justify"
+                align="left"
               >
-                <q-tab name="pedidos" label="Pedidos" />
-                <q-tab name="cotizaciones" label="Cotizaciones" />
+                <q-tab
+                  name="pedidos"
+                  :label="`Pedidos (${filteredPedidos.length})`"
+                  icon="shopping_cart"
+                />
+                <q-tab
+                  name="cotizaciones"
+                  :label="`Cotizaciones (${filteredCotizaciones.length})`"
+                  icon="description"
+                />
               </q-tabs>
 
               <q-separator />
 
-              <q-tab-panels v-model="tab" animated>
-                <q-tab-panel name="pedidos">
-                  <!-- <p class="text-caption">Lista de pedidos no facturados</p> -->
-
-                  <q-input
-                    dense
-                    debounce="300"
-                    v-model="filtroPedidos"
-                    placeholder="Buscar pedidos..."
-                    class="q-mb-md"
-                  >
-                    <template v-slot:append>
-                      <q-icon name="search" />
-                    </template>
-                  </q-input>
-
-                  <q-markup-table flat bordered class="q-mt-sm tabla-elegante">
-                    <thead>
-                      <tr>
-                        <th class="text-left"><strong># Pedido</strong></th>
-                        <th class="text-left"><strong>Cliente</strong></th>
-                        <th class="text-left"><strong>Nit</strong></th>
-                        <th class="text-left"><strong>Total</strong></th>
-                        <th class="text-center"><strong>Anular</strong></th>
-                        <th class="text-center"><strong>Continuar</strong></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr
-                        v-for="pedido in filteredPedidos"
-                        :key="pedido.NUMERO_DE_PEDIDO"
+              <q-tab-panels v-model="tab" animated class="tab-panels">
+                <!-- Panel de Pedidos -->
+                <q-tab-panel name="pedidos" class="q-pa-none">
+                  <div class="panel-content">
+                    <!-- Barra de búsqueda mejorada -->
+                    <div class="search-section">
+                      <q-input
+                        v-model="filtroPedidos"
+                        placeholder="Buscar por número, cliente o NIT..."
+                        debounce="300"
+                        outlined
+                        dense
+                        class="search-input"
                       >
-                        <td>{{ pedido.NUMERO_DE_PEDIDO }}</td>
-                        <td>{{ pedido.NOMBRE_A_FACTURAR }}</td>
-                        <td>{{ pedido.NIT_A_FACTURAR }}</td>
-                        <td>Q. {{ pedido.TOTAL_GENERAL_PEDIDO.toFixed(2) }}</td>
-                        <td class="text-center">
-                          <q-btn
-                            icon="close"
-                            color="red-6"
-                            flat
-                            dense
-                            label=""
-                            @click="anularPedido(pedido)"
-                          ></q-btn>
-                        </td>
-                        <td class="text-center">
-                          <q-btn
-                            icon="input"
-                            color="green-8"
-                            flat
-                            dense
-                            label=""
-                            @click="continuarPedido(pedido)"
-                          ></q-btn>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </q-markup-table>
+                        <template v-slot:prepend>
+                          <q-icon name="search" color="grey-6" />
+                        </template>
+                        <template v-slot:append v-if="filtroPedidos">
+                          <q-icon
+                            name="clear"
+                            class="cursor-pointer"
+                            @click="filtroPedidos = ''"
+                          />
+                        </template>
+                      </q-input>
+                    </div>
+
+                    <!-- Tabla mejorada -->
+                    <div class="table-container">
+                      <q-markup-table class="tabla-moderna">
+                        <thead>
+                          <tr>
+                            <th class="text-left col-pedido"># Pedido</th>
+                            <th class="text-left col-cliente">Cliente</th>
+                            <th class="text-left col-nit">NIT</th>
+                            <th class="text-right col-total">Total</th>
+                            <th class="text-center col-actions">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr
+                            v-for="pedido in filteredPedidos"
+                            :key="pedido.NUMERO_DE_PEDIDO"
+                            class="table-row"
+                          >
+                            <td class="text-left">
+                              <div class="pedido-number">
+                                <span class="text-weight-bold">{{
+                                  pedido.NUMERO_DE_PEDIDO
+                                }}</span>
+                              </div>
+                            </td>
+                            <td class="text-left">
+                              <div class="cliente-info">
+                                <div class="cliente-nombre">
+                                  {{ pedido.NOMBRE_A_FACTURAR }}
+                                </div>
+                              </div>
+                            </td>
+                            <td class="text-left">
+                              <q-chip
+                                size="sm"
+                                color="grey-3"
+                                text-color="grey-8"
+                                :label="pedido.NIT_A_FACTURAR"
+                              />
+                            </td>
+                            <td class="text-right">
+                              <div class="total-amount">
+                                Q. {{ pedido.TOTAL_GENERAL_PEDIDO.toFixed(2) }}
+                              </div>
+                            </td>
+                            <td class="text-center">
+                              <div class="action-buttons">
+                                <q-btn
+                                  icon="play_arrow"
+                                  color="positive"
+                                  dense
+                                  round
+                                  size="sm"
+                                  @click="continuarPedido(pedido)"
+                                >
+                                  <q-tooltip>Continuar Pedido</q-tooltip>
+                                </q-btn>
+                                <q-btn
+                                  icon="delete"
+                                  color="negative"
+                                  dense
+                                  round
+                                  size="sm"
+                                  @click="anularPedido(pedido)"
+                                >
+                                  <q-tooltip>Anular Pedido</q-tooltip>
+                                </q-btn>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </q-markup-table>
+
+                      <!-- Estado vacío -->
+                      <div
+                        v-if="filteredPedidos.length === 0"
+                        class="empty-state"
+                      >
+                        <q-icon
+                          name="shopping_cart"
+                          size="64px"
+                          color="grey-4"
+                        />
+                        <div class="text-h6 text-grey-6 q-mt-md">
+                          No hay pedidos pendientes
+                        </div>
+                        <div class="text-body2 text-grey-5">
+                          {{
+                            filtroPedidos
+                              ? "No se encontraron resultados para tu búsqueda"
+                              : "Todos los pedidos han sido procesados"
+                          }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </q-tab-panel>
 
-                <q-tab-panel name="cotizaciones">
-                  <!-- <p class="text-caption">Lista de cotizaciones pendientes</p> -->
-
-                  <q-input
-                    dense
-                    debounce="300"
-                    v-model="filtroCotizaciones"
-                    placeholder="Buscar cotizaciones..."
-                    class="q-mb-md"
-                  >
-                    <template v-slot:append>
-                      <q-icon name="search" />
-                    </template>
-                  </q-input>
-
-                  <q-markup-table flat bordered class="q-mt-sm tabla-elegante">
-                    <thead>
-                      <tr>
-                        <th class="text-left"><strong># Cotización</strong></th>
-                        <th class="text-left"><strong>Cliente</strong></th>
-                        <th class="text-left"><strong>Nit</strong></th>
-                        <th class="text-left"><strong>Total</strong></th>
-                        <th class="text-center"><strong>Anular</strong></th>
-                        <th class="text-center"><strong>Continuar</strong></th>
-                        <th class="text-center"><strong>Imprimir</strong></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr
-                        v-for="pedido in filteredCotizaciones"
-                        :key="pedido.NUMERO_DE_PEDIDO"
+                <!-- Panel de Cotizaciones -->
+                <q-tab-panel name="cotizaciones" class="q-pa-none">
+                  <div class="panel-content">
+                    <!-- Barra de búsqueda mejorada -->
+                    <div class="search-section">
+                      <q-input
+                        v-model="filtroCotizaciones"
+                        placeholder="Buscar por número, cliente o NIT..."
+                        debounce="300"
+                        outlined
+                        dense
+                        class="search-input"
                       >
-                        <td>{{ pedido.NUMERO_DE_PEDIDO }}</td>
-                        <td>{{ pedido.NOMBRE_A_FACTURAR }}</td>
-                        <td>{{ pedido.NIT_A_FACTURAR }}</td>
-                        <td>Q. {{ pedido.TOTAL_GENERAL_PEDIDO.toFixed(2) }}</td>
-                        <td class="text-center">
-                          <q-btn
-                            icon="close"
-                            color="red-6"
-                            flat
-                            dense
-                            label=""
-                            @click="anularPedido(pedido)"
-                          ></q-btn>
-                        </td>
-                        <td class="text-center">
-                          <q-btn
-                            icon="input"
-                            color="green-8"
-                            flat
-                            autofocus
-                            dense
-                            label=""
-                            @click="continuarPedido(pedido)"
-                          ></q-btn>
-                        </td>
-                        <td class="text-center">
-                          <q-btn
-                            icon="print"
-                            color="primary"
-                            flat
-                            dense
-                            label=""
-                            @click="imprimirCotizacion(pedido)"
-                          ></q-btn>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </q-markup-table>
+                        <template v-slot:prepend>
+                          <q-icon name="search" color="grey-6" />
+                        </template>
+                        <template v-slot:append v-if="filtroCotizaciones">
+                          <q-icon
+                            name="clear"
+                            class="cursor-pointer"
+                            @click="filtroCotizaciones = ''"
+                          />
+                        </template>
+                      </q-input>
+                    </div>
+
+                    <!-- Tabla mejorada -->
+                    <div class="table-container">
+                      <q-markup-table flat bordered class="tabla-moderna">
+                        <thead>
+                          <tr>
+                            <th class="text-left col-pedido"># Cotización</th>
+                            <th class="text-left col-cliente">Cliente</th>
+                            <th class="text-left col-nit">NIT</th>
+                            <th class="text-right col-total">Total</th>
+                            <th class="text-center col-actions">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr
+                            v-for="pedido in filteredCotizaciones"
+                            :key="pedido.NUMERO_DE_PEDIDO"
+                            class="table-row"
+                          >
+                            <td class="text-left">
+                              <div class="pedido-number">
+                                <q-icon
+                                  name="description"
+                                  size="sm"
+                                  color="green-6"
+                                />
+                                <span class="text-weight-bold">{{
+                                  pedido.NUMERO_DE_PEDIDO
+                                }}</span>
+                              </div>
+                            </td>
+                            <td class="text-left">
+                              <div class="cliente-info">
+                                <div class="cliente-nombre">
+                                  {{ pedido.NOMBRE_A_FACTURAR }}
+                                </div>
+                              </div>
+                            </td>
+                            <td class="text-left">
+                              <q-chip
+                                size="sm"
+                                color="grey-3"
+                                text-color="grey-8"
+                                :label="pedido.NIT_A_FACTURAR"
+                              />
+                            </td>
+                            <td class="text-right">
+                              <div class="total-amount">
+                                Q. {{ pedido.TOTAL_GENERAL_PEDIDO.toFixed(2) }}
+                              </div>
+                            </td>
+                            <td class="text-center">
+                              <div class="action-buttons">
+                                <q-btn
+                                  icon="play_arrow"
+                                  color="positive"
+                                  flat
+                                  dense
+                                  round
+                                  size="sm"
+                                  @click="continuarPedido(pedido)"
+                                >
+                                  <q-tooltip>Continuar Cotización</q-tooltip>
+                                </q-btn>
+                                <q-btn
+                                  icon="print"
+                                  color="primary"
+                                  flat
+                                  dense
+                                  round
+                                  size="sm"
+                                  @click="imprimirCotizacion(pedido)"
+                                >
+                                  <q-tooltip>Imprimir Cotización</q-tooltip>
+                                </q-btn>
+                                <q-btn
+                                  icon="close"
+                                  color="negative"
+                                  flat
+                                  dense
+                                  round
+                                  size="sm"
+                                  @click="anularPedido(pedido)"
+                                >
+                                  <q-tooltip>Anular Cotización</q-tooltip>
+                                </q-btn>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </q-markup-table>
+
+                      <!-- Estado vacío -->
+                      <div
+                        v-if="filteredCotizaciones.length === 0"
+                        class="empty-state"
+                      >
+                        <q-icon name="description" size="64px" color="grey-4" />
+                        <div class="text-h6 text-grey-6 q-mt-md">
+                          No hay cotizaciones pendientes
+                        </div>
+                        <div class="text-body2 text-grey-5">
+                          {{
+                            filtroCotizaciones
+                              ? "No se encontraron resultados para tu búsqueda"
+                              : "Todas las cotizaciones han sido procesadas"
+                          }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </q-tab-panel>
               </q-tab-panels>
 
-              <q-card-actions align="right">
-                <q-btn flat label="Cerrar" color="orange" v-close-popup />
+              <!-- Footer mejorado -->
+              <q-card-actions align="right" class="modal-footer">
+                <q-btn
+                  flat
+                  label="Cerrar"
+                  color="grey-7"
+                  icon="close"
+                  v-close-popup
+                  class="close-button"
+                />
               </q-card-actions>
             </q-card>
           </q-dialog>
@@ -694,18 +856,6 @@ const continuarPedido = async (pedido) => {
   const tipoPedido = pedido.ESTADO_PEDIDO === "P" ? "pedido" : "cotización";
 
   modalPendientes.value = false;
-
-  const confirmado = await showConfirmationInsideModal2(
-    `Continuar ${tipoPedido}`,
-    `¿Está seguro que desea continuar con ${
-      tipoPedido === "pedido" ? "el" : "la"
-    } ${tipoPedido} N° ${pedido.NUMERO_DE_PEDIDO}?`
-  );
-
-  if (!confirmado) {
-    modalPendientes.value = true;
-    return;
-  }
 
   await nextTick();
 
@@ -1500,5 +1650,223 @@ const handleCancelar = () => {
   background: linear-gradient(90deg, #fbc02d, #f9a825);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   transform: scale(1.02);
+}
+
+/* ===== ESTILOS PARA MODAL DE PEDIDOS PENDIENTES MEJORADO ===== */
+
+.modal-pedidos-pendientes {
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #ffeb3b 0%, #fbc02d 100%);
+  color: #070606;
+}
+
+.header-icon {
+  background: rgba(7, 6, 6, 0.1);
+  border-radius: 12px;
+  margin-right: 16px;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.header-content .text-h6 {
+  margin-bottom: 4px;
+}
+
+.close-btn {
+  color: #070606 !important;
+  background: rgba(7, 6, 6, 0.1);
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.close-btn:hover {
+  background: rgba(7, 6, 6, 0.2);
+}
+
+.tabs-mejorados {
+  background: linear-gradient(135deg, #fcf5d6 0%, #fae4a2 100%);
+  padding: 0 10px;
+  border-bottom: 1px solid #fae4a2;
+}
+
+.tabs-mejorados .q-tab {
+  font-weight: 600;
+  border-radius: 8px 8px 0 0;
+  margin-right: 8px;
+}
+
+.tabs-mejorados .q-tab--active {
+  background: white;
+  color: #fbc02d;
+}
+
+.tab-panels {
+  background: white;
+}
+
+.panel-content {
+  padding: 5px;
+}
+
+.search-section {
+  margin-bottom: 10px;
+}
+
+.search-input {
+  max-width: 400px;
+}
+
+.table-container {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.tabla-moderna {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: white;
+}
+
+.tabla-moderna thead {
+  background: linear-gradient(135deg, #fff9db 0%, #fae4a2 100%);
+}
+
+.tabla-moderna thead th {
+  font-weight: 700;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tabla-moderna tbody td {
+  border-bottom: 1px solid #f1f3f4;
+  vertical-align: middle;
+}
+
+.table-row {
+  transition: all 0.2s ease;
+}
+
+.table-row:hover {
+  background: linear-gradient(135deg, #fcf5d6 0%, #fae4a2 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(251, 192, 45, 0.2);
+}
+
+.pedido-number {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cliente-info {
+  max-width: 200px;
+}
+
+.cliente-nombre {
+  font-weight: 600;
+  color: #2c3e50;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.total-amount {
+  font-weight: 700;
+  color: #fbc02d;
+  font-size: 16px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-buttons .q-btn {
+  transition: all 0.2s ease;
+}
+
+.action-buttons .q-btn:hover {
+  transform: scale(1.1);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 10px;
+  background: #fafbfc;
+  border-radius: 12px;
+  margin: 20px 0;
+}
+
+.modal-footer {
+  background: linear-gradient(135deg, #fcf5d6 0%, #fae4a2 100%);
+  padding: 16px 24px;
+  border-top: 1px solid #fae4a2;
+}
+
+.close-button {
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.close-button:hover {
+  background: rgba(251, 192, 45, 0.2);
+}
+
+/* Columnas específicas */
+.col-pedido {
+  width: 120px;
+}
+
+.col-cliente {
+  width: 250px;
+}
+
+.col-nit {
+  width: 140px;
+}
+
+.col-total {
+  width: 120px;
+}
+
+.col-actions {
+  width: 140px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .modal-pedidos-pendientes {
+    min-width: 95vw !important;
+    max-width: 95vw !important;
+  }
+
+  .panel-content {
+    padding: 10px;
+  }
+
+  .tabla-moderna {
+    font-size: 13px;
+  }
+
+  .tabla-moderna thead th,
+  .tabla-moderna tbody td {
+    padding: 5px 4px;
+  }
+
+  .cliente-info {
+    max-width: 150px;
+  }
 }
 </style>
