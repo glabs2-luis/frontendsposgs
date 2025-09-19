@@ -26,7 +26,7 @@
               floating
               class="q-mr-md"
               :label="facturasErrores.length"
-              v-if="item.label === 'Pendientes' && facturasErrores"
+              v-if="item.label === 'Pendientes' && facturasErrores && facturasErrores.length > 0"
             />
         </q-item>
       </q-list>

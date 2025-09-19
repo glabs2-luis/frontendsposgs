@@ -838,48 +838,11 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-
-    <!-- Modal de cantidad-->
-    <q-dialog
-      v-model="modalCantidad"
-      transition-show="fade"
-      transition-hide="fade"
-      @hide="volverAFocusInput"
-    >
-      <q-card
-        class="q-dialog-plugin q-pa-md"
-        style="min-width: 400px; max-width: 90vw; max-height: 90vh"
-      >
-        <q-card-section class="row items-center justify-between">
-          <div class="text-h6 text-primary">Cantidad del Producto</div>
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
-
-        <q-separator />
-
-        <q-card-section>
-          <q-input
-            v-model.number="cantidad2"
-            ref="focusCantidad"
-            label="Cantidad"
-            type="number"
-            outlined
-            dense
-            min="1"
-            @keyup.enter.prevent="actualizarCantidad()"
-          />
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancelar" v-close-popup />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
   </div>
 </template>
 
 <script lang="ts"  setup>
-import { Notify, QTableColumn, QTableProps, useQuasar, debounce } from 'quasar';
+import { Notify, QTableColumn, QTableProps, useQuasar, debounce, Dialog } from 'quasar';
 import { useQueryClient } from "@tanstack/vue-query";
 import {
   ref,
@@ -1085,7 +1048,8 @@ const allowAutoFocusProduct = ref(true); // Controla si el input de código pued
 const btnConfirmarFactura = ref(null);
 const calcularCambio = ref(0);
 const cantidad = ref(1); // Cantidad en el boton
-const cantidad2 = ref(1); // para modal cantidad
+const cantidad2 = ref(1); // para cantidad
+const cantidadDialog = ref(1); // Cantidad en el dialog
 const cantidadInputs = ref({}); // Referencias a los inputs de cantidad en el catálogo
 const clave = ref("");
 const codigoProducto = ref("");
@@ -1101,7 +1065,6 @@ const loadingAgregar = ref(false);
 const loadingDetalle = ref(false);
 const loadingPorCodigo = ref(false);
 const loadingProductos = ref(false);
-const modalCantidad = ref(false);
 const modalProductos = ref(false);
 const modalProductos2 = ref(false);
 const montoEfectivo = ref(null);
@@ -1211,14 +1174,6 @@ watch(modalCuponazo, (val) => {
     });
 });
 
-//focus al modal cantidad
-watch(modalCantidad, (val) => {
-  if (val) {
-    nextTick(() => {
-      focusCantidad.value?.$el.querySelector("input")?.select();
-    });
-  }
-});
 
 //cargar productos en factura
 watch(modalFacturacion, (val) => {
@@ -1613,14 +1568,6 @@ watch(modalCuponazo, (val) => {
     });
 });
 
-//focus al modal cantidad
-watch(modalCantidad, (val) => {
-  if (val) {
-    nextTick(() => {
-      focusCantidad.value?.$el.querySelector("input")?.select();
-    });
-  }
-});
 
 //cargar productos en factura
 watch(modalFacturacion, (val) => {
@@ -1716,13 +1663,6 @@ const usarMultiplicador = (e) => {
   }
 };
 
-// cerrar modal de cantidad con enter
-const actualizarCantidad = () => {
-  if (cantidad2.value) {
-    modalCantidad.value = false;
-    return;
-  }
-};
 
 // aumentar cantidad en input de código
 const aumentarCantidadInput = () => {
@@ -1929,7 +1869,23 @@ const abrirCatalogo2 = async () => {
 };
 
 const abrirModalCantidad = () => {
-  modalCantidad.value = true;
+  Dialog.create({
+    title: "Cantidad",
+    message: "Ingrese la cantidad del producto",
+    prompt: {
+      type: "number",
+      model: null,
+    },
+  }).onOk((resul:number) => {
+    // Confirmado
+    if (resul >= 1) {
+      cantidad2.value = resul;
+    }
+  }).onCancel(() => {
+    // Cancelado
+  }).onDismiss(() => {
+    // Cerrado
+  });
 };
 
 // FUNCIONES GENERALES
@@ -2328,6 +2284,8 @@ const buscarProductoEscaneado = async () => {
       mostrarNotificacionCorrectoSonido(
         `${detalle.PRODUCT0} agregado con éxito`
       );
+      nuevosDatos.value = null;
+
     },
     onError: async (err) => {
       await errorAgregarProductoConSonido(
