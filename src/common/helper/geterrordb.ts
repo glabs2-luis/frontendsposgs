@@ -1,12 +1,13 @@
 import { AxiosError } from 'axios';
 
 export const getAxiosErrorMessage = (
-  error: unknown,
+  error: any,
   fallbackMessage = 'Ocurrió un error inesperado',
 ): string => {
   if (error instanceof AxiosError) {
     const data = error.response?.data;
-
+    
+    
     // Si `details` es string o array
     if (typeof data?.details === 'string') {
       return data.details;
@@ -14,9 +15,9 @@ export const getAxiosErrorMessage = (
     if (Array.isArray(data?.details)) {
       return data.details.join('\n');
     }
-
-    if (typeof data?.message === 'string') {
-      return data.message;
+    
+    if (data.message) {
+      return data.message.toString();
     }
     if (Array.isArray(data?.message)) {
       return data.message.join('\n');
@@ -28,5 +29,5 @@ export const getAxiosErrorMessage = (
     }
   }
 
-  return fallbackMessage;
+  return error.toString() || fallbackMessage;
 };

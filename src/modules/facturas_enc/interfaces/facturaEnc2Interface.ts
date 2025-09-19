@@ -4,3 +4,9 @@ export interface FacturaEnc2 {
   SERIE?: string;
   ES_CONTINGENCIA?: boolean;
 }
+
+export interface FacturacionModel {
+    ID_FACTURA_ENC: number,
+    CORR_CONTINGENCIA: number,
+}
+

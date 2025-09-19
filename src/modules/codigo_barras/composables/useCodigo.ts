@@ -3,7 +3,7 @@ import { obtenerCodigoBarrasAction, obtenerProductoPorCodigoAction } from '../ac
 import { showSuccessNotification, showErrorNotification } from '@/common/helper/notification'
 import { Codigo } from '../interfaces/codigoInterface';
 import { getAxiosErrorMessage } from '@/common/helper/geterrordb';
-import { Ref, warn } from 'vue';
+import { computed, Ref, warn } from 'vue';
 
 export const useCodigo = () => {
     
@@ -37,9 +37,9 @@ export const useCodigo = () => {
   })
   
   const obtenerProducto2 = (codigo: Ref<string>) => useQuery({
-    queryKey: ['codigo-barra-producto2', codigo],
+    queryKey: computed(() => ['codigo-barra-producto2', codigo]),
     queryFn: () => obtenerProductoPorCodigoAction(codigo.value),
-    enabled: false
+    enabled: computed(() => !!codigo.value)
   })
 
 //   const obtenerProducto2 = async (codigo: string) => {

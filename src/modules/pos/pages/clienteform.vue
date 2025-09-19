@@ -87,9 +87,9 @@
                         hide-bottom-space
                         style="font-size: 13px"
                         @keydown.enter.prevent="buscarClienteDPINIT2"
-                        @update:model-value="busquedaAutomatica"
+                        @update:model-value="clienteStore.nombre = ''; clienteStore.direccion = '';"
                         @keydown="usarF2"
-                      >
+                        >
                         <template v-slot:append>
                           <q-btn
                             flat

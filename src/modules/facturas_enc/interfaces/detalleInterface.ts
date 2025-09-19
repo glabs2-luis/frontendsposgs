@@ -32,6 +32,7 @@ export interface Enc {
     DET:                   Det[];
     DES:                   De[];
     CUPONES:               any[];
+
 }
 
 export interface De {

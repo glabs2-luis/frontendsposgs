@@ -20,9 +20,9 @@ export const obtenerProductosAction = async (): Promise<Productos[]> => {
 // por Id
 export const obtenerProductosIdAction = async (
   producto: string
-): Promise<Productos[]> => {
+): Promise<Productos> => {
   try {
-    const { data } = await posApi.get<Productos[]>(
+    const { data } = await posApi.get<Productos>(
       `/maestro-productos/${producto}`
     );
     return data;

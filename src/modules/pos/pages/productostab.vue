@@ -39,7 +39,7 @@
             color="indigo"
             class="color: black"
             @click="imprimirCotizacion"
-            :disable="tipoPedido === 'pedido'"
+            :disable="tipoPedido !== 'cotización'"
           />
           <q-btn
             icon="restart_alt"
@@ -87,6 +87,7 @@
           label="Código del Producto"
           outlined
           dense
+          debounce="300"
           @update:model-value="busquedaAutomatica"
           @keyup.enter="buscarProductoEscaneado"
           @keydown.arrow-up.prevent="aumentarCantidadInput"
@@ -159,12 +160,15 @@
           <span style="color: black; font-weight: bold">
             {{ nuevosDatos.descripcion }}
           </span>
-          <span style="color: green; font-weight: bold; font-size: 16px">
-            {{ ` - Precio: ${formatCurrency(nuevosDatos.precio, 3)} - ` }}
-          </span>
-          <span style="color: blue; font-weight: bold; font-size: 16px">
-            {{ `  Subtotal: ${formatCurrency(nuevosDatos.subtotal, 3)}` }}
-          </span>
+          <template v-if="nuevosDatos.encontrado">
+            <span style="color: green; font-weight: bold; font-size: 16px">
+              {{ ` - Precio: ${formatCurrency(nuevosDatos.precio, 3)} - ` }}
+            </span>
+            <span style="color: blue; font-weight: bold; font-size: 16px">
+              {{ `  Subtotal: ${formatCurrency(nuevosDatos.subtotal, 3)}` }}
+            </span>
+
+          </template>
         </div>
       </div>
     </q-card>
@@ -212,7 +216,7 @@
                 size="lg"
                 :loading="fetchingProductos"
                 :disable="loadingProductosQuery"
-                @click="refetchTodosProductos"
+                @click="() => refetchTodosProductos"
                 class="refresh-btn"
               >
                 <q-tooltip>Actualizar productos</q-tooltip>
@@ -329,7 +333,7 @@
                   color="orange"
                   icon="refresh"
                   label="Reintentar"
-                  @click="refetchTodosProductos"
+                  @click="() => refetchTodosProductos"
                   :loading="fetchingProductos"
                 />
               </div>
@@ -461,12 +465,11 @@
                         if (
                           el &&
                           cantidadInputs &&
-                          cantidadInputs.value &&
                           typeof props.rowIndex === 'number' &&
                           props.rowIndex >= 0
                         ) {
                           try {
-                            cantidadInputs.value[props.rowIndex] = el;
+                            cantidadInputs[props.rowIndex] = el;
                           } catch (error) {
                             showConfirmationInsideModal('Error', error);
                             //console.warn('Error assigning ref:', error);
@@ -875,8 +878,8 @@
   </div>
 </template>
 
-<script setup>
-import { Notify, useQuasar } from "quasar";
+<script lang="ts"  setup>
+import { Notify, QTableColumn, QTableProps, useQuasar, debounce } from 'quasar';
 import { useQueryClient } from "@tanstack/vue-query";
 import {
   ref,
@@ -926,13 +929,19 @@ import {
 import { useClienteStore } from "@/stores/cliente";
 import { usePdfTicket } from "@/modules/ticket_pdf/composable/useTicket";
 import { db } from "@/db/productosDB";
+import { obtenerProductoPorCodigoAction } from "@/modules/codigo_barras/action/codigoAction";
+import { PedidosDet } from "@/modules/pedidos_det/interfaces/pedidosDetInterface";
+import { FacturaEnc2 } from "@/modules/facturas_enc/interfaces/facturaEnc2Interface";
+import { DatosProductoBuscado } from '../interfaces/posInterfaces';
+
+
 
 /*
 ==========================================================
                       COLUMNAS
 ==========================================================
 */
-const columnasCatalogo = [
+const columnasCatalogo:QTableProps['columns'] = [
   {
     name: "codigo",
     label: "Código / Marca",
@@ -1049,7 +1058,6 @@ const {
   errorProductos,
 } = useProductos();
 const buscarCodigo = ref("2774651818380");
-const { obtenerPorCodigo } = useCodigo();
 const $q = useQuasar();
 const { mutateAnularPedidoPendiente } = usePedidosEnc();
 const { generarCotizacionPDF } = usePdfCotizacion();
@@ -1109,15 +1117,12 @@ const queryClient = useQueryClient();
 const descripcionProd = ref("");
 const subtotalCalculado = ref(0);
 const espera = ref(null); // guarda el timeout
-const nuevosDatos = ref(null); // Mostrar info del producto
+const nuevosDatos = ref<DatosProductoBuscado|undefined>(); // Mostrar info del producto
 const codigoBarra = ref("");
 const productosCacheados = shallowRef([]); // superfiical que solo ref
 const { obtenerProducto } = useCodigo();
-const { obtenerProducto2 } = useCodigo();
-const { data: productoEncontrado, refetch: refetchProducto } =
-  obtenerProducto(filtroProductos);
-const { data: productoEncontrado2, refetch: refetchProducto2 } =
-  obtenerProducto2(codigoProducto);
+const { data: productoEncontrado, refetch: refetchProducto } = obtenerProducto(filtroProductos);
+
 
 // Paginación del catálogo
 const paginacionCatalogo = ref({
@@ -1375,8 +1380,8 @@ const productosUnicos = computed(() => {
     const nivelTexto = `${formatCurrency(
       prod.PRECIO_FINAL,
       3
-    )} ( ${formatNumber(prod.CANTIDAD_INICIAL)} a ${formatNumber(
-      prod.CANTIDAD_FINAL
+    )} ( ${formatNumber(Number(prod.CANTIDAD_INICIAL))} a ${formatNumber(
+      Number(prod.CANTIDAD_FINAL)
     )} )`;
 
     if (!mapa.has(clave)) {
@@ -1400,52 +1405,76 @@ const productosUnicos = computed(() => {
 
 // Busqueda Automatica
 const busquedaAutomatica = () => {
-  if (espera.value) clearTimeout(espera.value); // limpiar tiempo
+  buscarDescripcion();
+  // if (espera.value) clearTimeout(espera.value); // limpiar tiempo
 
-  if (codigoProducto.value.length > 0) {
-    espera.value = setTimeout(() => {
-      buscarDescripcion();
-    }, 500);
-  }
+  // if (codigoProducto.value.length > 0) {
+  //   espera.value = setTimeout(() => {
+  //   }, 500);
+  // }
 };
 
 // Mostrar la descripcion del producto
 const buscarDescripcion = async () => {
+  if (codigoProducto.value.trim() == '') {
+    nuevosDatos.value = null
+    return
+  }
   try {
+    
+
     let prod = null; // Tiene el precio del producto
     let codigoFinal = codigoProducto.value; // Tiene el codigo a buscar descripcion
+    let mensajeError:string = '';
 
     // 1. Intentar con el código ingresado
-    try {
-      prod = await precioReal(codigoProducto.value, cantidad2.value);
-    } catch (error) {
-      //console.warn("No se encontró precio con el código:", codigoProducto.value)
-    }
+    await precioReal(codigoProducto.value, cantidad2.value)
+      .then((res) => {
+        prod = res;
+      })
+      .catch(async (errPrecio:Error) => {
+        mensajeError += `${errPrecio.message}`;
+        
+        // 2. Si no existe → intentar con PRODUCT0 alterno
+        await obtenerProductoPorCodigoAction(codigoProducto.value)
+          .then( async (res) => {
+            await precioReal(res.PRODUCT0, cantidad2.value)
+              .then( (res2) => {
+                prod = res2;
+                codigoFinal = res.PRODUCT0;
+              })
+              .catch((errorPrecioMP:Error) => {
+                mensajeError += ` PR-Real ${errorPrecioMP.message}`;
+              });
+          })
+          .catch(async (errorProd:Error) => {
+            prod = null;
+            // mostrarNotificacionErrorSonido(error.message);
+          });
+      });
 
-    // 2. Si no existe → intentar con PRODUCT0 alterno
-    if (!prod) {
-      const { data } = await refetchProducto2(); // aquí data no es ref
-
-      if (data && data.PRODUCT0) {
-        try {
-          prod = await precioReal(data.PRODUCT0, cantidad2.value);
-          codigoFinal = data.PRODUCT0;
-        } catch (error) {
-          //console.warn("Tampoco se encontró precio con PRODUCT0:", data.PRODUCT0)
-        }
-      }
-    }
+    
 
     // 3. Si aún no hay prod → salir
     if (!prod) {
-      nuevosDatos.value = null;
+      const productoError:DatosProductoBuscado = {
+              encontrado: false,
+              codigo: codigoProducto.value, // No se muestra en pantalla
+              descripcion: `${mensajeError}`,
+              precio: 0,
+              subtotal: 0,
+            };
+      nuevosDatos.value = productoError;
+      // nuevosDatos.value = null;
       return;
     }
+    
 
     // 4. Obtener descripción
     const nuevaDescripcion = await obtenerProductosId(codigoFinal);
 
     nuevosDatos.value = {
+      encontrado: true,
       codigo: codigoFinal, // No se muestra en pantalla
       descripcion: nuevaDescripcion.DESCRIPCION_PROD,
       precio: prod.PRECIO_FINAL,
@@ -1453,6 +1482,7 @@ const buscarDescripcion = async () => {
     };
   } catch (error) {
     nuevosDatos.value = null;
+    
   }
 };
 
@@ -1465,7 +1495,7 @@ watch(cantidad2, async () => {
 
 const cantidadIngresada = (producto) => {
   if (!producto.CANTIDAD_PEDIDA || producto.CANTIDAD_PEDIDA <= 0) {
-    showErrorNotificationInsideModal("Cantidad", "Ingrese una cantidad válida");
+    showErrorNotificationInside("Cantidad", "Ingrese una cantidad válida");
     return;
   }
 };
@@ -1801,7 +1831,7 @@ const imprimirCotizacion = async () => {
 
     $q.loading.hide();
   } catch (error) {
-    showErrorNotification("Error"), error;
+    showErrorNotification("Error", error);
   } finally {
     $q.loading.hide();
   }
@@ -1998,7 +2028,7 @@ const confirmarFactura = async () => {
   }
 
   // modal confirmacion factura
-  const datos = {
+  const datos:FacturaEnc2 = {
     ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
     USUARIO_QUE_FACTURA: userStore.nombreVendedor,
     SERIE: configuracionStore.serieSeleccionada,
@@ -2096,13 +2126,7 @@ const terminarPedidoRompefilas = async () => {
 
     cleanAllStores();
   } catch (error) {
-    $q.notify({
-      type: "negative",
-      message: "Error al generar ticket: ",
-      error,
-      position: "top",
-      timeout: 3000,
-    });
+    showErrorNotification("Error al generar ticket", error);
   } finally {
     $q.loading.hide();
   }
@@ -2113,7 +2137,7 @@ const imprimirFactura = async (data) => {
 
   const detalle = await obtenerDetalleFactura3(idFacturaEnc.value);
 
-  if (!detalle || detalle.length === 0) return;
+  if (!detalle) return;
 
   const itemsFactura = detalle.map((item) => ({
     cantidad: item.CANTIDAD_PEDIDA, // Cantidad Pedida
@@ -2192,7 +2216,7 @@ const imprimirFactura = async (data) => {
 
 // mostrar total
 const totalEncabezado = computed(() => {
-  return pedidoData.value?.TOTAL_PEDIDO ?? 0;
+  return pedidoData.value?.TOTAL_GENERAL_PEDIDO ?? 0;
 });
 
 const totalPedido = () => {
@@ -2280,8 +2304,8 @@ const buscarProductoEscaneado = async () => {
   }
 
   // 3. Insertar producto al pedido
-  const detalle = {
-    ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
+  const detalle:PedidosDet = {
+    ID_PEDIDO_ENC: pedidoStore.idPedidoEnc.toString(),
     PRODUCT0: resultado.producto.PRODUCT0,
     CANTIDAD_PEDIDA: cantidad2.value || 1, // usar cantidad del modal o 1 por defecto
     PRECIO_UNIDAD_VENTA: Number(resultado.precio.PRECIO_FINAL.toFixed(4)),
@@ -2340,8 +2364,8 @@ const agregarProductoAlPedido2 = async (producto) => {
     }
 
     // Armar detalle para guardar
-    const detalle2 = {
-      ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
+    const detalle2:PedidosDet = {
+      ID_PEDIDO_ENC: pedidoStore.idPedidoEnc.toString(),
       PRODUCT0: producto.PRODUCT0,
       CANTIDAD_PEDIDA: cantidadFinal,
       PRECIO_UNIDAD_VENTA: precio.PRECIO_PROMOCION ?? precio.PRECIO_FINAL,
@@ -2380,7 +2404,7 @@ const agregarProductoAlPedido2 = async (producto) => {
           `Error al agregar producto: ${error.message || "Error desconocido"}`
         );
         //showConfirmationInsideModal('Error', error)
-        throw new Error(error);
+        throw new Error(error.message || "Error desconocido");
       },
       onSettled: () => {
         loadingAgregar.value = false;
@@ -2438,7 +2462,7 @@ const seleccionarProducto2 = async (producto, index) => {
     await nextTick();
     moverFocoAlSiguienteProducto(index);
   } catch (error) {
-    showErrorNotificationInsideModal("Error", error);
+    showErrorNotificationInside("Error", error);
     //console.error("Error in seleccionarProducto2:", error);
   }
 };

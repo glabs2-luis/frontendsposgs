@@ -1,10 +1,10 @@
 import posApi from "@/api/apiPos";
 import { getAxiosErrorMessage } from "@/common/helper/geterrordb";
 import { FacturaEnc } from "../interfaces/facturaEncInterface";
-import { FacturaEnc2 } from "../interfaces/facturaEnc2Interface";
+import { FacturacionModel, FacturaEnc2 } from "../interfaces/facturaEnc2Interface";
 import { DatosFel } from "../interfaces/datosFelInterface";
 import { FacturaEnc3 } from "../interfaces/facturaEnc3Interface";
-import { Detalle, Enc } from '../interfaces/detalleInterface';
+import { De, Detalle, Enc } from '../interfaces/detalleInterface';
 
 // Obtener todas las Facturas enc
 export const obtenerFacturasEncAction = async (): Promise<FacturaEnc[]> => {
@@ -49,7 +49,7 @@ export const obtenerDetalleFacturaPorIdAction = async (idFacturaEnc: number) => 
 };
 
 // Para impresion xd
-export const obtenerDetalleFacturaPorIdAction3 = async (idFacturaEnc: number) :Promise<Detalle> => {
+export const obtenerDetalleFacturaPorIdAction3 = async (idFacturaEnc: number) :Promise<De[]> => {
   try {
     const { data } = await posApi.get(`/facturas-enc/detalles/${idFacturaEnc}`);
     return data.ENC.DES;
@@ -82,9 +82,9 @@ export const crearFacturaEncAction = async () => {
 // crear factura
 export const crearFacturaEncAction2 = async (
   factura: FacturaEnc2
-): Promise<FacturaEnc2> => {
+): Promise<FacturacionModel> => {
   try {
-    const { data } = await posApi.post<FacturaEnc2>(
+    const { data } = await posApi.post<FacturacionModel>(
       `/facturas-enc/facturacion`,
       factura
     );
@@ -127,6 +127,7 @@ export const obtenerFacturasFechaAction = async (
     return data;
   } catch (error) {
     const message = getAxiosErrorMessage(error, "Hubo un error obteniendo facturas por fecha" );
+    
     throw new Error(message);
   }
 };

@@ -32,8 +32,8 @@ export const useProductos = () => {
       const producto = await obtenerProductosIdAction(codigo);
       return producto;
     } catch (error) {
-      const message = getAxiosErrorMessage(error, "Error consultando producto");
-      throw new Error(message);
+      // const message = getAxiosErrorMessage(error, "Error consultando producto");
+      throw new Error(error);
     }
   };
 
