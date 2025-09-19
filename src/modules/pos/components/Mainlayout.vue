@@ -19,6 +19,14 @@
             <q-icon :name="item.icon" />
           </q-item-section>
           <q-item-section>{{ item.label }}</q-item-section>
+          <!-- SI EL BOTON ES DE PENDIENTES, MOSTRAR UN CONTADOR DE FACTURAS PENDIENTES -->
+            <q-badge
+              color="red"
+              floating
+              class="q-mr-md"
+              :label="facturasErrores.length"
+              v-if="item.label === 'Pendientes' && facturasErrores"
+            />
         </q-item>
       </q-list>
     </q-drawer>
@@ -159,6 +167,10 @@ import { useQuasar } from "quasar";
 import { useSyncManager } from "@/modules/sync/composables/useSyncManager";
 import SyncResultsModal from "@/modules/sync/components/SyncResultsModal.vue";
 import { useStoreSucursal } from "@/stores/sucursal";
+import { useFacturasFel } from "@/modules/pendientes/composables/useFelPendientes";
+
+
+const {facturasErrores} = useFacturasFel()
 
 const StoreSucursal = useStoreSucursal();
 // const { obtenerSucursal } = useSucursales();

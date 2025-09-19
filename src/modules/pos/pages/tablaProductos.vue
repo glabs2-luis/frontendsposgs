@@ -54,6 +54,7 @@
           type="number"
           label="Cantidad"
           dense
+          debounce="500"
           outlined
           style="width: 100px"
         >
@@ -330,8 +331,7 @@ const columnas: QTableColumn[] = [
     field: "PRECIO_UNIDAD_VENTA",
     format: (val, row) => formatCurrency(Number(row.PRECIO_UNIDAD_VENTA), 4),
     align: "center",
-    style:
-      "width: 150px; min-width: 150px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
+    style: "width: 150px; min-width: 150px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
   },
   {
     name: "SUBTOTAL_GENERAL",
@@ -340,7 +340,7 @@ const columnas: QTableColumn[] = [
     format: (val, row) =>
       formatCurrency(row.SUBTOTAL_VENTAS + row.MONTO_IVA, 2),
     align: "center",
-    style: "width: 100px; min-width: 100px; max-width: 120px;",
+    style: "width: 150px; min-width: 150px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
   },
   {
     name: "acciones",
@@ -420,11 +420,15 @@ const totalGeneral = computed(() => {
 
 // Watch para actualizar el tamaño de letra en la tabla
 watch(tamanioLetra, (nuevoTamanio) => {
-  if (nuevoTamanio < 8 || nuevoTamanio > 100) {
-    $q.notify({
-      type: "negative",
-      message: "El tamaño de letra debe estar entre 8 y 100",
-    });
+  if (nuevoTamanio < 8 || nuevoTamanio > 60) {
+
+    showErrorNotificationInside("Error", "El tamaño de letra debe estar entre 8 y 60");
+    // $q.notify({
+    //   type: "negative",
+    //   message: "El tamaño de letra debe estar entre 8 y 60",
+    // });
+    if (nuevoTamanio < 8) tamanioLetra.value = 8;
+    if (nuevoTamanio > 60) tamanioLetra.value = 60
     return;
   }
   // Actualizar el tamaño de letra en el store o en la tabla si es necesario

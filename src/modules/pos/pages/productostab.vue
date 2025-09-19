@@ -92,7 +92,7 @@
           @keydown.arrow-up.prevent="aumentarCantidadInput"
           @keydown.arrow-down.prevent="disminuirCantidadInput"
           class="col-12 col-md-5"
-          :disable="errorAgregarProducto"
+          :disable="errorAgregarProducto || loadingPorCodigo"
         >
           <template #append>
             <q-btn
@@ -131,8 +131,8 @@
             class="boton-amarillo"
             icon="add_shopping_cart"
             size="sm"
-            :loading="loadingAgregar"
-            :disable="!codigoProducto"
+            :loading="loadingAgregar || loadingPorCodigo"
+            :disable="!codigoProducto || loadingPorCodigo"
           />
 
           <!-- Contador de productos -->
@@ -2205,16 +2205,17 @@ const limpiarFiltro = () => {
 
 // Buscar producto por código escaneado o ingresado manualmente
 const buscarProductoEscaneado = async () => {
-  if (!codigoProducto.value) return;
+  if (!codigoProducto.value || loadingPorCodigo.value) return;
 
+
+  loadingPorCodigo.value = true;
   if (!pedidoStore.idPedidoEnc) {
     await errorAgregarProductoConSonido(
       "No hay un pedido activo. Por favor, crea un nuevo pedido."
     );
+    loadingPorCodigo.value = false;
     return;
   }
-
-  loadingPorCodigo.value = true;
   let resultado = null;
 
   // 1. buscar por código de barras
