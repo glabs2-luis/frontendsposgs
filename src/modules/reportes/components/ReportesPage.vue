@@ -73,8 +73,11 @@
       </div>
     </div>
 
-    <!-- Contenido de la pagina-->
-    <div v-else-if="accesoPermitido">
+    <!-- <div v-else-if="accesoPermitido"> -->
+      
+      <!-- Contenido de la pagina--> 
+      <div v-else-if="accesoPermitido">
+      
       <!-- Sincronizar Facturas -->
       <q-card flat bordered class="sync-card">
         <q-expansion-item
@@ -267,6 +270,15 @@
                   size="sm"
                   @click="imprimirTicket"
                 />
+                <q-btn
+                  v-if="listaFacturas.length > 0"
+                  class="boton-rapido"
+                  label="resumen"
+                  icon="receipt_long"
+                  size="sm"
+                  @click="imprimirTicket2"
+                />
+
               </div>
             </div>
 
@@ -347,6 +359,8 @@ import { useQuasar } from "quasar";
 import { useStoreSucursal } from "@/stores/sucursal";
 import { useConfiguracionStore } from "@/stores/serie";
 import { useSync } from "@/modules/sync/composables/useSync";
+import { c } from "vite/dist/node/moduleRunnerTransport.d-DJ_mE5sf";
+import { ResumenDia } from "../interfaces/resumenDiaInterfaces";
 
 const storeSerie = useConfiguracionStore();
 const $q = useQuasar();
@@ -452,7 +466,7 @@ const verificarFacturasPendientes = () => {
 
 // Mostrar el modal al iniciar la página
 onMounted(async () => {
-  // Esperar a que se carguen las facturas pendientes
+// Esperar a que se carguen las facturas pendientes
   if (loadingFacturasErrores.value) {
     // Si está cargando, esperar a que termine
     await new Promise((resolve) => {
@@ -463,10 +477,11 @@ onMounted(async () => {
         }
       });
     });
-  }
+   }
 
   // Verificar facturas pendientes
   const hayFacturasPendientes = verificarFacturasPendientes();
+  //const hayFacturasPendientes = false // Para pruebas
 
   // Si no hay facturas pendientes, mostrar modal de contraseña
   if (!hayFacturasPendientes) {
@@ -668,6 +683,117 @@ const getConnectionStatusText = () => {
   return estadoConexion.value.status ? "Conectado" : "Desconectado";
 };
 
+const imprimirTicket2 = () => {
+
+  //console.log('Lista Facturas', listaFacturas.value);
+
+  if (!listaFacturas.value || listaFacturas.value.length === 0) {
+    showErrorNotification("Impresión", "No hay facturas para imprimir");
+    return;
+  }
+
+   // Agrupar facturas por día
+  const resumenPorDia: Record<string, ResumenDia> = {};  
+
+  listaFacturas.value.forEach(factura => {
+
+    // Tomar solo la fecha (YYYY-MM-DD)
+    const fecha = new Date(factura.FECHA_DE_FACTURA).toISOString().split("T")[0];
+
+
+    if (!resumenPorDia[fecha]) {
+      resumenPorDia[fecha] = { cantidad: 0, total: 0, descuento: 0 };
+    }
+
+    resumenPorDia[fecha].cantidad += 1;
+    resumenPorDia[fecha].total += factura.TOTAL_GENERAL ?? 0;
+    resumenPorDia[fecha].descuento += factura.MONTO_DESCUENTO_FACT ?? 0;
+  });
+
+  // Crear ventana de impresión
+  const ventanaImpresion = window.open("", "", "width=600, height=800");
+
+  if (ventanaImpresion) {
+    ventanaImpresion.document.write(`
+      <html>
+        <head>
+          <title>Resumen de Facturas por Día</title>
+          <style>
+            @page { size: auto; margin: 0; }
+            body {
+              font-family: 'Arial', monospace;
+              padding: 20px;
+              font-size: 13px;
+              color: #000;
+            }
+            .titulo {
+              text-align: center;
+              font-weight: bold;
+              margin-bottom: 15px;
+              font-size: 14px;
+              border-bottom: 1px solid #333;
+              padding-bottom: 8px;
+              text-transform: uppercase;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 20px;
+            }
+            th, td {
+              border: 1px solid #333;
+              padding: 6px;
+              font-size: 13px;
+              text-align: right;
+            }
+            th {
+              background: #f0f0f0;
+              text-align: center;
+            }
+            td.fecha {
+              text-align: left;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="titulo">RESUMEN DE FACTURAS POR DÍA</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Cantidad</th>
+                <th>Total General</th>
+                <th>Total Descuentos</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.entries(resumenPorDia)
+                .map(
+                  ([fecha, datos]) => `
+                  <tr>
+                    <td class="fecha">${fecha}</td>
+                    <td>${datos.cantidad}</td>
+                    <td>Q. ${datos.total.toFixed(2)}</td>
+                    <td>Q. ${datos.descuento.toFixed(2)}</td>
+                  </tr>`
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+
+    ventanaImpresion.document.close();
+    ventanaImpresion.focus();
+    ventanaImpresion.print();
+    ventanaImpresion.close();
+
+    
+  }
+};
+
+
 // Imprimir nota
 const imprimirTicket = () => {
   if (!ticketRef.value) {
@@ -685,6 +811,7 @@ const imprimirTicket = () => {
       <title>Ticket de Corte</title>
       <style>
         @page {
+          size: auto;
           margin: 0;
         }
         body {
