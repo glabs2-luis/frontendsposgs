@@ -76,6 +76,7 @@
     <!-- <div v-else-if="accesoPermitido"> -->
       
       <!-- Contenido de la pagina--> 
+       <!-- <div> -->
       <div v-else-if="accesoPermitido">
       
       <!-- Sincronizar Facturas -->
@@ -685,46 +686,45 @@ const getConnectionStatusText = () => {
 
 const imprimirTicket2 = () => {
 
-  //console.log('Lista Facturas', listaFacturas.value);
-
   if (!listaFacturas.value || listaFacturas.value.length === 0) {
     showErrorNotification("Impresión", "No hay facturas para imprimir");
     return;
   }
 
-   // Agrupar facturas por día
-  const resumenPorDia: Record<string, ResumenDia> = {};  
+  // Agrupar facturas por día y serie
+  const resumen: Record<string, ResumenDia & { fecha: string; serie: string }> = {};  
 
   listaFacturas.value.forEach(factura => {
-
-    // Tomar solo la fecha (YYYY-MM-DD)
     const fecha = new Date(factura.FECHA_DE_FACTURA).toISOString().split("T")[0];
+    const serie = factura.SERIE ?? "SIN SERIE";
+    const clave = `${fecha}-${serie}`;
 
-
-    if (!resumenPorDia[fecha]) {
-      resumenPorDia[fecha] = { cantidad: 0, total: 0, descuento: 0 };
+    if (!resumen[clave]) {
+      resumen[clave] = { cantidad: 0, total: 0, descuento: 0, fecha, serie };
     }
 
-    resumenPorDia[fecha].cantidad += 1;
-    resumenPorDia[fecha].total += factura.TOTAL_GENERAL ?? 0;
-    resumenPorDia[fecha].descuento += factura.MONTO_DESCUENTO_FACT ?? 0;
+    resumen[clave].cantidad += 1;
+    resumen[clave].total += factura.TOTAL_GENERAL ?? 0;
+    resumen[clave].descuento += factura.MONTO_DESCUENTO_FACT ?? 0;
   });
 
-  // Crear ventana de impresión
   const ventanaImpresion = window.open("", "", "width=600, height=800");
 
   if (ventanaImpresion) {
     ventanaImpresion.document.write(`
       <html>
         <head>
-          <title>Resumen de Facturas por Día</title>
+          <title>Resumen de Facturas</title>
           <style>
-            @page { size: auto; margin: 0; }
+            @page { size: 80mm auto; margin: 10mm; }
             body {
               font-family: 'Arial', monospace;
               padding: 20px;
               font-size: 13px;
+              width: 80mm;
+              max-width: 80mm;
               color: #000;
+              text-align: center;
             }
             .titulo {
               text-align: center;
@@ -736,7 +736,9 @@ const imprimirTicket2 = () => {
               text-transform: uppercase;
             }
             table {
-              width: 100%;
+              width: 95%;
+              max-width: 95%;
+              margin: auto;
               border-collapse: collapse;
               margin-top: 20px;
             }
@@ -750,28 +752,30 @@ const imprimirTicket2 = () => {
               background: #f0f0f0;
               text-align: center;
             }
-            td.fecha {
+            td.fecha, td.serie {
               text-align: left;
             }
           </style>
         </head>
         <body>
-          <div class="titulo">RESUMEN DE FACTURAS POR DÍA</div>
+          <div class="titulo">RESUMEN DE FACTURAS POR DÍA </div>
           <table>
             <thead>
               <tr>
                 <th>Fecha</th>
+                <th>Serie</th>
                 <th>Cantidad</th>
                 <th>Total General</th>
                 <th>Total Descuentos</th>
               </tr>
             </thead>
             <tbody>
-              ${Object.entries(resumenPorDia)
+              ${Object.values(resumen)
                 .map(
-                  ([fecha, datos]) => `
+                  (datos) => `
                   <tr>
-                    <td class="fecha">${fecha}</td>
+                    <td class="fecha">${datos.fecha}</td>
+                    <td class="serie">${datos.serie}</td>
                     <td>${datos.cantidad}</td>
                     <td>Q. ${datos.total.toFixed(2)}</td>
                     <td>Q. ${datos.descuento.toFixed(2)}</td>
@@ -788,8 +792,6 @@ const imprimirTicket2 = () => {
     ventanaImpresion.focus();
     ventanaImpresion.print();
     ventanaImpresion.close();
-
-    
   }
 };
 
