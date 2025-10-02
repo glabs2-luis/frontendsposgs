@@ -376,7 +376,74 @@
       </q-expansion-item>
     </q-card>
 
+    <!-- Configuracion de sonidos -->
+      <q-card flat bordered class="q-pa-md q-mt-md">
+      <q-expansion-item
+        class="text-h6 text-black prueba"
+        icon="volume_up"
+        label="Configuración de Sonidos"
+        dense-toggle
+        expand-icon="keyboard_arrow_down"
+        header-class="text-black"
+      >
+        <q-markup-table flat bordered class="q-mt-md">
+          <q-card-section>
+            <!-- Boton para regresar los valores por defecto -->
+            <q-btn color="primary" text-color="black" icon="restore" label="Valores por defecto" @click="regresarValoresDefecto" />
+          </q-card-section>
+          <q-card-section class="row q-col-gutter-md">
+            <q-input 
+              class="col col-lg-5 col-md-4 col-sm-12" 
+              rounded 
+              outlined  
+              v-model="hzExito" 
+              type="number" 
+              label="Frecuencia(HZ) de sonido completado" />
+            <q-input 
+              class="col col-lg-5 col-md-4 col-sm-12" 
+              rounded 
+              outlined  
+              v-model="tiempoExito" 
+              type="number" 
+              label="Tiempo(ms) de sonido completado" />
+            <q-btn 
+              class="col col-lg-2 col-md-4 col-sm-12" 
+              text-color="black" 
+              color="primary" 
+              rounded 
+              outlined 
+              dense 
+              icon="check" 
+              label="Guardar" 
+              @click="guardarConfigCompletado" />
+          </q-card-section>
+          <q-card-section class="row q-col-gutter-md">
+            <q-input 
+              class="col col-lg-5 col-md-4 col-sm-12" 
+              rounded outlined  
+              v-model="hzError" 
+              type="number" 
+              label="Frecuencia(HZ) de sonido error" />
+            <q-input 
+              class="col col-lg-5 col-md-4 col-sm-12" 
+              rounded outlined  
+              v-model="tiempoError" 
+              type="number" 
+              label="Tiempo(ms) de sonido error" />
+            <q-btn 
+              class="col col-lg-2 col-md-4 col-sm-12" 
+              text-color="black" 
+              color="primary" 
+              rounded outlined dense  
+              icon="check" 
+              label="Guardar" @click="guardarConfigError" />
+          </q-card-section>
+        </q-markup-table>
+      </q-expansion-item>
+    </q-card>
+
     <!-- Mas configuraciones -->
+     
 
     <q-page class="q-mt-lg">
       <!--<q-btn label="Actualizar bodega" color="black" @click="actualizarBodega" /> -->
@@ -391,6 +458,7 @@ import { useConfiguracionStore } from "@/stores/serie";
 import {
   runWithLoading,
   showConfirmationDialog,
+  showSuccessNotification,
 } from "@/common/helper/notification";
 
 import { DataFactura } from "@/modules/facturar_pdf/interfaces/pdfInterface";
@@ -405,6 +473,9 @@ const configuracionStore = useConfiguracionStore();
 
 // sync
 import { useSync } from "@/modules/sync/composables/useSync";
+import { eliminarConfigSonidoError, eliminarConfigSonidoExito, getConfigSonidoError, setConfigSonidoError, setConfigSonidoExito } from "@/stores/localStorage";
+import { getConfigSonidoExito } from '../../../stores/localStorage';
+import { showErrorNotification } from '../../../common/helper/notification';
 const { seriesSucursal } = useSeries();
 const storeSucursal = useStoreSucursal();
 
@@ -423,6 +494,11 @@ const {
 const idSucursal = ref(0);
 const serie = ref(configuracionStore.serieSeleccionada || "");
 const conexionMensaje = ref(false);
+
+const hzError = ref(getConfigSonidoError().Herzio);
+const tiempoError = ref(getConfigSonidoError().Tiempo);
+const hzExito = ref(getConfigSonidoExito().Herzio);
+const tiempoExito = ref(getConfigSonidoExito().Tiempo);
 
 idSucursal.value = Number(storeSucursal.idSucursal)
 
@@ -495,6 +571,47 @@ function ListaDet1(idPedidoEnc: any): {
 } {
   throw new Error("Function not implemented.");
 }
+
+const regresarValoresDefecto = async () => {
+
+  const msg = await showConfirmationDialog(
+    "Restablecer Valores",
+    "¿Está seguro que desea restablecer los valores de configuración de sonidos a los valores por defecto?"
+  );
+  if (!msg) return;
+
+  eliminarConfigSonidoError();
+  eliminarConfigSonidoExito();
+
+  const configSonidoError = getConfigSonidoError();
+  const configSonidoExito = getConfigSonidoExito();
+
+  hzError.value = configSonidoError.Herzio;
+  tiempoError.value = configSonidoError.Tiempo;
+  hzExito.value = configSonidoExito.Herzio;
+  tiempoExito.value = configSonidoExito.Tiempo;
+
+  showSuccessNotification("Completado","Valores restablecidos a los valores por defecto.");
+};
+
+const guardarConfigCompletado = () => {
+  setConfigSonidoExito({
+    Herzio: hzExito.value,
+    Tiempo: tiempoExito.value,
+  });
+  showSuccessNotification("Completado","La configuración de sonido de completado ha sido guardada exitosamente.");
+
+};
+
+const guardarConfigError = () => {
+   setConfigSonidoError({
+    Herzio: hzError.value,
+    Tiempo: tiempoError.value,
+  });
+  showSuccessNotification("Completado","La configuración de sonidos de error ha sido guardada exitosamente.");
+
+};
+
 </script>
 
 <style scoped>
@@ -675,6 +792,7 @@ function ListaDet1(idPedidoEnc: any): {
 .info-section .q-banner:last-child {
   border-left-color: #388e3c;
 }
+
 
 /* Responsive */
 @media (max-width: 768px) {
