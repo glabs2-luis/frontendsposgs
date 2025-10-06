@@ -389,7 +389,7 @@
         <q-markup-table flat bordered class="q-mt-md">
           <q-card-section>
             <!-- Boton para regresar los valores por defecto -->
-            <q-btn color="primary" text-color="black" icon="restore" label="Valores por defecto" @click="regresarValoresDefecto" />
+            <q-btn color="yellow-8" text-color="black" icon="restore" label="Valores por defecto" @click="regresarValoresDefecto" />
           </q-card-section>
           <q-card-section class="row q-col-gutter-md">
             <q-input 
@@ -407,14 +407,15 @@
               type="number" 
               label="Tiempo(ms) de sonido completado" />
             <q-btn 
-              class="col col-lg-2 col-md-4 col-sm-12" 
+     
               text-color="black" 
-              color="primary" 
+              color="green-6" 
               rounded 
               outlined 
               dense 
               icon="check" 
               label="Guardar" 
+              class="btn-pequeno"
               @click="guardarConfigCompletado" />
           </q-card-section>
           <q-card-section class="row q-col-gutter-md">
@@ -431,9 +432,10 @@
               type="number" 
               label="Tiempo(ms) de sonido error" />
             <q-btn 
-              class="col col-lg-2 col-md-4 col-sm-12" 
+              class="btn-pequeno" 
               text-color="black" 
-              color="primary" 
+              size="md"
+              color="green-6" 
               rounded outlined dense  
               icon="check" 
               label="Guardar" @click="guardarConfigError" />
@@ -476,6 +478,7 @@ import { useSync } from "@/modules/sync/composables/useSync";
 import { eliminarConfigSonidoError, eliminarConfigSonidoExito, getConfigSonidoError, setConfigSonidoError, setConfigSonidoExito } from "@/stores/localStorage";
 import { getConfigSonidoExito } from '../../../stores/localStorage';
 import { showErrorNotification } from '../../../common/helper/notification';
+import { cleanAllStores } from '../../../common/helper/cleanStore';
 const { seriesSucursal } = useSeries();
 const storeSucursal = useStoreSucursal();
 
@@ -622,6 +625,13 @@ const guardarConfigError = () => {
   transition: all 0.3s ease;
   margin-bottom: 0;
   padding: 0 0 0 0;
+}
+
+.btn-pequeno {
+  padding: 2px 100px ;/* altura y ancho */
+  font-size: 0.8rem;
+  min-height: 12px;  /* fuerza una altura más baja */
+  border-radius: 40px ; /* conserva el estilo redondeado */
 }
 
 /* ===== ESTILOS PARA SINCRONIZACIÓN PROFESIONAL ===== */

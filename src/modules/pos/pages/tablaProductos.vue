@@ -2,7 +2,7 @@
   <!-- Modal de contraseña para bajar precios -->
   <PasswordModal
     ref="passwordModalRef"
-    title="Bajar precio"
+    title="Autorización Requerida"
     label="Clave del encargado"
     @success="onPasswordSuccess"
     @cancel="onPasswordCancel"
@@ -84,9 +84,7 @@
         :filter-method="filtrarProductos"
       >
         <!-- Header -->
-        <!--
-          Se quito esto ya que era una carga extra para la tabla 
-         -->
+
         <!-- Filas  -->
         <!-- Descripción editable con  (AUX -> PROD) -->
         <template v-slot:body-cell-DESCRIPCION_PROD="props">
@@ -100,8 +98,10 @@
             >
               Clic para editar la descripción
             </q-tooltip>
+            
             <!-- Descripción editable -->
             <!-- <div class="descripcion-prod row items-center no-wrap cursor-pointer"> -->
+
             <q-popup-edit
               style="width: 500px"
               :cover="false"
@@ -109,7 +109,7 @@
                 props.row.DESCRIPCION_PROD_AUX || props.row.DESCRIPCION_PROD
               "
               :disable="savingDescId === props.row.ID_PEDIDO_DET"
-              @save="(val) => onGuardarDescripcion(props.row, val)"
+              @save="(val) => solicitarAutorizacionDescripcion(props.row, val)"
               v-slot="scope"
             >
               <q-input
@@ -122,12 +122,13 @@
                 counter
                 :maxlength="200"
                 @focus="(e) => (e.target as HTMLInputElement).select()"
-                @keyup.enter="onGuardarDescripcion(props.row, scope.value)"
+                @keyup.enter="() => { solicitarAutorizacionDescripcion(props.row, scope.value); scope.set(); }"
                 @keyup.esc="scope.set()"
               />
             </q-popup-edit>
           </q-td>
         </template>
+        
         <!-- CANTIDAD PEDIDA -->
         <template v-slot:body-cell-CANTIDAD_PEDIDA="props">
           <q-td
@@ -283,13 +284,13 @@ import { usePedidosEnc } from "../../pedidos_enc/composables/usePedidosEnc";
 import { usePedidoStore } from "@/stores/pedido";
 import { useTotalStore } from "@/stores/total";
 import useFormat from "@/common/composables/useFormat";
+import PasswordModal from "@/common/components/PasswordModal.vue";
 
 import {
   showConfirmationDialog,
   showErrorNotification,
   showErrorNotificationInside,
 } from "@/common/helper/notification";
-import PasswordModal from "@/common/components/PasswordModal.vue";
 
 // PROPS
 interface Props {
@@ -299,6 +300,19 @@ interface Props {
 const props = defineProps<Props>();
 const pedidoId = toRef(props, "PedidoId");
 const tamanioLetra = ref(16); // Tamaño de letra para la descripción, precio y subtotal
+// Para descripción pendiente de autorización
+const descPendiente = ref<{ row: any; nuevaDesc: string } | null>(null);
+
+const solicitarAutorizacionDescripcion = (row: any, nuevaDesc: string) => {
+  if (!nuevaDesc || nuevaDesc.trim() === descMostrar(row)) return;
+
+  // Guardar pendiente
+  descPendiente.value = { row, nuevaDesc: nuevaDesc.trim() };
+
+  // Abrir el modal de contraseña
+  passwordModalRef.value?.abrirModal();
+};
+
 
 // COLUMNAS PARA LA TABLA
 const columnas: QTableColumn[] = [
@@ -605,11 +619,20 @@ const onPasswordSuccess = () => {
     guardarPrecio(row, nuevoPrecio);
     precioPendiente.value = null;
   }
+
+    // Caso 2: descripción pendiente
+  if (descPendiente.value) {
+    const { row, nuevaDesc } = descPendiente.value;
+    onGuardarDescripcion(row, nuevaDesc);
+    descPendiente.value = null;
+    return;
+  }
 };
 
 // Función cuando se cancela la contraseña
 const onPasswordCancel = () => {
   precioPendiente.value = null;
+  descPendiente.value = null;
 };
 
 // Eliminar Producto

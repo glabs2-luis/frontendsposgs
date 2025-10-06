@@ -361,12 +361,12 @@
               <template #body-cell-codigo="props">
                 <q-td :props="props" class="codigo-cell">
                   <div class="row items-center q-gutter-sm">
-                    <q-icon name="qr_code" size="sm" />
+                    <q-icon name="qr_code" color="yellow-10" size="sm" />
                     <div>
-                      <div class="text-weight-bold">
+                      <div class="text-weight-bold text-black-8" >
                         {{ props.row.PRODUCT0 }}
                       </div>
-                      <div class="text-caption text-grey-6">
+                      <div class="text-caption text-black-6">
                         {{ props.row.DESCRIPCION_MARCA }}
                       </div>
                     </div>
@@ -2901,18 +2901,19 @@ defineExpose({
 
 /* Celdas personalizadas */
 .codigo-cell {
+  color: black;
   min-width: 200px;
   white-space: normal;
   word-break: break-word;
 }
 
 .codigo-cell .text-weight-bold {
-  color: #fbc02d;
+  color: #080505d8;
   font-size: 1rem;
 }
 
 .codigo-cell .text-caption {
-  color: #6c757d;
+  color: #090a0c;
   font-size: 0.8rem;
 }
 

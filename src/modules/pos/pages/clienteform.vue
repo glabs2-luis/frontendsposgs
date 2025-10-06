@@ -530,7 +530,7 @@
               <div v-if="mostrarNumPedido" class="row items-center q-gutter-xs">
                 <div
                   class="text-subtitle2 text-primary"
-                  style="font-size: 160%"
+                  style="font-size: 160%;"
                 >
                   {{ estadoPedido === "pedido" ? "Pedido" : "Cotización" }} N°
                   {{ formatNumber(numPedido2) }}

@@ -139,7 +139,7 @@
         <q-btn
           unelevated
           label="Actualizar Todo"
-          color="primary"
+          class="boton-amarillo" 
           :loading="isSyncing"
           :disable="isSyncing"
           @click="executeAll"
@@ -249,6 +249,22 @@ const executeSingleTask = (taskId: string) => {
 </script>
 
 <style scoped>
+
+.boton-amarillo {
+  background: linear-gradient(90deg, #ffeb3b, #fbc02d);
+  color: #070606;
+  font-weight: 500;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.boton-amarillo:hover {
+  background: linear-gradient(90deg, #fbc02d, #f9a825);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transform: scale(1.02);
+}
+
 .sync-results-modal {
   min-width: 600px;
   max-width: 800px;

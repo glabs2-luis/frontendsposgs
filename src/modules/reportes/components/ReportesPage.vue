@@ -362,6 +362,8 @@ import { useConfiguracionStore } from "@/stores/serie";
 import { useSync } from "@/modules/sync/composables/useSync";
 import { c } from "vite/dist/node/moduleRunnerTransport.d-DJ_mE5sf";
 import { ResumenDia } from "../interfaces/resumenDiaInterfaces";
+import { useCupones } from '@/modules/cupones/composables/useCupones';
+import { Resultado } from '../../cupones/interfaces/bitacoraInterface';
 
 const storeSerie = useConfiguracionStore();
 const $q = useQuasar();
@@ -398,6 +400,8 @@ const ticketRef = ref<HTMLElement | null>(null); // Para impresion
 const listaFacturas = ref<FacturaEnc[]>([]);
 const router = useRouter();
 const serie2 = ref("");
+const { todosCupones } = useCupones();
+const cantidadCupones = ref(0);
 
 serie2.value = storeSerie.serieSeleccionada;
 
@@ -566,6 +570,8 @@ const seriesOptions2 = [serie2.value];
 
 // Funcion para buscar Facturas
 const buscarFacturas = async () => {
+
+  // todos cupones
   // Validaciones
   if (!storeSerie.serieSeleccionada) {
     showErrorNotification("Serie", "Debe seleccionar una serie");
@@ -589,6 +595,17 @@ const buscarFacturas = async () => {
       spinnerColor: "green",
       spinnerSize: 50,
     });
+
+    // Obtener cantidad de cupones also
+    const cupones = await todosCupones(
+      buscar.fecha_inicial,
+      buscar.fecha_final)
+      
+      console.log("Cupones: ",cupones)
+      console.log("buscar.fecha_inicial ",buscar.fecha_inicial)
+      console.log("buscar.fecha_final ",buscar.fecha_final)
+      
+      cantidadCupones.value = cupones.resultado.length
 
     const facturas = await obtenerFacturasPorFecha(
       buscar.fecha_inicial,
@@ -708,6 +725,8 @@ const imprimirTicket2 = () => {
     resumen[clave].descuento += factura.MONTO_DESCUENTO_FACT ?? 0;
   });
 
+  const cupones = cantidadCupones.value;
+
   const ventanaImpresion = window.open("", "", "width=600, height=800");
 
   if (ventanaImpresion) {
@@ -716,11 +735,11 @@ const imprimirTicket2 = () => {
         <head>
           <title>Resumen de Facturas</title>
           <style>
-            @page { size: 80mm auto; margin: 10mm; }
+            @page { size: 80mm auto; margin: 0; }
             body {
               font-family: 'Arial', monospace;
               padding: 20px;
-              font-size: 13px;
+              font-size: 11px;
               width: 80mm;
               max-width: 80mm;
               color: #000;
@@ -734,6 +753,12 @@ const imprimirTicket2 = () => {
               border-bottom: 1px solid #333;
               padding-bottom: 8px;
               text-transform: uppercase;
+            }
+            .cupones {
+              text-align: center;
+              margin: 15px 0;
+              font-size: 13px;
+              font-weight: bold;
             }
             table {
               width: 95%;
@@ -758,13 +783,14 @@ const imprimirTicket2 = () => {
           </style>
         </head>
         <body>
-          <div class="titulo">RESUMEN DE FACTURAS POR DÍA </div>
+          <div class="titulo">RESUMEN DE FACTURAS POR DÍA</div>
+          <div class="cupones">Cupones utilizados: ${cupones}</div>
           <table>
             <thead>
               <tr>
                 <th>Fecha</th>
                 <th>Serie</th>
-                <th>Cantidad</th>
+                <th>Facturas</th>
                 <th>Total General</th>
                 <th>Total Descuentos</th>
               </tr>

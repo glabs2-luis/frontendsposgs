@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { AplicarDescuentoAction } from '../action/cuponesAction'
 import { Cupon } from '../interfaces/cuponesInterface'
+import { obtenerCupones } from '../action/cuponesAction'
+import { date } from 'quasar';
 
 export const useCupones = () => {
     
@@ -13,7 +15,18 @@ export const useCupones = () => {
         }
     })
 
+    // Obtener cupones por fecha
+    const todosCupones = async (fechaInicio: Date, fechaFinal: Date ) => {
+        try {
+            const cupones = await obtenerCupones(fechaInicio, fechaFinal)
+            return cupones
+        } catch (error) {   
+            throw error
+        }
+    }
+
     return {
+        todosCupones,
         mutateAplicarCupon
     }
 
