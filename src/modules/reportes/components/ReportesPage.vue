@@ -742,6 +742,7 @@ const imprimirTicket2 = () => {
               font-size: 11px;
               width: 80mm;
               max-width: 80mm;
+              heigh: auto;
               color: #000;
               text-align: center;
             }
