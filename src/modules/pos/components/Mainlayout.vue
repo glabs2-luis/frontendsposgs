@@ -73,6 +73,15 @@
           <q-tooltip> Nombre del vendedor</q-tooltip>
         </div>
 
+        <!-- Icono de Wifi
+        <q-icon
+          :name="Online ? 'wifi' : 'wifi_off'"
+          :color="Online ? 'green' : 'red'"
+          class="q-mr-sm"
+          size="22px"
+          /> -->
+          <!---<span>{{ Online ? 'Conectado' : 'Sin conexión' }}</span> -->
+
         <!-- Botón de sincronización -->
         <q-btn
           flat
@@ -81,7 +90,7 @@
           :icon="isSyncing ? 'sync' : 'sync'"
           :class="isSyncing ? 'rotating' : ''"
           :color="isSyncing ? 'green' : 'grey-7'"
-          class="q-mr-sm sync-button"
+          class="q-ml-md sync-button"
           @click="abrirModalSincronizacion"
           :disable="isSyncing"
         >
@@ -115,6 +124,7 @@
           </q-tooltip>
         </q-btn>
 
+        <!-- Cerrar Sesión-->
         <q-btn
           flat
           icon="logout"
@@ -169,10 +179,10 @@ import { useSyncManager } from "@/modules/sync/composables/useSyncManager";
 import SyncResultsModal from "@/modules/sync/components/SyncResultsModal.vue";
 import { useStoreSucursal } from "@/stores/sucursal";
 import { useFacturasFel } from "@/modules/pendientes/composables/useFelPendientes";
+import { conexion } from "@/helper/networkStatus";
 
-
+const { Online } = conexion();
 const {facturasErrores} = useFacturasFel()
-
 const StoreSucursal = useStoreSucursal();
 // const { obtenerSucursal } = useSucursales();
 const { nombreVendedor, codigoVendedor } = useUserStore();

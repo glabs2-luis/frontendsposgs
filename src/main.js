@@ -18,9 +18,11 @@ registerSW({
 })
 
 const token = localStorage.getItem('token')
-if (token) {
-  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-}
+
+// Deshabilitado para consultar existencias, api remota
+// if (token) {
+//   axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+// }
 
 const app = createApp(App)
 const pinia = createPinia()

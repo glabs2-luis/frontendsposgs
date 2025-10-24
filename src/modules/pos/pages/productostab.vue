@@ -80,6 +80,7 @@
 
       <!-- Segunda fila: inputs + botones -->
       <div class="row q-col-gutter-sm items-end">
+
         <!-- Código del producto -->
         <q-input
           ref="inputCodigo"
@@ -136,6 +137,14 @@
             :disable="!codigoProducto || loadingPorCodigo"
           />
 
+          <q-btn
+            @click="abrirExistencia"
+            class="boton-amarillo"
+            icon="inventory_2"
+            label="Existencias"
+            size="sm"
+            />
+
           <!-- Contador de productos -->
           <div class="col-auto">
             <q-card flat class="productos-counter-card">
@@ -183,6 +192,7 @@
               <div class="text-h6 text-weight-bold">
                 <q-icon name="inventory_2" class="q-mr-md" />
                 Catálogo de Productos
+
                 <!-- Indicador de loading en el header -->
                 <q-spinner-dots
                   v-if="loadingProductosQuery && !todosProductos"
@@ -207,6 +217,7 @@
               </div>
             </div>
             <div class="col-auto row items-center q-gutter-sm">
+
               <!-- Botón de refresh -->
               <q-btn
                 icon="refresh"
@@ -221,6 +232,7 @@
               >
                 <q-tooltip>Actualizar productos</q-tooltip>
               </q-btn>
+
               <!-- Botón de cerrar -->
               <q-btn icon="close" flat round dense v-close-popup size="lg" />
             </div>
@@ -279,7 +291,9 @@
         </q-card-section>
 
         <!-- Tabla de productos mejorada -->
+
         <q-card-section class="q-pa-xs q-pl-sm">
+
           <!-- Loading inicial - cuando no hay productos y está cargando -->
           <div
             v-if="loadingProductosQuery && !todosProductos"
@@ -838,10 +852,253 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+      
+    <!-- Modal de existencias de productos -->
+      <q-dialog
+        v-model="modalExistencias"
+        transition-show="fade"
+        transition-hide="fade"
+      >
+    <q-card style="min-width: 90vw; max-height: 90vh;">
+      
+       <!-- Header -->
+      <q-card-section class="row items-center justify-between facturacion-header">
+        <div class="text-h6">Existencias de Productos</div>
+        <q-btn icon="close" flat dense round v-close-popup @click="resetearSeleccion" />
+      </q-card-section>
+      
+      <q-separator />
+
+      <!-- Breadcrumb para mostrar navegación -->
+      <q-card-section class="q-pa-sm bg-grey-2">
+        <q-breadcrumbs>
+          <q-breadcrumbs-el 
+            label="Todos los productos" 
+            @click="resetearSeleccion"
+            :class="!productoSeleccionado ? 'text-primary text-weight-bold' : 'cursor-pointer'"
+          />
+          <q-breadcrumbs-el 
+            v-if="productoSeleccionado" 
+            :label="`Producto: ${productoSeleccionado}`"
+            @click="loteSeleccionado = null"
+            :class="!loteSeleccionado ? 'text-primary text-weight-bold' : 'cursor-pointer'"
+          />
+          <q-breadcrumbs-el 
+            v-if="loteSeleccionado" 
+            :label="`Lote: ${loteSeleccionado}`"
+            class="text-primary text-weight-bold"
+          />
+        </q-breadcrumbs>
+      </q-card-section>
+
+      <q-separator />
+
+      <!-- Contenido dinámico según la selección -->
+      <q-card-section style="max-height: 70vh; overflow: visible;">
+ 
+            <!-- Vista 1: Selector de productos -->
+      <div v-if="!productoSeleccionado" style="height: auto;">
+        <div class="text-h6 text-center justify-between q-mb-lg text-weight-bold">
+          <q-icon name="inventory_2" size="md" color="yellow-10" class="q-mr-sm" />
+          Selecciona un producto para ver sus existencias
+          
+          <q-space /> 
+          <q-btn
+            flat
+            dense
+            round
+            icon="refresh"
+            color="orange-8"
+            label="Recargar conexion"
+            @click="recargarConexionExistencias"></q-btn>
+
+        </div>
+
+        <q-select
+          v-model="productoSeleccionadoTemp"
+          :options="opcionesProductosFiltrados"
+          option-value="Producto"
+          option-label="label"
+          label="Buscar producto por código o descripción"
+          outlined
+          use-input
+          input-debounce="300"
+          @filter="filtrarProductosSelect"
+          @update:model-value="seleccionarProductoDesdeSelect"
+          class="selector-productos"
+          behavior="menu"
+          clearable
+  menu-portal
+  menu-anchor="bottom middle"
+  menu-self="top middle"
+        >
+          <template v-slot:prepend>
+            <q-icon name="search" color="yellow-10" />
+          </template>
+
+          <template v-slot:no-option>
+            <q-item>
+              <q-item-section class="text-grey">
+                No se encontraron productos
+              </q-item-section>
+            </q-item>
+          </template>
+
+          <!-- Estilo en el Select Box-->
+          <template v-slot:option="scope">
+            <q-item v-bind="scope.itemProps">
+              <q-item-section avatar>
+                <q-icon name="inventory" color="orange" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-weight-bold">
+                  {{ scope.opt.Producto }}
+                </q-item-label>
+                <q-item-label caption>
+                  {{ scope.opt.Descripcion }}
+                </q-item-label>
+                <q-item-label caption class="text-grey-6">
+                  Marca: {{ scope.opt.Marca }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </template>
+
+          <template v-slot:selected-item="scope">
+            <div class="row items-center q-gutter-sm">
+              <q-icon name="inventory" color="orange" />
+              <div>
+                <div class="text-weight-bold">{{ scope.opt.Producto }}</div>
+                <div class="text-caption">{{ scope.opt.Descripcion }}</div>
+              </div>
+            </div>
+          </template>
+        </q-select>
+
+        <!-- Info adicional -->
+        <div class="text-center q-mt-lg text-grey-7">
+          <q-icon name="info" size="sm" class="q-mr-xs" />
+          {{ productosExistencias3.length }} productos disponibles
+        </div>
+      </div>
+
+
+        <!-- Vista 2: Lotes del producto seleccionado -->
+        <div v-else-if="productoSeleccionado && !loteSeleccionado">
+            <q-toolbar class="q-pa-none">
+              <div class="text-h6">Lotes de: {{ productoSeleccionado.Descripcion }}</div>
+              <q-space /> <!-- Esto empuja lo que sigue a la derecha -->
+              <q-btn
+                flat
+                dense
+                round
+                icon="arrow_back"
+                label="Regresar"
+                color="red-10"
+                @click="resetearSeleccion"
+              >
+                <q-tooltip>Volver a productos</q-tooltip>
+              </q-btn>
+            </q-toolbar>
+          <q-table
+            flat
+            bordered
+            dense
+            :rows="LotesExistentes"
+            :columns="columnasLotes"
+            row-key="Lote"
+            :pagination="{ rowsPerPage: 100 }"
+            :loading="!loteProducto"
+            no-data-label="No hay lotes disponibles"
+            class="tabla-lotes-mejorada"
+          >
+            <!-- Celda personalizada para Cantidad -->
+            <template v-slot:body-cell-Cantidad="props">
+              <q-td :props="props" class="cantidad-destacada">
+                <div class="cantidad-badge">
+                  <span class="cantidad-numero">{{ props.row.Disponible }}</span>
+                  <span class="cantidad-label">unidades</span>
+                </div>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-acciones="props">
+              <q-td :props="props">
+                <q-btn 
+                  dense 
+                  flat 
+                  color="green-8" 
+                  icon="storefront" 
+                  label="Bodegas"
+                  @click="verExistencias(props.row.Lote)"  
+                  :disable="props.row.Existencia <= 0"
+                  :loading="loadingBodegas"
+                >
+                  <q-tooltip>Ver existencias en bodegas</q-tooltip>
+                </q-btn>
+              </q-td>
+            </template>
+          </q-table>
+        </div>
+
+        <!-- Vista 3: Existencias en bodegas del producto/lote seleccionado -->
+          <div v-else>
+            <div class="row items-center justify-between q-mb-md">
+              <div class="text-h6">
+                Existencias en Bodegas - Lote: {{loteSeleccionado}}
+              </div>
+
+              <q-btn 
+                flat 
+                dense 
+                round 
+                icon="arrow_back" 
+                color="red-10" 
+                label="Regresar"
+                @click="loteSeleccionado = null"
+              >
+                <q-tooltip>Volver a lotes</q-tooltip>
+              </q-btn>
+            </div>
+
+            <q-table
+              flat
+              bordered
+              dense
+              :rows="datosExistencias"
+              :columns="columnasBodegas"
+              row-key="Bodega"
+              :pagination="{ rowsPerPage: 20 }"
+              no-data-label="No hay existencias en otras bodegas"
+              class="tabla-lotes-mejorada"
+            >
+                        <!-- Celda personalizada para Cantidad -->
+            <template v-slot:body-cell-Disponible="props">
+              <q-td :props="props" class="cantidad-destacada">
+                <div class="cantidad-badge">
+                  <span class="cantidad-numero">{{ props.row.Disponible }}</span>
+                  <span class="cantidad-label">unidades</span>
+                </div>
+              </q-td>
+            </template>
+            <template v-slot:body-cell-Existencia="props">
+              <q-td :props="props">
+                <q-badge :color="props.row.Existencia > 0 ? 'positive' : 'negative'">
+                  {{ props.row.Existencia }}
+                </q-badge>
+              </q-td>
+            </template>
+          </q-table>
+        </div>
+
+      </q-card-section>
+    </q-card>
+  </q-dialog>
+
   </div>
 </template>
 
-<script lang="ts"  setup>
+<script lang="ts" setup>
 import { Notify, QTableColumn, QTableProps, useQuasar, debounce, Dialog } from 'quasar';
 import { useQueryClient } from "@tanstack/vue-query";
 import {
@@ -896,7 +1153,15 @@ import { obtenerProductoPorCodigoAction } from "@/modules/codigo_barras/action/c
 import { PedidosDet } from "@/modules/pedidos_det/interfaces/pedidosDetInterface";
 import { FacturaEnc2 } from "@/modules/facturas_enc/interfaces/facturaEnc2Interface";
 import { DatosProductoBuscado } from '../interfaces/posInterfaces';
+import { useProductosExistencias } from '@/modules/existencias/composables/useExistencias';
+import { Empresa } from '../../fel_empresa_establecimiento/interfaces/empresaInterface';
+import { Sucursal } from '../../Sucursales/interfaces/sucursalesInterface';
+import { Bodega } from '../../bodegas/interfaces/bodegaInterface';
+import { Vendedor } from '../../notas_credito/interfaces/NotaCredito';
+import { conexion } from '@/helper/networkStatus';
+import { useStoreTokenExistencia } from '@/stores/tokenExistencia';
 
+import type { AxiosError } from 'axios';
 
 
 /*
@@ -904,6 +1169,8 @@ import { DatosProductoBuscado } from '../interfaces/posInterfaces';
                       COLUMNAS
 ==========================================================
 */
+
+// Catalogo de productos
 const columnasCatalogo:QTableProps['columns'] = [
   {
     name: "codigo",
@@ -954,6 +1221,39 @@ const columnasCatalogo:QTableProps['columns'] = [
     style: "min-width: 120px",
   },
 ];
+
+// Tabla de Existencias
+const columnasExistencias: QTableColumn[] = [
+  {
+    name: 'Producto',
+    label: 'Código',
+    field: 'producto',
+    align: 'left',
+    sortable: true
+  },
+  {
+    name: 'Descripcion',
+    label: 'Descripción',
+    field: 'Descripcion',
+    align: 'left',
+    sortable: true
+  },
+  {
+    name: 'Lote',
+    label: 'DescripcionLote',
+    field: 'DescripcionLote',
+    align: 'right',
+    sortable: true
+  },
+  {
+    name: 'Marca',
+    label: 'Marca',
+    field: 'Marca',
+    align: 'right',
+    sortable: true
+  },
+]; 
+
 
 /*
 ==========================================================
@@ -1027,10 +1327,22 @@ const { generarCotizacionPDF } = usePdfCotizacion();
 const clienteStore = useClienteStore();
 const { nombreVendedor } = useUserStore();
 const { totalItems } = useTotalStore();
+const userStore = useUserStore();
 const totalStore = useTotalStore();
 const { generarTicketPDF } = usePdfTicket();
+const paramsBase = ref({  // Parametros para consultar existencias
+   empresa: 'GS',
+   bodega: Number(storeSucursal.codigoBodega),
+   vendedor: userStore.codigoVendedor,
+   sucursal: Number(storeSucursal.idSucursal),
+   producto: null,
+   lote: null
+})
 
 //USE COMPOSABLES
+const tokenExistencias = useStoreTokenExistencia();
+const { existenciaProducto, errorExistencias, refetchExistenciaProducto, loteProducto, refetchLoteProducto, existenciaBodega, refetchExistenciasBodegas, tokenData, errorToken, obtenerToken, obtenerTokenAsync } = useProductosExistencias(paramsBase); // Existencias
+
 const { data: pedidoData, refetchObtenerPedidoID } =
   obtenerPedidoPorId(idPedidoEnc);
 const { refetch: refetchObtenerPedidoDetID } =
@@ -1067,25 +1379,26 @@ const loadingPorCodigo = ref(false);
 const loadingProductos = ref(false);
 const modalProductos = ref(false);
 const modalProductos2 = ref(false);
-const montoEfectivo = ref(null);
 const montoTarjeta = ref(null);
+const modalExistencias = ref(false);
+const montoEfectivo = ref(null);
+const filtroProductosExistencias = ref('');
+const productoSeleccionado = ref(null);
+const loteSeleccionado = ref(null);
 // const opcionesPago2 = ["EFECTIVO", "TARJETA", "MIXTO"]; // Ya no se necesita para el btn-group
 const tipoPago = ref("EFECTIVO");
 const errorAgregarProducto = ref(false);
 const refCupon = ref();
 const pedidoStore = usePedidoStore();
-const { consultarCodigo, consultarCodigoM } = useCodigo();
-const userStore = useUserStore();
+const { consultarCodigoM } = useCodigo();
 const queryClient = useQueryClient();
 const descripcionProd = ref("");
 const subtotalCalculado = ref(0);
 const espera = ref(null); // guarda el timeout
 const nuevosDatos = ref<DatosProductoBuscado|undefined>(); // Mostrar info del producto
-const codigoBarra = ref("");
-const productosCacheados = shallowRef([]); // superfiical que solo ref
+const productosCacheados = shallowRef([]); 
 const { obtenerProducto } = useCodigo();
 const { data: productoEncontrado, refetch: refetchProducto } = obtenerProducto(filtroProductos);
-
 
 // Paginación del catálogo
 const paginacionCatalogo = ref({
@@ -1095,11 +1408,6 @@ const paginacionCatalogo = ref({
   rowsPerPage: 50,
 });
 
-/*
-==========================================================
-                    VARIABLES COMPUTED
-==========================================================
-*/
 const buscadorProductoRef = ref(null);
 const totalAnterior = ref(0);
 
@@ -1173,7 +1481,6 @@ watch(modalCuponazo, (val) => {
       refCupon.value?.$el.querySelector("input")?.select();
     });
 });
-
 
 //cargar productos en factura
 watch(modalFacturacion, (val) => {
@@ -1408,8 +1715,6 @@ const buscarDescripcion = async () => {
           });
       });
 
-    
-
     // 3. Si aún no hay prod → salir
     if (!prod) {
       const productoError:DatosProductoBuscado = {
@@ -1424,7 +1729,6 @@ const buscarDescripcion = async () => {
       return;
     }
     
-
     // 4. Obtener descripción
     const nuevaDescripcion = await obtenerProductosId(codigoFinal);
 
@@ -1436,10 +1740,177 @@ const buscarDescripcion = async () => {
       subtotal: prod.PRECIO_FINAL * cantidad2.value,
     };
   } catch (error) {
-    nuevosDatos.value = null;
-    
+    nuevosDatos.value = null; 
   }
+}
+
+const filtroExistencias = (rows, terms) => {
+  const term = terms.toLowerCase();
+  return rows.filter(r => 
+    r.Producto.toLowerCase().includes(term) || 
+    r.Descripcion.toLowerCase().includes(term) ||
+    r.Codigo?.toLowerCase().includes(term)
+  );
 };
+
+// Después de las otras variables (línea ~160)
+const productoSeleccionadoTemp = ref(null);
+const opcionesProductosFiltrados = ref([]);
+
+// Función para filtrar en el select
+const filtrarProductosSelect = (val, update) => {
+  if (val === '') {
+    update(() => {
+      opcionesProductosFiltrados.value = productosExistencias3.value.map(p => ({
+        ...p,
+        label: `${p.Producto} - ${p.Descripcion}`
+      }))
+    })
+    return
+  }
+
+  update(() => {
+    // Dividir la búsqueda en palabras separadas y limpiarlas
+    const palabras = val.toLowerCase().trim().split(/\s+/).filter(p => p.length > 0);
+    
+    opcionesProductosFiltrados.value = productosExistencias3.value
+      .filter(p => {
+        // Crear un string con todos los campos buscables
+        const textoBuscable = `${p.Producto} ${p.Descripcion} ${p.Marca || ''}`.toLowerCase();
+        
+        // Verificar que TODAS las palabras estén presentes (búsqueda AND)
+        return palabras.every(palabra => textoBuscable.includes(palabra));
+      })
+      .map(p => ({
+        ...p,
+        label: `${p.Producto} - ${p.Descripcion}`
+      }))
+  })
+}
+
+// Función para seleccionar desde el select
+const seleccionarProductoDesdeSelect = async (producto) => {
+  if (!producto) return
+  
+  await seleccionarProducto(producto.Producto)
+  productoSeleccionadoTemp.value = null // Limpiar el select después de seleccionar
+}
+
+const loadingBodegas = ref(false);
+const LotesExistentes = ref<any[]>([])
+
+// Tomar producto 
+const seleccionarProducto = async (producto) => {
+
+  try {
+    productoSeleccionado.value = producto // Asignamos el producto
+    //console.log('Producto seleccionado lo tengo:', productoSeleccionado.value)
+    paramsBase.value.producto = producto // Setear el producto
+
+    await nextTick()
+
+    $q.loading.show({
+      message: `Cargando lotes de ${producto}...`,
+      spinnerColor: 'primary',
+      spinnerSize: 40,
+    })
+
+    // Esperar los Lotes
+    const { data } = await refetchLoteProducto()
+    //console.log('Datos de lotes recibidos:', data)
+
+    LotesExistentes.value = data.ProductosLote
+   //console.log('Lotes listos para tabla:', LotesExistentes.value)
+
+    } catch (error) {
+      //console.error('Error cargando lotes:', error)
+      $q.notify({
+        color: 'negative',
+        message: 'Error cargando los lotes del producto',
+        position: 'top',
+      })
+    } finally {
+      $q.loading.hide()
+    }
+}
+
+const datosExistencias = ref<any[]>([])
+
+const verExistencias = async (lote) => {
+
+  try {
+  $q.loading.show({
+  message: `Consultando existencias del lote ${lote}...`,
+  spinnerColor: 'primary',
+  spinnerSize: 40,
+  })
+  loteSeleccionado.value = lote // Asignamos el lote
+  // Setear el lote
+  paramsBase.value.lote = lote.trim()
+  //console.log('yo tengo al señor lote:', lote)
+  //console.log('Desde param base ya llevo el producto en existencias:', paramsBase.value)
+
+  await nextTick()
+
+  const { data } = await refetchExistenciasBodegas()
+  //console.log('Datos de existencias en bodegas recibidos:', data)
+  datosExistencias.value = data.Existencias
+  //console.log('Existencias en bodegas listos para tabla:', datosExistencias.value)
+
+  } catch (error){
+    //console.error('Error cargando las existencias:', error)
+    $q.notify({
+      color: 'negative',
+      message: 'Error cargando las existencias en otras bodegas',
+      position: 'top',
+    })
+  }
+  finally {
+    $q.loading.hide()
+  }
+}
+
+const resetearSeleccion = () => {
+  productoSeleccionado.value = null
+  loteSeleccionado.value = null
+  paramsBase.value.producto = null
+  paramsBase.value.lote = null
+}
+
+// Mapear los productos desde existenciaProducto
+const productosExistencias3 = computed(() => {
+  try {
+    if (!existenciaProducto.value) return []
+
+    // Si ya hay data, devuelve solo el array interno de productos
+    return existenciaProducto.value.Productos
+  } catch (error) {
+    console.error("Error al acceder a existenciaProducto:", error)
+    return { error } 
+  }
+})
+
+// Columnas
+const columnasProductos : QTableColumn[] = [
+  { name: 'Producto', label: 'Código', field: 'Producto', align: 'left', sortable: true },
+  { name: 'Descripcion', label: 'Descripción', field: 'Descripcion', align: 'left', sortable: true },
+  { name: 'Marca', label: 'Marca', field: 'Marca', align: 'left', sortable: true },
+  { name: 'acciones', label: 'Ver Lotes', field: 'acciones', align: 'left' },
+]
+
+const columnasLotes :  QTableColumn[] = [
+  { name: 'Producto', label: 'Producto', field: 'Producto', align: 'left', sortable: true },
+  { name: 'Descripcion', label: 'Descripcion', field: 'Descripcion', align: 'left', sortable: true },
+  { name: 'Descripcion', label: 'Lote', field: 'DescripcionLote', align: 'left', sortable: true },
+  { name: 'Cantidad', label: 'Cantidad', field: 'Disponible', align: 'center' },
+  { name: 'acciones', label: 'Otras Bodegas', field: 'acciones', align: 'left' },
+]
+
+const columnasBodegas: QTableColumn[] = [
+  { name: 'Bodega', label: 'Bodega', field: 'Bodega', align: 'left', sortable: true },
+  { name: 'Nombre', label: 'Nombre', field: 'Nombre', align: 'left', sortable: true },
+  { name: 'Disponible', label: 'Disponible', field: 'Disponible', align: 'center', sortable: true },
+]
 
 // Si se actualiza cantidad
 watch(cantidad2, async () => {
@@ -1567,7 +2038,6 @@ watch(modalCuponazo, (val) => {
       refCupon.value?.$el.querySelector("input")?.select();
     });
 });
-
 
 //cargar productos en factura
 watch(modalFacturacion, (val) => {
@@ -1867,6 +2337,84 @@ const abrirCatalogo2 = async () => {
     showErrorNotification("Error", "No se pudieron cargar los productos");
   }
 };
+
+const abrirExistencia = async () => {
+  $q.loading.show({
+    message: "Cargando productos...",
+    spinnerColor: "green",
+    spinnerSize: 50,
+  });
+
+  try{
+    modalExistencias.value = true;
+    $q.loading.hide();
+  } catch (error) {
+    showErrorNotification("Error", "No hay conexion a Internet")
+  }
+}
+
+const recargarConexionExistencias = async () => {
+  $q.loading.show({
+    message: "Revisando conexión...",
+    spinnerColor: "green",
+    spinnerSize: 50,
+  });
+
+  try {
+    // Primer intento de consulta
+    const { data, error } = await refetchExistenciaProducto();
+
+    console.log("¿Hay error?", error);
+
+    if (error) {
+      console.error("❌ Error en recarga de existencias:", error);
+      
+      // Si hay error, generar nuevo token
+      $q.loading.show({
+        message: "Regenerando token...",
+        spinnerColor: "orange",
+        spinnerSize: 50,
+      });
+
+      // Obtener nuevo token
+      const nuevoTokenData = await obtenerTokenAsync();
+      
+      console.log("✅ Nuevo token obtenido:", nuevoTokenData);
+      console.log("🔑 Token:", nuevoTokenData.Token);
+
+      // Guardar el nuevo token en el store
+      tokenExistencias.setTokenExistencia(nuevoTokenData.Token);
+      
+      console.log("💾 Token actualizado en el store:", tokenExistencias.tokenExistencia);
+
+      // Cambiar mensaje del loading
+      $q.loading.show({
+        message: "Reintentando consulta...",
+        spinnerColor: "blue",
+        spinnerSize: 50,
+      });
+
+      // ✅ REINTENTAR: simplemente volver a llamar refetchExistenciaProducto
+      // El interceptor de webApiAuth ya tiene el nuevo token del store
+      await refetchExistenciaProducto();
+      
+      // Si llegamos aquí, significa que la reconsulta fue exitosa
+      console.log("Existencias actualizadas con nuevo token");
+      showSuccessNotificationInside("Conexión", "Existencias actualizadas correctamente.");
+
+    } else if (data) {
+      // Si no hay error en el primer intento, todo OK 
+      console.log("Existencias OK (primer intento):", data);
+      showSuccessNotificationInside("Conexión", "Existencias actualizadas correctamente.");
+    }
+
+  } catch (err) {
+    showErrorNotificationInside("Error", "No hay conexión a internet");
+  } finally {
+    $q.loading.hide();
+  }
+};
+
 
 const abrirModalCantidad = () => {
   Dialog.create({
@@ -3289,4 +3837,92 @@ defineExpose({
 .catalogo-table .q-table__tbody tr:nth-child(6) {
   animation-delay: 0.6s;
 }
+
+/* ===== Estilo para tabla existencias ===== */
+.tabla-lotes-mejorada {
+  font-size: 1.1rem; /* Letra más grande */
+}
+
+.tabla-lotes-mejorada .q-table__thead th {
+  font-size: 1rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  color: #495057;
+  padding: 12px 16px;
+}
+
+.tabla-lotes-mejorada .q-table__tbody td {
+  padding: 12px 16px;
+  font-size: 1rem;
+  vertical-align: middle;
+}
+
+.tabla-lotes-mejorada .q-table__tbody tr:hover {
+  background-color: rgba(76, 175, 80, 0.08);
+}
+
+/* Celda de cantidad destacada */
+.cantidad-destacada {
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+  border-left: 4px solid #4caf50 !important;
+  text-align: center !important;
+}
+
+.cantidad-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  font-weight: 700;
+  min-width: 100px;
+}
+
+.cantidad-numero {
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.cantidad-label {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Botón de existencias mejorado */
+.btn-existencias {
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  padding: 4px 16px;
+}
+
+.btn-existencias:hover {
+  background-color: rgba(76, 175, 80, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tabla-lotes-mejorada {
+    font-size: 0.95rem;
+  }
+  
+  .cantidad-numero {
+    font-size: 1.4rem;
+  }
+  
+  .cantidad-badge {
+    padding: 8px 16px;
+    min-width: 100px;
+  }
+}
+
 </style>

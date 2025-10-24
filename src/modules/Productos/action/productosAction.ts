@@ -6,7 +6,6 @@ import { Productos } from "../interfaces/productosInterface";
 export const obtenerProductosAction = async (): Promise<Productos[]> => {
   try {
     const { data } = await posApi.get<Productos[]>(`/maestro-productos`);
-
     return data;
   } catch (error) {
     const message = getAxiosErrorMessage(
