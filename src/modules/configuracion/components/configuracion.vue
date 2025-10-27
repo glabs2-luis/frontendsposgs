@@ -392,13 +392,15 @@
             <q-btn color="yellow-8" text-color="black" icon="restore" label="Valores por defecto" @click="regresarValoresDefecto" />
           </q-card-section>
           <q-card-section class="row q-col-gutter-md">
+
             <q-input 
-              class="col col-lg-5 col-md-4 col-sm-12" 
+              class="col col-lg-5 col-md-4 col-sm-12 " 
               rounded 
               outlined  
               v-model="hzExito" 
               type="number" 
               label="Frecuencia(HZ) de sonido completado" />
+
             <q-input 
               class="col col-lg-5 col-md-4 col-sm-12" 
               rounded 
@@ -406,8 +408,8 @@
               v-model="tiempoExito" 
               type="number" 
               label="Tiempo(ms) de sonido completado" />
-            <q-btn 
-     
+            
+              <q-btn 
               text-color="black" 
               color="green-6" 
               rounded 
@@ -415,30 +417,61 @@
               dense 
               icon="check" 
               label="Guardar" 
-              class="btn-pequeno"
+              class="btn-pequeno q-ma-md"
               @click="guardarConfigCompletado" />
+
+              <!-- Probar Sonido-->
+              <q-btn 
+              text-color="black" 
+              color="yellow-6" 
+              rounded 
+              outlined 
+              dense 
+              icon="volume_up" 
+              label="Probar" 
+              class="btn-pequeno q-ma-md"
+              @click="probarSonidoExito" />
+
           </q-card-section>
+
+          <q-separator />
+
           <q-card-section class="row q-col-gutter-md">
+            
             <q-input 
               class="col col-lg-5 col-md-4 col-sm-12" 
               rounded outlined  
               v-model="hzError" 
               type="number" 
               label="Frecuencia(HZ) de sonido error" />
+
             <q-input 
               class="col col-lg-5 col-md-4 col-sm-12" 
               rounded outlined  
               v-model="tiempoError" 
               type="number" 
               label="Tiempo(ms) de sonido error" />
+
             <q-btn 
-              class="btn-pequeno" 
+              class="btn-pequeno q-ma-md" 
               text-color="black" 
-              size="md"
               color="green-6" 
               rounded outlined dense  
               icon="check" 
               label="Guardar" @click="guardarConfigError" />
+
+              <!-- Probar Sonido-->
+              <q-btn 
+              text-color="black" 
+              color="yellow-6" 
+              rounded 
+              outlined 
+              dense
+              icon="volume_up" 
+              label="Probar" 
+              class="btn-pequeno q-ma-md"
+              @click="probarSonidoError" />
+
           </q-card-section>
         </q-markup-table>
       </q-expansion-item>
@@ -446,7 +479,6 @@
 
     <!-- Mas configuraciones -->
      
-
     <q-page class="q-mt-lg">
       <!--<q-btn label="Actualizar bodega" color="black" @click="actualizarBodega" /> -->
     </q-page>
@@ -454,7 +486,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+
+import { ref, computed } from "vue";
 import useSeries from "../../fel_establecimiento_series/composables/useSeries";
 import { useConfiguracionStore } from "@/stores/serie";
 import {
@@ -467,11 +500,9 @@ import { DataFactura } from "@/modules/facturar_pdf/interfaces/pdfInterface";
 import { useStoreSucursal } from "@/stores/sucursal";
 import { usePdfFactura } from "@/modules/facturar_pdf/composables/usePdFactura";
 
-
 const { generarFacturaPDF } = usePdfFactura();
 // Store
 const configuracionStore = useConfiguracionStore();
-
 
 // sync
 import { useSync } from "@/modules/sync/composables/useSync";
@@ -615,9 +646,57 @@ const guardarConfigError = () => {
 
 };
 
+const probarSonidoError = () => {
+  const config = getConfigSonidoError();
+  reproducirSonido(config.Herzio, config.Tiempo);
+}
+
+// Función para reproducir el sonido de éxito
+const probarSonidoExito = () => {
+  const config = getConfigSonidoExito();
+  reproducirSonido(config.Herzio, config.Tiempo);
+}
+
+// Función auxiliar para reproducir un sonido con Web Audio API
+const reproducirSonido = (frecuencia: number, duracion: number) => {
+  try {
+    // Crear contexto de audio
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // Crear oscilador (genera el tono)
+    const oscilador = audioContext.createOscillator();
+    const ganancia = audioContext.createGain();
+    
+    // Configurar el oscilador
+    oscilador.type = 'square'; // Tipo de onda (puedes usar 'sine', 'square', 'sawtooth', 'triangle')
+    oscilador.frequency.value = frecuencia; // Frecuencia en Hertz
+    
+    // Configurar ganancia (volumen)
+    ganancia.gain.value = 0.3; // Volumen (0.0 a 1.0)
+    
+    // Conectar nodos
+    oscilador.connect(ganancia);
+    ganancia.connect(audioContext.destination);
+    
+    // Reproducir sonido
+    oscilador.start(audioContext.currentTime);
+    oscilador.stop(audioContext.currentTime + duracion / 1000); // Convertir ms a segundos
+    
+    // Limpiar después de reproducir
+    setTimeout(() => {
+      audioContext.close();
+    }, duracion + 100);
+    
+  } catch (error) {
+    //console.error('Error al reproducir sonido:', error);
+  }
+}
+
+
 </script>
 
 <style scoped>
+
 .prueba {
   color: #212121;
   border-radius: 8px;
@@ -628,10 +707,10 @@ const guardarConfigError = () => {
 }
 
 .btn-pequeno {
-  padding: 2px 100px ;/* altura y ancho */
+  padding: 10px 20px ;/* altura y ancho */
   font-size: 0.8rem;
   min-height: 12px;  /* fuerza una altura más baja */
-  border-radius: 40px ; /* conserva el estilo redondeado */
+  border-radius: 18px ; /* conserva el estilo redondeado */
 }
 
 /* ===== ESTILOS PARA SINCRONIZACIÓN PROFESIONAL ===== */

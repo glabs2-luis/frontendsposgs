@@ -17,7 +17,7 @@
           navigation
           color="warning"
           done-color="positive"
-          active-color="yellow-8"
+          active-color="yellow-10"
           inactive-color="grey"
         >
           <q-step name="1" title="Buscar Factura" icon="search" :done="step > '1'">

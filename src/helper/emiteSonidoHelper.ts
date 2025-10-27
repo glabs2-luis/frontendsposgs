@@ -8,7 +8,7 @@ export function sonidoProceso(tipo: string = "correcto"): void {
   const configSonidoError = getConfigSonidoError();
   const configSonidoExito = getConfigSonidoExito();
 
-  const tipoSonido = tipo === "error" ? "sawtooth" : "square"; // Tipo de onda, se usan: 'sine', 'square', 'triangle', 'sawtooth'
+  const tipoSonido = tipo === "error" ? "square" : "square"; // Tipo de onda, se usan: 'sine', 'square', 'triangle', 'sawtooth'
   const frecuencia = Number((tipo === "error" ? configSonidoError.Herzio : configSonidoExito.Herzio).toString()); // Frecuencia en Hz (440 = nota La, 880 = una octava arriba)
   const tiempo = Number((tipo === "error" ? configSonidoError.Tiempo : configSonidoExito.Tiempo).toString()); // Duración en ms
 

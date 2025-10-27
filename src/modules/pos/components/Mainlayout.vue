@@ -364,15 +364,17 @@ const cerrarSesion = async () => {
     }
   });
 };
+
 </script>
 
 <style scoped>
+
 .barra-principal {
-  background: linear-gradient(90deg, #ffeb3b, #fbc02d);
+  background: linear-gradient(90deg, #d1df0d, #fbc02d);
 }
 .drawer-elegante {
   background: linear-gradient(to bottom, #fffde7, #fff8e1);
-  border-right: 1px solid #fdd835;
+  border-right: 1px solid #f0fd35;
 }
 .q-item {
   border-radius: 6px;
@@ -399,7 +401,7 @@ const cerrarSesion = async () => {
 }
 
 .menu-item-active:hover {
-  background: linear-gradient(135deg, #fbc02d 0%, #ffc107 100%) !important;
+  background: linear-gradient(135deg, #bbda73 0%, #fcf80c 100%) !important;
   transform: translateX(6px);
   box-shadow: 0 4px 12px rgba(251, 192, 45, 0.4);
 }
@@ -532,4 +534,5 @@ const cerrarSesion = async () => {
   background: #fdd835;
   opacity: 0.3;
 }
+
 </style>
