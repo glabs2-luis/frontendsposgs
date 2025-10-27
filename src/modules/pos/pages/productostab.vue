@@ -928,9 +928,9 @@
           class="selector-productos"
           behavior="menu"
           clearable
-  menu-portal
-  menu-anchor="bottom middle"
-  menu-self="top middle"
+          menu-portal
+          menu-anchor="bottom middle"
+          menu-self="top middle"
         >
           <template v-slot:prepend>
             <q-icon name="search" color="yellow-10" />
@@ -954,7 +954,7 @@
                 <q-item-label class="text-weight-bold">
                   {{ scope.opt.Producto }}
                 </q-item-label>
-                <q-item-label caption>
+                <q-item-label caption class="text-black">
                   {{ scope.opt.Descripcion }}
                 </q-item-label>
                 <q-item-label caption class="text-grey-6">
@@ -1015,9 +1015,9 @@
             <!-- Celda personalizada para Cantidad -->
             <template v-slot:body-cell-Cantidad="props">
               <q-td :props="props" class="cantidad-destacada">
-                <div class="cantidad-badge">
+                <div :class="props.row.Disponible === 0 ? 'cantidad-badge-red' : 'cantidad-badge'">
                   <span class="cantidad-numero">{{ props.row.Disponible }}</span>
-                  <span class="cantidad-label">unidades</span>
+                  <span class="cantidad-label"></span>
                 </div>
               </q-td>
             </template>
@@ -1075,9 +1075,9 @@
                         <!-- Celda personalizada para Cantidad -->
             <template v-slot:body-cell-Disponible="props">
               <q-td :props="props" class="cantidad-destacada">
-                <div class="cantidad-badge">
+                <div :class="props.row.Disponible === 0 ? 'cantidad-badge-red' : 'cantidad-badge'">
                   <span class="cantidad-numero">{{ props.row.Disponible }}</span>
-                  <span class="cantidad-label">unidades</span>
+                  <span class="cantidad-label"></span>
                 </div>
               </q-td>
             </template>
@@ -3389,6 +3389,9 @@ defineExpose({
   cursor: not-allowed;
 }
 
+.texto-rojo {
+  color: red;
+}
 /* Contenedor del buscador */
 .search-container {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -3873,11 +3876,25 @@ defineExpose({
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  background: linear-gradient(135deg, #56a859 0%, #0ceb17 100%);
   color: white;
   padding: 8px 16px;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  font-weight: 700;
+  min-width: 100px;
+}
+
+.cantidad-badge-red {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #f81616 0%, #8a4545 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(212, 205, 205, 0.3);
   font-weight: 700;
   min-width: 100px;
 }
