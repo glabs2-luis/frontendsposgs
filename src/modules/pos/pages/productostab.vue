@@ -976,12 +976,16 @@
         </q-select>
 
         <!-- Info adicional -->
-        <div class="text-center q-mt-lg text-grey-7">
-          <q-icon name="info" size="sm" class="q-mr-xs" />
-          {{ productosExistencias3.length }} productos disponibles
-        </div>
+          <div class="q-mt-lg text-grey-7 row items-center justify-between">
+            <div>
+             <!-- <q-icon name="warning" size="sm" class="q-mr-xs" color="yellow-10" /> -->
+              ⚠️ La existencia mostrada podria no estar actualizada.
+            </div>
+            <div>
+              {{ productosExistencias3.length }} productos disponibles
+            </div>
+          </div>
       </div>
-
 
         <!-- Vista 2: Lotes del producto seleccionado -->
         <div v-else-if="productoSeleccionado && !loteSeleccionado">

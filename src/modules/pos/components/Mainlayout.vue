@@ -35,7 +35,7 @@
     <!-- Barra superior -->
     <q-header
       elevated
-      class="barra-principal text-dark shadow-2"
+      class="barra-principal text-dark shadow-4"
       height-hint="60"
     >
       <q-toolbar>
@@ -370,7 +370,7 @@ const cerrarSesion = async () => {
 <style scoped>
 
 .barra-principal {
-  background: linear-gradient(90deg, #d1df0d, #fbc02d);
+  background: linear-gradient(90deg, #e2df0e, #fbc02d);
 }
 .drawer-elegante {
   background: linear-gradient(to bottom, #fffde7, #fff8e1);

@@ -456,7 +456,9 @@
               class="btn-pequeno q-ma-md" 
               text-color="black" 
               color="green-6" 
-              rounded outlined dense  
+              rounded
+              outlined
+              dense  
               icon="check" 
               label="Guardar" @click="guardarConfigError" />
 
