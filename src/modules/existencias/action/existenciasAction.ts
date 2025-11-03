@@ -20,12 +20,12 @@ export const obtenerProductoExistencia = async (params) => {
 export const obtenerLoteProducto = async (params) => {
     try {
         const { data } = await webApi.get(`/PRODUCTOS/ProductoLote`, {params})
-         console.log("Parámetros enviados lote:", params)
-        console.log("Lotes del producto desde action:", data)
+         //console.log("Parámetros enviados lote:", params)
+        //console.log("Lotes del producto desde action:", data)
         return data
     } catch (error) {
         const message = getAxiosErrorMessage(error, "Error obteniendo los lotes del producto")
-        console.error("Error obteniendo los lotes del producto:", error)
+        //console.error("Error obteniendo los lotes del producto:", error)
         throw new Error(message)
     }
 }
@@ -34,12 +34,12 @@ export const obtenerLoteProducto = async (params) => {
 export const obtenerExistenciaBodega = async (params) => {
     try {
         const { data } = await webApi.get(`PRODUCTOS/EXISTENCIA`, {params})
-         console.log("Parámetros enviados eixstencia:", params)
-        console.log("Existencia en otras bodegas desde action:", data)
+         //console.log("Parámetros enviados eixstencia:", params)
+        //console.log("Existencia en otras bodegas desde action:", data)
         return data
     } catch (error) {      
         const message = getAxiosErrorMessage(error, "Error obteniendo la existencia en otras bodegas")
-        console.error("Error obteniendo la existencia en otras bodegas:", error)
+        //console.error("Error obteniendo la existencia en otras bodegas:", error)
         throw new Error(message)
     }
 }
@@ -49,7 +49,7 @@ export const obtenerExistenciaBodega = async (params) => {
 export const obtenerTokenAction = async (params) => {
   try {
     //console.log("🔍 Params enviados:", params);
-    console.log("webApiNoauh URL:", webApiNoAuth.defaults.baseURL);
+    //console.log("webApiNoauh URL:", webApiNoAuth.defaults.baseURL);
     
     const response = await axios({
       method: 'POST',
