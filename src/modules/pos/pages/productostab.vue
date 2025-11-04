@@ -21,8 +21,9 @@
         </div>
 
         <!-- Botones alineados a la derecha -->
-        <div class="col-auto row items-center q-gutter-sm">
+        <div class="col-auto row items-center q-gutter-sm" >
           <q-toggle
+            v-if="userStore.tipoUsuarioStore === 'POS'"
             v-model="contingencia"
             label="Contingencia"
             color="yellow-10"
@@ -3058,7 +3059,7 @@ defineExpose({
 }
 
 .pedido-detalle-container {
-  padding: 6px 6px 0px 0;
+  padding: 6px 0px 0px 0;
   max-width: auto;
   margin: 0 auto;
 }

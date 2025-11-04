@@ -51,8 +51,14 @@
         <q-toolbar-title>
           POS GS - {{ StoreSucursal.descripcionBodega }}
         </q-toolbar-title>
+        
+        <!-- Etiqeuta de Rompefila-->
+        <div v-if="userStore.tipoUsuarioStore === 'ROMPEFILA'" class="rompefila-card  q-mr-lg">
+          ROMPE FILAS
+        </div>
 
         <div class="q-mr-md text-weight-medium">
+
           <div
             v-if="
               !configuracionStore.serieSeleccionada ||
@@ -62,7 +68,7 @@
           >
             No hay serie para facturación
           </div>
-          <div v-else>
+          <div v-else> 
             {{ configuracionStore.serieSeleccionada }}
           </div>
           <q-tooltip> Serie de facturación</q-tooltip>
@@ -418,6 +424,17 @@ const cerrarSesion = async () => {
   to {
     transform: rotate(360deg);
   }
+}
+
+.rompefila-card {
+  background: linear-gradient(to right, #9be218, #f5f10e);
+  border: 2px solid #110c01;
+  border-radius: 12px;
+  color: #050500;
+  font-weight: 600;
+  text-align: center;
+  padding: 9px 14px;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.25);
 }
 
 /* Estilos para el botón de sincronización con notificaciones */

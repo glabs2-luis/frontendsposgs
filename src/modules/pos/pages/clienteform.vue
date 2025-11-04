@@ -513,7 +513,7 @@
         </div>
 
         <!-- Boton para modal pedidos/cotizaciones pendientes -->
-        <div class="btn-pendientes-container">
+        <div class="btn-pendientes-container" v-if="userStore.tipoUsuarioStore === 'POS'">
           <q-btn
             icon="assignment"
             class="boton-amarillo"
