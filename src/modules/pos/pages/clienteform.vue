@@ -16,7 +16,7 @@
               text-color="black"
               :options="[
                 { label: 'Pedido', value: 'pedido' },
-                { label: 'Cotizacion', value: 'cotización' },
+                ...(userStore.tipoUsuarioStore === 'POS' ? [{ label: 'Cotizacion', value: 'cotización' }] : []),
               ]"
               class="tipo-transaccion-toggle"
               :disable="!!mostrarNumPedido"
