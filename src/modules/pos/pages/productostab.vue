@@ -21,7 +21,7 @@
         </div>
 
         <!-- Botones alineados a la derecha -->
-        <div class="col-auto row items-center q-gutter-sm" >
+        <div class="col-auto row items-center q-gutter-sm">
           <q-toggle
             v-if="userStore.tipoUsuarioStore === 'POS'"
             v-model="contingencia"
@@ -81,7 +81,6 @@
 
       <!-- Segunda fila: inputs + botones -->
       <div class="row q-col-gutter-sm items-end">
-
         <!-- Código del producto -->
         <q-input
           ref="inputCodigo"
@@ -144,7 +143,7 @@
             icon="inventory_2"
             label="Existencias"
             size="sm"
-            />
+          />
 
           <!-- Contador de productos -->
           <div class="col-auto">
@@ -177,7 +176,6 @@
             <span style="color: blue; font-weight: bold; font-size: 16px">
               {{ `  Subtotal: ${formatCurrency(nuevosDatos.subtotal, 3)}` }}
             </span>
-
           </template>
         </div>
       </div>
@@ -218,7 +216,6 @@
               </div>
             </div>
             <div class="col-auto row items-center q-gutter-sm">
-
               <!-- Botón de refresh -->
               <q-btn
                 icon="refresh"
@@ -294,7 +291,6 @@
         <!-- Tabla de productos mejorada -->
 
         <q-card-section class="q-pa-xs q-pl-sm">
-
           <!-- Loading inicial - cuando no hay productos y está cargando -->
           <div
             v-if="loadingProductosQuery && !todosProductos"
@@ -378,7 +374,7 @@
                   <div class="row items-center q-gutter-sm">
                     <q-icon name="qr_code" color="yellow-10" size="sm" />
                     <div>
-                      <div class="text-weight-bold text-black-8" >
+                      <div class="text-weight-bold text-black-8">
                         {{ props.row.PRODUCT0 }}
                       </div>
                       <div class="text-caption text-black-6">
@@ -853,146 +849,171 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-      
+
     <!-- Modal de existencias de productos -->
-      <q-dialog
-        v-model="modalExistencias"
-        transition-show="fade"
-        transition-hide="fade"
-      >
-    <q-card style="min-width: 90vw; max-height: 90vh;">
-      
-       <!-- Header -->
-      <q-card-section class="row items-center justify-between facturacion-header">
-        <div class="text-h6">Existencias de Productos</div>
-        <q-btn icon="close" flat dense round v-close-popup @click="resetearSeleccion" />
-      </q-card-section>
-      
-      <q-separator />
-
-      <!-- Breadcrumb para mostrar navegación -->
-      <q-card-section class="q-pa-sm bg-grey-2">
-        <q-breadcrumbs>
-          <q-breadcrumbs-el 
-            label="Todos los productos" 
-            @click="resetearSeleccion"
-            :class="!productoSeleccionado ? 'text-primary text-weight-bold' : 'cursor-pointer'"
-          />
-          <q-breadcrumbs-el 
-            v-if="productoSeleccionado" 
-            :label="`Producto: ${productoSeleccionado}`"
-            @click="loteSeleccionado = null"
-            :class="!loteSeleccionado ? 'text-primary text-weight-bold' : 'cursor-pointer'"
-          />
-          <q-breadcrumbs-el 
-            v-if="loteSeleccionado" 
-            :label="`Lote: ${loteSeleccionado}`"
-            class="text-primary text-weight-bold"
-          />
-        </q-breadcrumbs>
-      </q-card-section>
-
-      <q-separator />
-
-      <!-- Contenido dinámico según la selección -->
-      <q-card-section style="max-height: 70vh; overflow: visible;">
- 
-            <!-- Vista 1: Selector de productos -->
-      <div v-if="!productoSeleccionado" style="height: auto;">
-        <div class="text-h6 text-center justify-between q-mb-lg text-weight-bold">
-          <q-icon name="inventory_2" size="md" color="yellow-10" class="q-mr-sm" />
-          Selecciona un producto para ver sus existencias
-          
-          <q-space /> 
+    <q-dialog
+      v-model="modalExistencias"
+      transition-show="fade"
+      transition-hide="fade"
+    >
+      <q-card style="min-width: 90vw; max-height: 90vh">
+        <!-- Header -->
+        <q-card-section
+          class="row items-center justify-between facturacion-header"
+        >
+          <div class="text-h6">Existencias de Productos</div>
           <q-btn
+            icon="close"
             flat
             dense
             round
-            icon="refresh"
-            color="orange-8"
-            label="Recargar conexion"
-            @click="recargarConexionExistencias"></q-btn>
+            v-close-popup
+            @click="resetearSeleccion"
+          />
+        </q-card-section>
 
-        </div>
+        <q-separator />
 
-        <q-select
-          v-model="productoSeleccionadoTemp"
-          :options="opcionesProductosFiltrados"
-          option-value="Producto"
-          option-label="label"
-          label="Buscar producto por código o descripción"
-          outlined
-          use-input
-          input-debounce="300"
-          @filter="filtrarProductosSelect"
-          @update:model-value="seleccionarProductoDesdeSelect"
-          class="selector-productos"
-          behavior="menu"
-          clearable
-          menu-portal
-          menu-anchor="bottom middle"
-          menu-self="top middle"
-        >
-          <template v-slot:prepend>
-            <q-icon name="search" color="yellow-10" />
-          </template>
+        <!-- Breadcrumb para mostrar navegación -->
+        <q-card-section class="q-pa-sm bg-grey-2">
+          <q-breadcrumbs>
+            <q-breadcrumbs-el
+              label="Todos los productos"
+              @click="resetearSeleccion"
+              :class="
+                !productoSeleccionado
+                  ? 'text-primary text-weight-bold'
+                  : 'cursor-pointer'
+              "
+            />
+            <q-breadcrumbs-el
+              v-if="productoSeleccionado"
+              :label="`Producto: ${productoSeleccionado}`"
+              @click="loteSeleccionado = null"
+              :class="
+                !loteSeleccionado
+                  ? 'text-primary text-weight-bold'
+                  : 'cursor-pointer'
+              "
+            />
+            <q-breadcrumbs-el
+              v-if="loteSeleccionado"
+              :label="`Lote: ${loteSeleccionado}`"
+              class="text-primary text-weight-bold"
+            />
+          </q-breadcrumbs>
+        </q-card-section>
 
-          <template v-slot:no-option>
-            <q-item>
-              <q-item-section class="text-grey">
-                No se encontraron productos
-              </q-item-section>
-            </q-item>
-          </template>
+        <q-separator />
 
-          <!-- Estilo en el Select Box-->
-          <template v-slot:option="scope">
-            <q-item v-bind="scope.itemProps">
-              <q-item-section avatar>
-                <q-icon name="inventory" color="orange" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="text-weight-bold">
-                  {{ scope.opt.Producto }}
-                </q-item-label>
-                <q-item-label caption class="text-black">
-                  {{ scope.opt.Descripcion }}
-                </q-item-label>
-                <q-item-label caption class="text-grey-6">
-                  Marca: {{ scope.opt.Marca }}
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </template>
+        <!-- Contenido dinámico según la selección -->
+        <q-card-section style="max-height: 70vh; overflow: visible">
+          <!-- Vista 1: Selector de productos -->
+          <div v-if="!productoSeleccionado" style="height: auto">
+            <div
+              class="text-h6 text-center justify-between q-mb-lg text-weight-bold"
+            >
+              <q-icon
+                name="inventory_2"
+                size="md"
+                color="yellow-10"
+                class="q-mr-sm"
+              />
+              Selecciona un producto para ver sus existencias
 
-          <template v-slot:selected-item="scope">
-            <div class="row items-center q-gutter-sm">
-              <q-icon name="inventory" color="orange" />
+              <q-space />
+              <q-btn
+                flat
+                dense
+                round
+                icon="refresh"
+                color="orange-8"
+                label="Recargar conexion"
+                @click="recargarConexionExistencias"
+              ></q-btn>
+            </div>
+
+            <q-select
+              v-model="productoSeleccionadoTemp"
+              :options="opcionesProductosFiltrados"
+              option-value="Producto"
+              option-label="label"
+              label="Buscar producto por código o descripción"
+              outlined
+              use-input
+              input-debounce="300"
+              @filter="filtrarProductosSelect"
+              @update:model-value="seleccionarProductoDesdeSelect"
+              class="selector-productos"
+              behavior="menu"
+              clearable
+              menu-portal
+              menu-anchor="bottom middle"
+              menu-self="top middle"
+            >
+              <template v-slot:prepend>
+                <q-icon name="search" color="yellow-10" />
+              </template>
+
+              <template v-slot:no-option>
+                <q-item>
+                  <q-item-section class="text-grey">
+                    No se encontraron productos
+                  </q-item-section>
+                </q-item>
+              </template>
+
+              <!-- Estilo en el Select Box-->
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section avatar>
+                    <q-icon name="inventory" color="orange" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-weight-bold">
+                      {{ scope.opt.Producto }}
+                    </q-item-label>
+                    <q-item-label caption class="text-black">
+                      {{ scope.opt.Descripcion }}
+                    </q-item-label>
+                    <q-item-label caption class="text-grey-6">
+                      Marca: {{ scope.opt.Marca }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+
+              <template v-slot:selected-item="scope">
+                <div class="row items-center q-gutter-sm">
+                  <q-icon name="inventory" color="orange" />
+                  <div>
+                    <div class="text-weight-bold">{{ scope.opt.Producto }}</div>
+                    <div class="text-caption">{{ scope.opt.Descripcion }}</div>
+                  </div>
+                </div>
+              </template>
+            </q-select>
+
+            <!-- Info adicional -->
+            <div class="q-mt-lg text-grey-7 row items-center justify-between">
               <div>
-                <div class="text-weight-bold">{{ scope.opt.Producto }}</div>
-                <div class="text-caption">{{ scope.opt.Descripcion }}</div>
+                <!-- <q-icon name="warning" size="sm" class="q-mr-xs" color="yellow-10" /> -->
+                ⚠️ La existencia mostrada podria no estar actualizada.
+              </div>
+              <div>
+                {{ productosExistencias3.length }} productos disponibles
               </div>
             </div>
-          </template>
-        </q-select>
-
-        <!-- Info adicional -->
-          <div class="q-mt-lg text-grey-7 row items-center justify-between">
-            <div>
-             <!-- <q-icon name="warning" size="sm" class="q-mr-xs" color="yellow-10" /> -->
-              ⚠️ La existencia mostrada podria no estar actualizada.
-            </div>
-            <div>
-              {{ productosExistencias3.length }} productos disponibles
-            </div>
           </div>
-      </div>
 
-        <!-- Vista 2: Lotes del producto seleccionado -->
-        <div v-else-if="productoSeleccionado && !loteSeleccionado">
+          <!-- Vista 2: Lotes del producto seleccionado -->
+          <div v-else-if="productoSeleccionado && !loteSeleccionado">
             <q-toolbar class="q-pa-none">
-              <div class="text-h6">Lotes de: {{ productoSeleccionado.Descripcion }}</div>
-              <q-space /> <!-- Esto empuja lo que sigue a la derecha -->
+              <div class="text-h6">
+                Lotes de: {{ productoSeleccionado.Descripcion }}
+              </div>
+              <q-space />
+              <!-- Esto empuja lo que sigue a la derecha -->
               <q-btn
                 flat
                 dense
@@ -1005,60 +1026,68 @@
                 <q-tooltip>Volver a productos</q-tooltip>
               </q-btn>
             </q-toolbar>
-          <q-table
-            flat
-            bordered
-            dense
-            :rows="LotesExistentes"
-            :columns="columnasLotes"
-            row-key="Lote"
-            :pagination="{ rowsPerPage: 100 }"
-            :loading="!loteProducto"
-            no-data-label="No hay lotes disponibles"
-            class="tabla-lotes-mejorada"
-          >
-            <!-- Celda personalizada para Cantidad -->
-            <template v-slot:body-cell-Cantidad="props">
-              <q-td :props="props" class="cantidad-destacada">
-                <div :class="props.row.Disponible === 0 ? 'cantidad-badge-red' : 'cantidad-badge'">
-                  <span class="cantidad-numero">{{ props.row.Disponible }}</span>
-                  <span class="cantidad-label"></span>
-                </div>
-              </q-td>
-            </template>
+            <q-table
+              flat
+              bordered
+              dense
+              :rows="LotesExistentes"
+              :columns="columnasLotes"
+              row-key="Lote"
+              :pagination="{ rowsPerPage: 100 }"
+              :loading="!loteProducto"
+              no-data-label="No hay lotes disponibles"
+              class="tabla-lotes-mejorada"
+            >
+              <!-- Celda personalizada para Cantidad -->
+              <template v-slot:body-cell-Cantidad="props">
+                <q-td :props="props" class="cantidad-destacada">
+                  <div
+                    :class="
+                      props.row.Disponible === 0
+                        ? 'cantidad-badge-red'
+                        : 'cantidad-badge'
+                    "
+                  >
+                    <span class="cantidad-numero">{{
+                      props.row.Disponible
+                    }}</span>
+                    <span class="cantidad-label"></span>
+                  </div>
+                </q-td>
+              </template>
 
-            <template v-slot:body-cell-acciones="props">
-              <q-td :props="props">
-                <q-btn 
-                  dense 
-                  flat 
-                  color="green-8" 
-                  icon="storefront" 
-                  label="Bodegas"
-                  @click="verExistencias(props.row.Lote)"  
-                  :disable="props.row.Existencia <= 0"
-                  :loading="loadingBodegas"
-                >
-                  <q-tooltip>Ver existencias en bodegas</q-tooltip>
-                </q-btn>
-              </q-td>
-            </template>
-          </q-table>
-        </div>
+              <template v-slot:body-cell-acciones="props">
+                <q-td :props="props">
+                  <q-btn
+                    dense
+                    flat
+                    color="green-8"
+                    icon="storefront"
+                    label="Bodegas"
+                    @click="verExistencias(props.row.Lote)"
+                    :disable="props.row.Existencia <= 0"
+                    :loading="loadingBodegas"
+                  >
+                    <q-tooltip>Ver existencias en bodegas</q-tooltip>
+                  </q-btn>
+                </q-td>
+              </template>
+            </q-table>
+          </div>
 
-        <!-- Vista 3: Existencias en bodegas del producto/lote seleccionado -->
+          <!-- Vista 3: Existencias en bodegas del producto/lote seleccionado -->
           <div v-else>
             <div class="row items-center justify-between q-mb-md">
               <div class="text-h6">
-                Existencias en Bodegas - Lote: {{loteSeleccionado}}
+                Existencias en Bodegas - Lote: {{ loteSeleccionado }}
               </div>
 
-              <q-btn 
-                flat 
-                dense 
-                round 
-                icon="arrow_back" 
-                color="red-10" 
+              <q-btn
+                flat
+                dense
+                round
+                icon="arrow_back"
+                color="red-10"
                 label="Regresar"
                 @click="loteSeleccionado = null"
               >
@@ -1077,34 +1106,49 @@
               no-data-label="No hay existencias en otras bodegas"
               class="tabla-lotes-mejorada"
             >
-                        <!-- Celda personalizada para Cantidad -->
-            <template v-slot:body-cell-Disponible="props">
-              <q-td :props="props" class="cantidad-destacada">
-                <div :class="props.row.Disponible === 0 ? 'cantidad-badge-red' : 'cantidad-badge'">
-                  <span class="cantidad-numero">{{ props.row.Disponible }}</span>
-                  <span class="cantidad-label"></span>
-                </div>
-              </q-td>
-            </template>
-            <template v-slot:body-cell-Existencia="props">
-              <q-td :props="props">
-                <q-badge :color="props.row.Existencia > 0 ? 'positive' : 'negative'">
-                  {{ props.row.Existencia }}
-                </q-badge>
-              </q-td>
-            </template>
-          </q-table>
-        </div>
-
-      </q-card-section>
-    </q-card>
-  </q-dialog>
-
+              <!-- Celda personalizada para Cantidad -->
+              <template v-slot:body-cell-Disponible="props">
+                <q-td :props="props" class="cantidad-destacada">
+                  <div
+                    :class="
+                      props.row.Disponible === 0
+                        ? 'cantidad-badge-red'
+                        : 'cantidad-badge'
+                    "
+                  >
+                    <span class="cantidad-numero">{{
+                      props.row.Disponible
+                    }}</span>
+                    <span class="cantidad-label"></span>
+                  </div>
+                </q-td>
+              </template>
+              <template v-slot:body-cell-Existencia="props">
+                <q-td :props="props">
+                  <q-badge
+                    :color="props.row.Existencia > 0 ? 'positive' : 'negative'"
+                  >
+                    {{ props.row.Existencia }}
+                  </q-badge>
+                </q-td>
+              </template>
+            </q-table>
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { Notify, QTableColumn, QTableProps, useQuasar, debounce, Dialog } from 'quasar';
+import {
+  Notify,
+  QTableColumn,
+  QTableProps,
+  useQuasar,
+  debounce,
+  Dialog,
+} from "quasar";
 import { useQueryClient } from "@tanstack/vue-query";
 import {
   ref,
@@ -1157,17 +1201,16 @@ import { db } from "@/db/productosDB";
 import { obtenerProductoPorCodigoAction } from "@/modules/codigo_barras/action/codigoAction";
 import { PedidosDet } from "@/modules/pedidos_det/interfaces/pedidosDetInterface";
 import { FacturaEnc2 } from "@/modules/facturas_enc/interfaces/facturaEnc2Interface";
-import { DatosProductoBuscado } from '../interfaces/posInterfaces';
-import { useProductosExistencias } from '@/modules/existencias/composables/useExistencias';
-import { Empresa } from '../../fel_empresa_establecimiento/interfaces/empresaInterface';
-import { Sucursal } from '../../Sucursales/interfaces/sucursalesInterface';
-import { Bodega } from '../../bodegas/interfaces/bodegaInterface';
-import { Vendedor } from '../../notas_credito/interfaces/NotaCredito';
-import { conexion } from '@/helper/networkStatus';
-import { useStoreTokenExistencia } from '@/stores/tokenExistencia';
+import { DatosProductoBuscado } from "../interfaces/posInterfaces";
+import { useProductosExistencias } from "@/modules/existencias/composables/useExistencias";
+import { Empresa } from "../../fel_empresa_establecimiento/interfaces/empresaInterface";
+import { Sucursal } from "../../Sucursales/interfaces/sucursalesInterface";
+import { Bodega } from "../../bodegas/interfaces/bodegaInterface";
+import { Vendedor } from "../../notas_credito/interfaces/NotaCredito";
+import { conexion } from "@/helper/networkStatus";
+import { useStoreTokenExistencia } from "@/stores/tokenExistencia";
 
-import type { AxiosError } from 'axios';
-
+import type { AxiosError } from "axios";
 
 /*
 ==========================================================
@@ -1176,7 +1219,7 @@ import type { AxiosError } from 'axios';
 */
 
 // Catalogo de productos
-const columnasCatalogo:QTableProps['columns'] = [
+const columnasCatalogo: QTableProps["columns"] = [
   {
     name: "codigo",
     label: "Código / Marca",
@@ -1230,35 +1273,34 @@ const columnasCatalogo:QTableProps['columns'] = [
 // Tabla de Existencias
 const columnasExistencias: QTableColumn[] = [
   {
-    name: 'Producto',
-    label: 'Código',
-    field: 'producto',
-    align: 'left',
-    sortable: true
+    name: "Producto",
+    label: "Código",
+    field: "producto",
+    align: "left",
+    sortable: true,
   },
   {
-    name: 'Descripcion',
-    label: 'Descripción',
-    field: 'Descripcion',
-    align: 'left',
-    sortable: true
+    name: "Descripcion",
+    label: "Descripción",
+    field: "Descripcion",
+    align: "left",
+    sortable: true,
   },
   {
-    name: 'Lote',
-    label: 'DescripcionLote',
-    field: 'DescripcionLote',
-    align: 'right',
-    sortable: true
+    name: "Lote",
+    label: "DescripcionLote",
+    field: "DescripcionLote",
+    align: "right",
+    sortable: true,
   },
   {
-    name: 'Marca',
-    label: 'Marca',
-    field: 'Marca',
-    align: 'right',
-    sortable: true
+    name: "Marca",
+    label: "Marca",
+    field: "Marca",
+    align: "right",
+    sortable: true,
   },
-]; 
-
+];
 
 /*
 ==========================================================
@@ -1335,18 +1377,31 @@ const { totalItems } = useTotalStore();
 const userStore = useUserStore();
 const totalStore = useTotalStore();
 const { generarTicketPDF } = usePdfTicket();
-const paramsBase = ref({  // Parametros para consultar existencias
-   empresa: 'GS',
-   bodega: Number(storeSucursal.codigoBodega),
-   vendedor: userStore.codigoVendedor,
-   sucursal: Number(storeSucursal.idSucursal),
-   producto: null,
-   lote: null
-})
+const paramsBase = ref({
+  // Parametros para consultar existencias
+  empresa: "GS",
+  bodega: Number(storeSucursal.codigoBodega),
+  vendedor: userStore.codigoVendedor,
+  sucursal: Number(storeSucursal.idSucursal),
+  producto: null,
+  lote: null,
+});
 
 //USE COMPOSABLES
 const tokenExistencias = useStoreTokenExistencia();
-const { existenciaProducto, errorExistencias, refetchExistenciaProducto, loteProducto, refetchLoteProducto, existenciaBodega, refetchExistenciasBodegas, tokenData, errorToken, obtenerToken, obtenerTokenAsync } = useProductosExistencias(paramsBase); // Existencias
+const {
+  existenciaProducto,
+  errorExistencias,
+  refetchExistenciaProducto,
+  loteProducto,
+  refetchLoteProducto,
+  existenciaBodega,
+  refetchExistenciasBodegas,
+  tokenData,
+  errorToken,
+  obtenerToken,
+  obtenerTokenAsync,
+} = useProductosExistencias(paramsBase); // Existencias
 
 const { data: pedidoData, refetchObtenerPedidoID } =
   obtenerPedidoPorId(idPedidoEnc);
@@ -1387,7 +1442,7 @@ const modalProductos2 = ref(false);
 const montoTarjeta = ref(null);
 const modalExistencias = ref(false);
 const montoEfectivo = ref(null);
-const filtroProductosExistencias = ref('');
+const filtroProductosExistencias = ref("");
 const productoSeleccionado = ref(null);
 const loteSeleccionado = ref(null);
 // const opcionesPago2 = ["EFECTIVO", "TARJETA", "MIXTO"]; // Ya no se necesita para el btn-group
@@ -1400,10 +1455,11 @@ const queryClient = useQueryClient();
 const descripcionProd = ref("");
 const subtotalCalculado = ref(0);
 const espera = ref(null); // guarda el timeout
-const nuevosDatos = ref<DatosProductoBuscado|undefined>(); // Mostrar info del producto
-const productosCacheados = shallowRef([]); 
+const nuevosDatos = ref<DatosProductoBuscado | undefined>(); // Mostrar info del producto
+const productosCacheados = shallowRef([]);
 const { obtenerProducto } = useCodigo();
-const { data: productoEncontrado, refetch: refetchProducto } = obtenerProducto(filtroProductos);
+const { data: productoEncontrado, refetch: refetchProducto } =
+  obtenerProducto(filtroProductos);
 
 // Paginación del catálogo
 const paginacionCatalogo = ref({
@@ -1683,38 +1739,36 @@ const busquedaAutomatica = () => {
 
 // Mostrar la descripcion del producto
 const buscarDescripcion = async () => {
-  if (codigoProducto.value.trim() == '') {
-    nuevosDatos.value = null
-    return
+  if (codigoProducto.value.trim() == "") {
+    nuevosDatos.value = null;
+    return;
   }
   try {
-    
-
     let prod = null; // Tiene el precio del producto
     let codigoFinal = codigoProducto.value; // Tiene el codigo a buscar descripcion
-    let mensajeError:string = '';
+    let mensajeError: string = "";
 
     // 1. Intentar con el código ingresado
     await precioReal(codigoProducto.value, cantidad2.value)
       .then((res) => {
         prod = res;
       })
-      .catch(async (errPrecio:Error) => {
+      .catch(async (errPrecio: Error) => {
         mensajeError += `${errPrecio.message}`;
-        
+
         // 2. Si no existe → intentar con PRODUCT0 alterno
         await obtenerProductoPorCodigoAction(codigoProducto.value)
-          .then( async (res) => {
+          .then(async (res) => {
             await precioReal(res.PRODUCT0, cantidad2.value)
-              .then( (res2) => {
+              .then((res2) => {
                 prod = res2;
                 codigoFinal = res.PRODUCT0;
               })
-              .catch((errorPrecioMP:Error) => {
+              .catch((errorPrecioMP: Error) => {
                 mensajeError += ` PR-Real ${errorPrecioMP.message}`;
               });
           })
-          .catch(async (errorProd:Error) => {
+          .catch(async (errorProd: Error) => {
             prod = null;
             // mostrarNotificacionErrorSonido(error.message);
           });
@@ -1722,18 +1776,18 @@ const buscarDescripcion = async () => {
 
     // 3. Si aún no hay prod → salir
     if (!prod) {
-      const productoError:DatosProductoBuscado = {
-              encontrado: false,
-              codigo: codigoProducto.value, // No se muestra en pantalla
-              descripcion: `${mensajeError}`,
-              precio: 0,
-              subtotal: 0,
-            };
+      const productoError: DatosProductoBuscado = {
+        encontrado: false,
+        codigo: codigoProducto.value, // No se muestra en pantalla
+        descripcion: `${mensajeError}`,
+        precio: 0,
+        subtotal: 0,
+      };
       nuevosDatos.value = productoError;
       // nuevosDatos.value = null;
       return;
     }
-    
+
     // 4. Obtener descripción
     const nuevaDescripcion = await obtenerProductosId(codigoFinal);
 
@@ -1745,16 +1799,17 @@ const buscarDescripcion = async () => {
       subtotal: prod.PRECIO_FINAL * cantidad2.value,
     };
   } catch (error) {
-    nuevosDatos.value = null; 
+    nuevosDatos.value = null;
   }
-}
+};
 
 const filtroExistencias = (rows, terms) => {
   const term = terms.toLowerCase();
-  return rows.filter(r => 
-    r.Producto.toLowerCase().includes(term) || 
-    r.Descripcion.toLowerCase().includes(term) ||
-    r.Codigo?.toLowerCase().includes(term)
+  return rows.filter(
+    (r) =>
+      r.Producto.toLowerCase().includes(term) ||
+      r.Descripcion.toLowerCase().includes(term) ||
+      r.Codigo?.toLowerCase().includes(term)
   );
 };
 
@@ -1764,158 +1819,220 @@ const opcionesProductosFiltrados = ref([]);
 
 // Función para filtrar en el select
 const filtrarProductosSelect = (val, update) => {
-  if (val === '') {
+  if (val === "") {
     update(() => {
-      opcionesProductosFiltrados.value = productosExistencias3.value.map(p => ({
-        ...p,
-        label: `${p.Producto} - ${p.Descripcion}`
-      }))
-    })
-    return
+      opcionesProductosFiltrados.value = productosExistencias3.value.map(
+        (p) => ({
+          ...p,
+          label: `${p.Producto} - ${p.Descripcion}`,
+        })
+      );
+    });
+    return;
   }
 
   update(() => {
     // Dividir la búsqueda en palabras separadas y limpiarlas
-    const palabras = val.toLowerCase().trim().split(/\s+/).filter(p => p.length > 0);
-    
+    const palabras = val
+      .toLowerCase()
+      .trim()
+      .split(/\s+/)
+      .filter((p) => p.length > 0);
+
     opcionesProductosFiltrados.value = productosExistencias3.value
-      .filter(p => {
+      .filter((p) => {
         // Crear un string con todos los campos buscables
-        const textoBuscable = `${p.Producto} ${p.Descripcion} ${p.Marca || ''}`.toLowerCase();
-        
+        const textoBuscable = `${p.Producto} ${p.Descripcion} ${
+          p.Marca || ""
+        }`.toLowerCase();
+
         // Verificar que TODAS las palabras estén presentes (búsqueda AND)
-        return palabras.every(palabra => textoBuscable.includes(palabra));
+        return palabras.every((palabra) => textoBuscable.includes(palabra));
       })
-      .map(p => ({
+      .map((p) => ({
         ...p,
-        label: `${p.Producto} - ${p.Descripcion}`
-      }))
-  })
-}
+        label: `${p.Producto} - ${p.Descripcion}`,
+      }));
+  });
+};
 
 // Función para seleccionar desde el select
 const seleccionarProductoDesdeSelect = async (producto) => {
-  if (!producto) return
-  
-  await seleccionarProducto(producto.Producto)
-  productoSeleccionadoTemp.value = null // Limpiar el select después de seleccionar
-}
+  if (!producto) return;
+
+  await seleccionarProducto(producto.Producto);
+  productoSeleccionadoTemp.value = null; // Limpiar el select después de seleccionar
+};
 
 const loadingBodegas = ref(false);
-const LotesExistentes = ref<any[]>([])
+const LotesExistentes = ref<any[]>([]);
 
-// Tomar producto 
+// Tomar producto
 const seleccionarProducto = async (producto) => {
-
   try {
-    productoSeleccionado.value = producto // Asignamos el producto
+    productoSeleccionado.value = producto; // Asignamos el producto
     //console.log('Producto seleccionado lo tengo:', productoSeleccionado.value)
-    paramsBase.value.producto = producto // Setear el producto
+    paramsBase.value.producto = producto; // Setear el producto
 
-    await nextTick()
+    await nextTick();
 
     $q.loading.show({
       message: `Cargando lotes de ${producto}...`,
-      spinnerColor: 'primary',
+      spinnerColor: "primary",
       spinnerSize: 40,
-    })
+    });
 
     // Esperar los Lotes
-    const { data } = await refetchLoteProducto()
+    const { data } = await refetchLoteProducto();
     //console.log('Datos de lotes recibidos:', data)
 
-    LotesExistentes.value = data.ProductosLote
-   //console.log('Lotes listos para tabla:', LotesExistentes.value)
+    LotesExistentes.value = data.ProductosLote;
+    //console.log('Lotes listos para tabla:', LotesExistentes.value)
+  } catch (error) {
+    //console.error('Error cargando lotes:', error)
+    $q.notify({
+      color: "negative",
+      message: "Error cargando los lotes del producto",
+      position: "top",
+    });
+  } finally {
+    $q.loading.hide();
+  }
+};
 
-    } catch (error) {
-      //console.error('Error cargando lotes:', error)
-      $q.notify({
-        color: 'negative',
-        message: 'Error cargando los lotes del producto',
-        position: 'top',
-      })
-    } finally {
-      $q.loading.hide()
-    }
-}
-
-const datosExistencias = ref<any[]>([])
+const datosExistencias = ref<any[]>([]);
 
 const verExistencias = async (lote) => {
-
   try {
-  $q.loading.show({
-  message: `Consultando existencias del lote ${lote}...`,
-  spinnerColor: 'primary',
-  spinnerSize: 40,
-  })
-  loteSeleccionado.value = lote // Asignamos el lote
-  // Setear el lote
-  paramsBase.value.lote = lote.trim()
-  //console.log('yo tengo al señor lote:', lote)
-  //console.log('Desde param base ya llevo el producto en existencias:', paramsBase.value)
+    $q.loading.show({
+      message: `Consultando existencias del lote ${lote}...`,
+      spinnerColor: "primary",
+      spinnerSize: 40,
+    });
+    loteSeleccionado.value = lote; // Asignamos el lote
+    // Setear el lote
+    paramsBase.value.lote = lote.trim();
+    //console.log('yo tengo al señor lote:', lote)
+    //console.log('Desde param base ya llevo el producto en existencias:', paramsBase.value)
 
-  await nextTick()
+    await nextTick();
 
-  const { data } = await refetchExistenciasBodegas()
-  //console.log('Datos de existencias en bodegas recibidos:', data)
-  datosExistencias.value = data.Existencias
-  //console.log('Existencias en bodegas listos para tabla:', datosExistencias.value)
-
-  } catch (error){
+    const { data } = await refetchExistenciasBodegas();
+    //console.log('Datos de existencias en bodegas recibidos:', data)
+    datosExistencias.value = data.Existencias;
+    //console.log('Existencias en bodegas listos para tabla:', datosExistencias.value)
+  } catch (error) {
     //console.error('Error cargando las existencias:', error)
     $q.notify({
-      color: 'negative',
-      message: 'Error cargando las existencias en otras bodegas',
-      position: 'top',
-    })
+      color: "negative",
+      message: "Error cargando las existencias en otras bodegas",
+      position: "top",
+    });
+  } finally {
+    $q.loading.hide();
   }
-  finally {
-    $q.loading.hide()
-  }
-}
+};
 
 const resetearSeleccion = () => {
-  productoSeleccionado.value = null
-  loteSeleccionado.value = null
-  paramsBase.value.producto = null
-  paramsBase.value.lote = null
-}
+  productoSeleccionado.value = null;
+  loteSeleccionado.value = null;
+  paramsBase.value.producto = null;
+  paramsBase.value.lote = null;
+};
 
 // Mapear los productos desde existenciaProducto
 const productosExistencias3 = computed(() => {
   try {
-    if (!existenciaProducto.value) return []
+    if (!existenciaProducto.value) return [];
 
     // Si ya hay data, devuelve solo el array interno de productos
-    return existenciaProducto.value.Productos
+    return existenciaProducto.value.Productos;
   } catch (error) {
-    console.error("Error al acceder a existenciaProducto:", error)
-    return { error } 
+    console.error("Error al acceder a existenciaProducto:", error);
+    return { error };
   }
-})
+});
 
 // Columnas
-const columnasProductos : QTableColumn[] = [
-  { name: 'Producto', label: 'Código', field: 'Producto', align: 'left', sortable: true },
-  { name: 'Descripcion', label: 'Descripción', field: 'Descripcion', align: 'left', sortable: true },
-  { name: 'Marca', label: 'Marca', field: 'Marca', align: 'left', sortable: true },
-  { name: 'acciones', label: 'Ver Lotes', field: 'acciones', align: 'left' },
-]
+const columnasProductos: QTableColumn[] = [
+  {
+    name: "Producto",
+    label: "Código",
+    field: "Producto",
+    align: "left",
+    sortable: true,
+  },
+  {
+    name: "Descripcion",
+    label: "Descripción",
+    field: "Descripcion",
+    align: "left",
+    sortable: true,
+  },
+  {
+    name: "Marca",
+    label: "Marca",
+    field: "Marca",
+    align: "left",
+    sortable: true,
+  },
+  { name: "acciones", label: "Ver Lotes", field: "acciones", align: "left" },
+];
 
-const columnasLotes :  QTableColumn[] = [
-  { name: 'Producto', label: 'Producto', field: 'Producto', align: 'left', sortable: true },
-  { name: 'Descripcion', label: 'Descripcion', field: 'Descripcion', align: 'left', sortable: true },
-  { name: 'Descripcion', label: 'Lote', field: 'DescripcionLote', align: 'left', sortable: true },
-  { name: 'Cantidad', label: 'Cantidad', field: 'Disponible', align: 'center' },
-  { name: 'acciones', label: 'Otras Bodegas', field: 'acciones', align: 'left' },
-]
+const columnasLotes: QTableColumn[] = [
+  {
+    name: "Producto",
+    label: "Producto",
+    field: "Producto",
+    align: "left",
+    sortable: true,
+  },
+  {
+    name: "Descripcion",
+    label: "Descripcion",
+    field: "Descripcion",
+    align: "left",
+    sortable: true,
+  },
+  {
+    name: "Descripcion",
+    label: "Lote",
+    field: "DescripcionLote",
+    align: "left",
+    sortable: true,
+  },
+  { name: "Cantidad", label: "Cantidad", field: "Disponible", align: "center" },
+  {
+    name: "acciones",
+    label: "Otras Bodegas",
+    field: "acciones",
+    align: "left",
+  },
+];
 
 const columnasBodegas: QTableColumn[] = [
-  { name: 'Bodega', label: 'Bodega', field: 'Bodega', align: 'left', sortable: true },
-  { name: 'Nombre', label: 'Nombre', field: 'Nombre', align: 'left', sortable: true },
-  { name: 'Disponible', label: 'Disponible', field: 'Disponible', align: 'center', sortable: true },
-]
+  {
+    name: "Bodega",
+    label: "Bodega",
+    field: "Bodega",
+    align: "left",
+    sortable: true,
+  },
+  {
+    name: "Nombre",
+    label: "Nombre",
+    field: "Nombre",
+    align: "left",
+    sortable: true,
+  },
+  {
+    name: "Disponible",
+    label: "Disponible",
+    field: "Disponible",
+    align: "center",
+    sortable: true,
+  },
+];
 
 // Si se actualiza cantidad
 watch(cantidad2, async () => {
@@ -2138,7 +2255,6 @@ const usarMultiplicador = (e) => {
   }
 };
 
-
 // aumentar cantidad en input de código
 const aumentarCantidadInput = () => {
   cantidad2.value = (cantidad2.value || 1) + 1;
@@ -2350,13 +2466,13 @@ const abrirExistencia = async () => {
     spinnerSize: 50,
   });
 
-  try{
+  try {
     modalExistencias.value = true;
     $q.loading.hide();
   } catch (error) {
-    showErrorNotification("Error", "No hay conexion a Internet")
+    showErrorNotification("Error", "No hay conexion a Internet");
   }
-}
+};
 
 const recargarConexionExistencias = async () => {
   $q.loading.show({
@@ -2373,7 +2489,7 @@ const recargarConexionExistencias = async () => {
 
     if (error) {
       console.error("❌ Error en recarga de existencias:", error);
-      
+
       // Si hay error, generar nuevo token
       $q.loading.show({
         message: "Regenerando token...",
@@ -2383,14 +2499,17 @@ const recargarConexionExistencias = async () => {
 
       // Obtener nuevo token
       const nuevoTokenData = await obtenerTokenAsync();
-      
+
       console.log("✅ Nuevo token obtenido:", nuevoTokenData);
       console.log("🔑 Token:", nuevoTokenData.Token);
 
       // Guardar el nuevo token en el store
       tokenExistencias.setTokenExistencia(nuevoTokenData.Token);
-      
-      console.log("💾 Token actualizado en el store:", tokenExistencias.tokenExistencia);
+
+      console.log(
+        "💾 Token actualizado en el store:",
+        tokenExistencias.tokenExistencia
+      );
 
       // Cambiar mensaje del loading
       $q.loading.show({
@@ -2402,24 +2521,27 @@ const recargarConexionExistencias = async () => {
       // ✅ REINTENTAR: simplemente volver a llamar refetchExistenciaProducto
       // El interceptor de webApiAuth ya tiene el nuevo token del store
       await refetchExistenciaProducto();
-      
+
       // Si llegamos aquí, significa que la reconsulta fue exitosa
       console.log("Existencias actualizadas con nuevo token");
-      showSuccessNotificationInside("Conexión", "Existencias actualizadas correctamente.");
-
+      showSuccessNotificationInside(
+        "Conexión",
+        "Existencias actualizadas correctamente."
+      );
     } else if (data) {
-      // Si no hay error en el primer intento, todo OK 
+      // Si no hay error en el primer intento, todo OK
       console.log("Existencias OK (primer intento):", data);
-      showSuccessNotificationInside("Conexión", "Existencias actualizadas correctamente.");
+      showSuccessNotificationInside(
+        "Conexión",
+        "Existencias actualizadas correctamente."
+      );
     }
-
   } catch (err) {
     showErrorNotificationInside("Error", "No hay conexión a internet");
   } finally {
     $q.loading.hide();
   }
 };
-
 
 const abrirModalCantidad = () => {
   Dialog.create({
@@ -2429,16 +2551,19 @@ const abrirModalCantidad = () => {
       type: "number",
       model: null,
     },
-  }).onOk((resul:number) => {
-    // Confirmado
-    if (resul >= 1) {
-      cantidad2.value = resul;
-    }
-  }).onCancel(() => {
-    // Cancelado
-  }).onDismiss(() => {
-    // Cerrado
-  });
+  })
+    .onOk((resul: number) => {
+      // Confirmado
+      if (resul >= 1) {
+        cantidad2.value = resul;
+      }
+    })
+    .onCancel(() => {
+      // Cancelado
+    })
+    .onDismiss(() => {
+      // Cerrado
+    });
 };
 
 // FUNCIONES GENERALES
@@ -2537,7 +2662,7 @@ const confirmarFactura = async () => {
   }
 
   // modal confirmacion factura
-  const datos:FacturaEnc2 = {
+  const datos: FacturaEnc2 = {
     ID_PEDIDO_ENC: pedidoStore.idPedidoEnc,
     USUARIO_QUE_FACTURA: userStore.nombreVendedor,
     SERIE: configuracionStore.serieSeleccionada,
@@ -2740,13 +2865,37 @@ const limpiarFiltro = () => {
 const buscarProductoEscaneado = async () => {
   if (!codigoProducto.value || loadingPorCodigo.value) return;
 
-
   loadingPorCodigo.value = true;
   if (!pedidoStore.idPedidoEnc) {
     await errorAgregarProductoConSonido(
       "No hay un pedido activo. Por favor, crea un nuevo pedido."
     );
     loadingPorCodigo.value = false;
+    // Resetear errorAgregarProducto después de un tiempo
+    setTimeout(() => {
+      errorAgregarProducto.value = false;
+    }, 2000);
+    // Restaurar focus después del error con reintentos rápidos
+    await nextTick();
+    let intentos = 0;
+    const maxIntentos = 6;
+    const intentarFocus = () => {
+      intentos++;
+      if (!allowAutoFocusProduct.value || loadingPorCodigo.value) {
+        if (intentos < maxIntentos) {
+          setTimeout(intentarFocus, 50);
+        }
+        return;
+      }
+      const inputElement = inputCodigo.value?.$el?.querySelector("input");
+      if (inputElement && !inputElement.disabled) {
+        inputElement.focus();
+        inputElement.select();
+      } else if (intentos < maxIntentos) {
+        setTimeout(intentarFocus, 50);
+      }
+    };
+    setTimeout(intentarFocus, 100);
     return;
   }
   let resultado = null;
@@ -2776,9 +2925,31 @@ const buscarProductoEscaneado = async () => {
         );
         codigoProducto.value = "";
         loadingPorCodigo.value = false;
-        nextTick(() => {
-          inputCodigo.value?.focus();
-        });
+        // Resetear errorAgregarProducto después de un tiempo
+        setTimeout(() => {
+          errorAgregarProducto.value = false;
+        }, 2000);
+        await nextTick();
+        // Sistema de reintentos rápido
+        let intentos = 0;
+        const maxIntentos = 6;
+        const intentarFocus = () => {
+          intentos++;
+          if (!allowAutoFocusProduct.value || loadingPorCodigo.value) {
+            if (intentos < maxIntentos) {
+              setTimeout(intentarFocus, 50);
+            }
+            return;
+          }
+          const inputElement = inputCodigo.value?.$el?.querySelector("input");
+          if (inputElement && !inputElement.disabled) {
+            inputElement.focus();
+            inputElement.select();
+          } else if (intentos < maxIntentos) {
+            setTimeout(intentarFocus, 50);
+          }
+        };
+        setTimeout(intentarFocus, 100);
         return;
       }
 
@@ -2805,15 +2976,26 @@ const buscarProductoEscaneado = async () => {
       );
       codigoProducto.value = "";
       loadingPorCodigo.value = false;
-      nextTick(() => {
-        inputCodigo.value?.focus();
-      });
+      // Resetear errorAgregarProducto después de un tiempo
+      setTimeout(() => {
+        errorAgregarProducto.value = false;
+      }, 2000);
+      await nextTick();
+      setTimeout(() => {
+        if (allowAutoFocusProduct.value && !loadingPorCodigo.value) {
+          const inputElement = inputCodigo.value?.$el?.querySelector("input");
+          if (inputElement && !inputElement.disabled) {
+            inputElement.focus();
+            inputElement.select();
+          }
+        }
+      }, 250);
       return;
     }
   }
 
   // 3. Insertar producto al pedido
-  const detalle:PedidosDet = {
+  const detalle: PedidosDet = {
     ID_PEDIDO_ENC: pedidoStore.idPedidoEnc.toString(),
     PRODUCT0: resultado.producto.PRODUCT0,
     CANTIDAD_PEDIDA: cantidad2.value || 1, // usar cantidad del modal o 1 por defecto
@@ -2839,17 +3021,82 @@ const buscarProductoEscaneado = async () => {
       );
       nuevosDatos.value = null;
 
+      // Restaurar focus DESPUÉS de todas las operaciones asíncronas
+      // Usar sistema de reintentos inteligente que se detiene cuando el input está listo
+      loadingPorCodigo.value = false;
+      await nextTick();
+
+      // Función que intenta enfocar con reintentos rápidos
+      let intentos = 0;
+      const maxIntentos = 10; // Máximo 10 intentos (500ms total si es necesario)
+      const intentarFocus = () => {
+        intentos++;
+
+        // Verificar condiciones
+        if (
+          !allowAutoFocusProduct.value ||
+          errorAgregarProducto.value ||
+          loadingPorCodigo.value
+        ) {
+          if (intentos < maxIntentos) {
+            setTimeout(intentarFocus, 50); // Reintentar cada 50ms
+          }
+          return;
+        }
+
+        // Intentar acceder al elemento DOM
+        const inputElement = inputCodigo.value?.$el?.querySelector("input");
+        if (inputElement && !inputElement.disabled) {
+          // Si el input está listo, enfocar inmediatamente
+          inputElement.focus();
+          inputElement.select();
+        } else if (intentos < maxIntentos) {
+          // Si aún no está listo, reintentar rápidamente
+          setTimeout(intentarFocus, 50);
+        }
+      };
+
+      // Iniciar con un delay inicial corto (100ms) para dar tiempo mínimo a los re-renderizados
+      setTimeout(intentarFocus, 100);
     },
     onError: async (err) => {
       await errorAgregarProductoConSonido(
         `Error al guardar producto: ${err.message || "Error desconocido"}`
       );
+      // Restaurar focus también en caso de error
+      loadingPorCodigo.value = false;
+      // Resetear errorAgregarProducto después de un tiempo para permitir focus
+      setTimeout(() => {
+        errorAgregarProducto.value = false;
+      }, 2000);
+
+      await nextTick();
+      // Sistema de reintentos rápido para errores
+      let intentos = 0;
+      const maxIntentos = 8;
+      const intentarFocus = () => {
+        intentos++;
+        if (!allowAutoFocusProduct.value || loadingPorCodigo.value) {
+          if (intentos < maxIntentos) {
+            setTimeout(intentarFocus, 50);
+          }
+          return;
+        }
+        const inputElement = inputCodigo.value?.$el?.querySelector("input");
+        if (inputElement && !inputElement.disabled) {
+          inputElement.focus();
+          inputElement.select();
+        } else if (intentos < maxIntentos) {
+          setTimeout(intentarFocus, 50);
+        }
+      };
+      setTimeout(intentarFocus, 150);
     },
     onSettled: () => {
-      loadingPorCodigo.value = false;
-      nextTick(() => {
-        inputCodigo.value?.focus();
-      });
+      // Solo establecer loading en false si no se hizo en onSuccess/onError
+      if (loadingPorCodigo.value) {
+        loadingPorCodigo.value = false;
+      }
     },
   });
 };
@@ -2875,7 +3122,7 @@ const agregarProductoAlPedido2 = async (producto) => {
     }
 
     // Armar detalle para guardar
-    const detalle2:PedidosDet = {
+    const detalle2: PedidosDet = {
       ID_PEDIDO_ENC: pedidoStore.idPedidoEnc.toString(),
       PRODUCT0: producto.PRODUCT0,
       CANTIDAD_PEDIDA: cantidadFinal,
@@ -3936,15 +4183,14 @@ defineExpose({
   .tabla-lotes-mejorada {
     font-size: 0.95rem;
   }
-  
+
   .cantidad-numero {
     font-size: 1.4rem;
   }
-  
+
   .cantidad-badge {
     padding: 8px 16px;
     min-width: 100px;
   }
 }
-
 </style>
