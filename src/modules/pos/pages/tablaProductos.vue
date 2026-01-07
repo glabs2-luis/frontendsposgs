@@ -82,6 +82,7 @@
         table-header-style="background: linear-gradient(135deg, #536103 0%, #6b745b 100%); color: white;"
         :filter="filtro"
         :filter-method="filtrarProductos"
+        style="height: 100%;"
       >
         <!-- Header -->
 
@@ -121,7 +122,7 @@
                 autofocus
                 counter
                 :maxlength="200"
-                @focus="(e) => (e.target as HTMLInputElement).select()"
+                @focus="selectOnFocus"
                 @keyup.enter="() => { solicitarAutorizacionDescripcion(props.row, scope.value); scope.set(); }"
                 @keyup.esc="scope.set()"
               />
@@ -156,7 +157,7 @@
                 min="1"
                 step="1"
                 label="Cantidad"
-                @focus="(e) => (e.target as HTMLInputElement).select()"
+                @focus="selectOnFocus"
                 @keyup.enter="onGuardarCantidad(props.row, scope.value)"
                 @keyup.esc="scope.set()"
               />
@@ -204,7 +205,7 @@
                 step="0.0001"
                 label="Precio Unitario"
                 prefix="Q"
-                @focus="(e) => (e.target as HTMLInputElement).select()"
+                @focus="selectOnFocus"
                 @keyup.enter="onGuardarPrecio(props.row, scope.value)"
                 @keyup.esc="scope.set()"
               />
@@ -311,6 +312,14 @@ const solicitarAutorizacionDescripcion = (row: any, nuevaDesc: string) => {
 
   // Abrir el modal de contraseña
   passwordModalRef.value?.abrirModal();
+};
+
+// Helper to select input content on focus (templates can't use TypeScript assertions)
+const selectOnFocus = (e: Event) => {
+  const target = e.target as HTMLInputElement | null;
+  if (target && typeof (target as any).select === "function") {
+    (target as HTMLInputElement).select();
+  }
 };
 
 

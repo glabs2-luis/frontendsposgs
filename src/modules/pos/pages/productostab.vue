@@ -124,6 +124,8 @@
           outlined
           dense
           min="1"
+          :rules="[(val) => val > 0 || 'La cantidad debe ser mayor a 0']" 
+          hide-bottom-space
           class="col-6 col-md-2"
         />
 
