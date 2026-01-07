@@ -74,7 +74,8 @@
             label="Generar ticket"
             icon="theaters"
             @click="terminarPedidoRompefilas"
-            class="boton-amarillo"
+            class="boton-amarillo "
+            style="color: black"
           />
         </div>
       </div>
@@ -143,6 +144,13 @@
             class="boton-amarillo"
             icon="inventory_2"
             label="Existencias"
+            size="sm"
+            />
+
+            <q-btn
+            @click="abrirExistencia2"
+            class="boton-amarillo"
+            icon="storefront"
             size="sm"
             />
 
@@ -853,7 +861,109 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- Modal de Existencia por Producto-->
+    <q-dialog
+      v-model="modalExistencias2"
+      transition-show="fade"
+      transition-fade="fade"
+      >
+
+      <q-card style="min-width: 50vw; max-height: 90vh;">
+
+      <!-- Header -->
+      <q-card-section class="row items-center justify-between facturacion-header">
+        <div class="text-h6">Existencias de Productos</div>
+        <q-btn icon="close" flat dense round v-close-popup @click="resetearSeleccion" />
+      </q-card-section>
+
+      <q-separator />
+
+      <!-- Buscador -->
+      <q-card-section>
+        <div class="row q-col-gutter-sm justify-center items-center">
+          <div class="col-10">
+            <q-input
+              v-model="filtroExistencias2"
+              autofocus
+              label="Buscar producto por código"
+              outlined
+              dense
+              clearable
+              @keyup.enter="BuscarExistenciaProducto"
+            />
+          </div>
+        
+          <div class="col-auto">
+            <q-btn
+              dense
+              icon="search"
+              color="orange-8"
+              label="Buscar"
+              @click="BuscarExistenciaProducto"
+            />
+          </div>
+        </div>
+      </q-card-section>
+
+      <!-- Body -->
+       
+      <q-separator />
+
+      <q-card-section>
+        <q-banner v-if="!productoCodigoExistencia.length" class="bg-grey-2" rounded>
+          Busca un producto por código.
+        </q-banner>
+
+        <q-list v-else bordered separator class="rounded-borders text-center">
+          <q-item v-for="(p, i) in productoCodigoExistencia" :key="i" class="q-py-md">
+            <q-item-section>
+              <!-- Título -->
+              <q-item-label class="text-subtitle1 text-weight-bold">
+                {{ p.Producto }} - {{ p.Descripcion }}
+              </q-item-label>
+
+              <!-- Lote -->
+              <q-item-label class="text-body2 text-grey-7 q-mt-xs  text-center">
+                Lote: <span class="text-weight-medium">{{ p.Lote }}</span>
+                · <span class="text-weight-medium">{{ p.DescripcionLote }}</span>
+              </q-item-label>
+
+              <!-- Stocks -->
+              <div class="row q-col-gutter-sm q-mt-sm justify-center">
+                <div class="col-12 col-sm-auto">
+                  <q-chip
+                    square
+                    size="lg"
+                    :color="Number(p.Disponible) > 0 ? 'positive' : 'negative'"
+                    text-color="white"
+                    icon="inventory"
+                  >
+                    Disponible: <span class="q-ml-xs text-weight-bold">{{ p.Disponible }}</span>
+                  </q-chip>
+                </div>
+
+                <div class="col-12 col-sm-auto">
+                  <q-chip
+                    square
+                    size="lg"
+                    :color="Number(p.DisponibleOtras) > 0 ? 'info' : 'grey-6'"
+                    text-color="white"
+                    icon="store"
+                  >
+                    Otras sucursales:
+                    <span class="q-ml-xs text-weight-bold">{{ p.DisponibleOtras }}</span>
+                    </q-chip>
+                  </div>
+                </div>
+              </q-item-section>
+            </q-item>
+          </q-list>
+      </q-card-section>
+    </q-card>
+  </q-dialog>
       
+
     <!-- Modal de existencias de productos -->
       <q-dialog
         v-model="modalExistencias"
@@ -861,7 +971,7 @@
         transition-hide="fade"
       >
     <q-card style="min-width: 90vw; max-height: 90vh;">
-      
+    
        <!-- Header -->
       <q-card-section class="row items-center justify-between facturacion-header">
         <div class="text-h6">Existencias de Productos</div>
@@ -904,14 +1014,14 @@
           Selecciona un producto para ver sus existencias
           
           <q-space /> 
-          <q-btn
+          <!-- <q-btn
             flat
             dense
             round
             icon="refresh"
             color="orange-8"
             label="Recargar conexion"
-            @click="recargarConexionExistencias"></q-btn>
+            @click="recargarConexionExistencias"></q-btn> -->
 
         </div>
 
@@ -1159,6 +1269,7 @@ import { PedidosDet } from "@/modules/pedidos_det/interfaces/pedidosDetInterface
 import { FacturaEnc2 } from "@/modules/facturas_enc/interfaces/facturaEnc2Interface";
 import { DatosProductoBuscado } from '../interfaces/posInterfaces';
 import { useProductosExistencias } from '@/modules/existencias/composables/useExistencias';
+import { useProductosExistenciasDirect } from "@/modules/existencias/composables/useExisteciasNoAuth";
 import { Empresa } from '../../fel_empresa_establecimiento/interfaces/empresaInterface';
 import { Sucursal } from '../../Sucursales/interfaces/sucursalesInterface';
 import { Bodega } from '../../bodegas/interfaces/bodegaInterface';
@@ -1327,6 +1438,7 @@ const {
 } = useProductos();
 const buscarCodigo = ref("2774651818380");
 const $q = useQuasar();
+const filtroExistencias2 = ref(''); // Filtro para buscar productos en existencias
 const { mutateAnularPedidoPendiente } = usePedidosEnc();
 const { generarCotizacionPDF } = usePdfCotizacion();
 const clienteStore = useClienteStore();
@@ -1344,9 +1456,19 @@ const paramsBase = ref({  // Parametros para consultar existencias
    lote: null
 })
 
+const paramsBase2 = ref({  // Parametros para consultar existencias
+   empresa: 'GS',
+   bodega: Number(storeSucursal.codigoBodega),
+   vendedor: userStore.codigoVendedor,
+   sucursal: Number(storeSucursal.idSucursal),
+   producto: filtroExistencias2.value,
+   lote: null
+})
+
 //USE COMPOSABLES
 const tokenExistencias = useStoreTokenExistencia();
 const { existenciaProducto, errorExistencias, refetchExistenciaProducto, loteProducto, refetchLoteProducto, existenciaBodega, refetchExistenciasBodegas, tokenData, errorToken, obtenerToken, obtenerTokenAsync } = useProductosExistencias(paramsBase); // Existencias
+const {existenciaProductoDirect, errorExistenciasDirect, refetchExistenciaProductoDirect } = useProductosExistenciasDirect(paramsBase2); // Existencias sin auth
 
 const { data: pedidoData, refetchObtenerPedidoID } =
   obtenerPedidoPorId(idPedidoEnc);
@@ -1361,6 +1483,7 @@ const modalCuponazo = ref(false);
                 VARIABLES GENERALES
 ==========================================================
 */
+const productoBuscar = ref(''); // Producto a buscar en existencias
 const allowAutoFocusProduct = ref(true); // Controla si el input de código puede auto-enfocarse
 const btnConfirmarFactura = ref(null);
 const calcularCambio = ref(0);
@@ -1386,6 +1509,7 @@ const modalProductos = ref(false);
 const modalProductos2 = ref(false);
 const montoTarjeta = ref(null);
 const modalExistencias = ref(false);
+const modalExistencias2 = ref(false);
 const montoEfectivo = ref(null);
 const filtroProductosExistencias = ref('');
 const productoSeleccionado = ref(null);
@@ -1404,6 +1528,7 @@ const nuevosDatos = ref<DatosProductoBuscado|undefined>(); // Mostrar info del p
 const productosCacheados = shallowRef([]); 
 const { obtenerProducto } = useCodigo();
 const { data: productoEncontrado, refetch: refetchProducto } = obtenerProducto(filtroProductos);
+const productoCodigoExistencia = ref<any[]>([]); // Productos encontrados por codigo en existencias
 
 // Paginación del catálogo
 const paginacionCatalogo = ref({
@@ -1880,6 +2005,7 @@ const resetearSeleccion = () => {
   loteSeleccionado.value = null
   paramsBase.value.producto = null
   paramsBase.value.lote = null
+  paramsBase2.value.producto = null
 }
 
 // Mapear los productos desde existenciaProducto
@@ -2343,6 +2469,34 @@ const abrirCatalogo2 = async () => {
   }
 };
 
+const BuscarExistenciaProducto = async () => {
+  
+  $q.loading.show({
+    message: "Buscando productos...",
+    spinnerColor: "green",
+    spinnerSize: 50,
+  });
+  
+  try {
+    
+  paramsBase2.value.producto = (filtroExistencias2.value || '').trim()
+  
+  const res = await refetchExistenciaProductoDirect()
+  productoCodigoExistencia.value = res.data?.ProductosLote ?? []
+
+    
+  }
+  catch (error) {
+    showErrorNotification("Error", "Existencia no encontrada")
+  } finally {
+    $q.loading.hide();
+  }
+}
+
+const abrirExistencia2 = async () => {
+  modalExistencias2.value = true;
+}
+
 const abrirExistencia = async () => {
   $q.loading.show({
     message: "Cargando productos...",
@@ -2354,7 +2508,7 @@ const abrirExistencia = async () => {
     modalExistencias.value = true;
     $q.loading.hide();
   } catch (error) {
-    showErrorNotification("Error", "No hay conexion a Internet")
+    //showErrorNotification("Error", "No hay conexion a Internet")
   }
 }
 
@@ -2372,7 +2526,7 @@ const recargarConexionExistencias = async () => {
     console.log("¿Hay error?", error);
 
     if (error) {
-      console.error("❌ Error en recarga de existencias:", error);
+      console.error(" Error en recarga de existencias:", error);
       
       // Si hay error, generar nuevo token
       $q.loading.show({
@@ -2384,13 +2538,13 @@ const recargarConexionExistencias = async () => {
       // Obtener nuevo token
       const nuevoTokenData = await obtenerTokenAsync();
       
-      console.log("✅ Nuevo token obtenido:", nuevoTokenData);
-      console.log("🔑 Token:", nuevoTokenData.Token);
+      console.log(" Nuevo token obtenido:", nuevoTokenData);
+      console.log(" Token:", nuevoTokenData.Token);
 
       // Guardar el nuevo token en el store
       tokenExistencias.setTokenExistencia(nuevoTokenData.Token);
       
-      console.log("💾 Token actualizado en el store:", tokenExistencias.tokenExistencia);
+      console.log(" Token actualizado en el store:", tokenExistencias.tokenExistencia);
 
       // Cambiar mensaje del loading
       $q.loading.show({
@@ -2399,7 +2553,7 @@ const recargarConexionExistencias = async () => {
         spinnerSize: 50,
       });
 
-      // ✅ REINTENTAR: simplemente volver a llamar refetchExistenciaProducto
+      // reintentar
       // El interceptor de webApiAuth ya tiene el nuevo token del store
       await refetchExistenciaProducto();
       

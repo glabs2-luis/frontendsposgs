@@ -2,16 +2,14 @@ import webApi from "@/api/apiWeb";
 import webApiNoAuth from "@/api/apiWebNoAuth";
 import { getAxiosErrorMessage } from "@/helper/geterrordb";
 import axios from "axios";
+
 // Obtiene listado general de productos
 export const obtenerProductoExistencia = async (params) => {
   try {
     const { data } = await webApi.get(`/PRODUCTOS`, {params} )
-    //console.log("Productos:", data)
     return data
   } catch (error) {
     const message = getAxiosErrorMessage(error, "Error obteniendo la existencia del producto")
-    //console.error("Error obteniendo la existencia del producto:", error)
-    //console.error("Parámetros enviados:",  params)
     throw new Error(error)
    }
 }
@@ -20,26 +18,20 @@ export const obtenerProductoExistencia = async (params) => {
 export const obtenerLoteProducto = async (params) => {
     try {
         const { data } = await webApi.get(`/PRODUCTOS/ProductoLote`, {params})
-         //console.log("Parámetros enviados lote:", params)
-        //console.log("Lotes del producto desde action:", data)
         return data
     } catch (error) {
         const message = getAxiosErrorMessage(error, "Error obteniendo los lotes del producto")
-        //console.error("Error obteniendo los lotes del producto:", error)
         throw new Error(message)
     }
 }
 
-// Obtiene la existenia en otra bodegas
+// Obtiene la existencia en otra bodegas
 export const obtenerExistenciaBodega = async (params) => {
     try {
         const { data } = await webApi.get(`PRODUCTOS/EXISTENCIA`, {params})
-         //console.log("Parámetros enviados eixstencia:", params)
-        //console.log("Existencia en otras bodegas desde action:", data)
         return data
     } catch (error) {      
         const message = getAxiosErrorMessage(error, "Error obteniendo la existencia en otras bodegas")
-        //console.error("Error obteniendo la existencia en otras bodegas:", error)
         throw new Error(message)
     }
 }

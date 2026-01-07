@@ -752,7 +752,7 @@ onMounted(() => {
 }
 
 .elegant-table {
-  background: white;
+  background: rgb(255, 255, 255);
   border-radius: 0%;
   /* justify-items: center;
   justify-content: center; */

@@ -1549,6 +1549,7 @@ const handleCancelar = () => {
 </script>
 
 <style scoped>
+
 .total-card {
   background-color: #fcf5d6;
   border: 1px solid #fae4a2;
@@ -1558,7 +1559,8 @@ const handleCancelar = () => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-#Diseño de la tabla .tabla-elegante {
+#Diseño de la tabla 
+.tabla-elegante {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);

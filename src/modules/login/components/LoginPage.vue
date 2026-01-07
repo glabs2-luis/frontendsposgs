@@ -233,7 +233,7 @@ onMounted(async () => {
 <style scoped>
 
 .fondo-login {
-  background: linear-gradient(135deg, hsl(66, 97%, 49%), #252e10);
+  background: linear-gradient(135deg, hsl(66, 97%, 49%), #4d5e25);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -277,9 +277,10 @@ onMounted(async () => {
 }
 
 .logo-principal {
-  max-width: 160px;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  width: 170px;
+  max-width: 170px;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 255, 55, 0.2);
 }
 
 .sistema-titulo {

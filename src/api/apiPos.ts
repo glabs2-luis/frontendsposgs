@@ -4,6 +4,8 @@ const posApi = axios.create({
   baseURL: import.meta.env.VITE_POS_API_URL,
 });
 
+export default posApi;
+
 // Interceptor para agregar el token automáticamente en CADA request
 // posApi.interceptors.request.use(
 //   (config) => {
@@ -17,5 +19,3 @@ const posApi = axios.create({
 //     return Promise.reject(error);
 //   }
 // );
-
-export default posApi;
