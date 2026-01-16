@@ -82,7 +82,6 @@
                         v-model="clienteStore.documento"
                         label="NIT/DPI"
                         dense
-                        debounce="300"
                         outlined
                         lazy-rules
                         hide-bottom-space
