@@ -43,7 +43,7 @@ export const setConfigSonidoExito = (config: ConfiguracionSonidoExito) => {
   LocalStorage.set("ConfigSonidoExito", config);
 }
 export const getConfigSonidoExito = (): ConfiguracionSonidoExito => {
-  let confiSon: ConfiguracionSonidoExito = { Herzio: 600, Tiempo: 50 };
+  let confiSon: ConfiguracionSonidoExito = { Herzio: 600, Tiempo: 150 };
   const configGuardada = LocalStorage.getItem("ConfigSonidoExito") as ConfiguracionSonidoExito;
   // Si no hay valor guardado, retornamos un valor por defecto
   if (configGuardada) {

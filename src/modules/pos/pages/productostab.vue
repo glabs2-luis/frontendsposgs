@@ -1663,8 +1663,14 @@ watch(idPedidoEnc, (nuevo) => {
 });
 
 // actualizar cliente en facturacion
-watch(pedidoData, () => {
-  refetchObtenerPedidoID();
+watch(pedidoData, async () => {
+  await refetchObtenerPedidoID();
+  totalAnterior.value = 0;
+  if (pedidoData.value.MONTO_DESCUENTO_PEDI > 0) {
+    // si hay descuento, mostrar total anterior
+    totalAnterior.value = pedidoData.value.TOTAL_GENERAL_PEDIDO + pedidoData.value.MONTO_DESCUENTO_PEDI;
+    
+  }
 });
 
 // si el efectivo cambia, calcular cambio
@@ -2853,6 +2859,8 @@ const confirmarFactura = async () => {
       } else {
         await certificarFactura(respuesta.ID_FACTURA_ENC);
       }
+
+
     },
     onError: (error) => {
       //console.error("Error creando factura:", error);
@@ -2864,6 +2872,7 @@ const confirmarFactura = async () => {
   // LIMPIAR STORES DESPUÉS DE COMPLETAR EXITOSAMENTE
   // Esto se ejecuta solo si todo el proceso de facturación fue exitoso
   cleanAllStores();
+
 };
 
 // modal generar ticket rompefilas
